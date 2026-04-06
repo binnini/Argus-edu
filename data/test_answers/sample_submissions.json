@@ -1,0 +1,110 @@
+{
+  "description": "E2E 테스트용 학생 답변 샘플. 문제당 3종류(정답/부분정답/오답).",
+  "submissions": [
+    {
+      "problem_id": "수2_미분_001",
+      "type": "correct",
+      "student_answer": "f'(x) = 3x² - 6x = 0에서 x = 0, x = 2. 구간 [0,3]에서 f(0) = 1, f(2) = -3, f(3) = 1. 따라서 최솟값은 -3",
+      "expected_score": 3,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_001",
+      "type": "partial",
+      "student_answer": "f'(x) = 3x² - 6x = 0에서 x = 2만 구했음. f(2) = -3이므로 최솟값은 -3",
+      "expected_score": 2,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_001",
+      "type": "wrong",
+      "student_answer": "f'(x) = 3x² - 6이고 f'(x) = 0에서 x = √2. f(√2) = 2√2 - 6 + 1이므로 최솟값은 2√2 - 5",
+      "expected_score": 0,
+      "expected_trust": "low"
+    },
+    {
+      "problem_id": "수2_미분_002",
+      "type": "correct",
+      "student_answer": "f'(x) = 3x² - 12x + 9 = 3(x-1)(x-3) = 0에서 x=1, x=3. f(1)=6이 극댓값, f(3)=2가 극솟값. 합 = 8",
+      "expected_score": 3,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_002",
+      "type": "partial",
+      "student_answer": "f'(x) = 3(x-1)(x-3) = 0에서 x = 1, 3. x=1에서 극대이므로 극댓값 f(1) = 6",
+      "expected_score": 2,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_002",
+      "type": "wrong",
+      "student_answer": "f'(x) = 3x² - 12x에서 x = 0 또는 x = 4. f(0) = -1, f(4) = 64 - 144 + 48 - 1 = -33. 합 = -34",
+      "expected_score": 0,
+      "expected_trust": "low"
+    },
+    {
+      "problem_id": "수2_미분_003",
+      "type": "correct",
+      "student_answer": "y' = 3x² - 3이므로 x=2에서 기울기 = 3(4)-3 = 9. 접선: y - 2 = 9(x - 2), 즉 y = 9x - 16",
+      "expected_score": 3,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_003",
+      "type": "partial",
+      "student_answer": "y' = 3x² - 3에서 x=2일 때 기울기 = 9. 접선: y = 9x - 14",
+      "expected_score": 2,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "수2_미분_003",
+      "type": "wrong",
+      "student_answer": "y = x³ - 3x에서 x = 2일 때 y = 2. 기울기 = y/x = 2/2 = 1. 접선: y = x",
+      "expected_score": 0,
+      "expected_trust": "low"
+    },
+    {
+      "problem_id": "확통_002",
+      "type": "correct",
+      "student_answer": "전체 경우의 수 = 36. 합이 7인 경우: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1) = 6가지. P = 6/36 = 1/6",
+      "expected_score": 3,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "확통_002",
+      "type": "partial",
+      "student_answer": "전체 36가지. 합이 7: (1,6),(2,5),(3,4),(4,3),(5,2) = 5가지. P = 5/36",
+      "expected_score": 1,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "확통_002",
+      "type": "wrong",
+      "student_answer": "주사위 두 개 합이 7이 되는 경우는 7가지이므로 확률은 7/36",
+      "expected_score": 0,
+      "expected_trust": "low"
+    },
+    {
+      "problem_id": "확통_005",
+      "type": "correct",
+      "student_answer": "Z = (175 - 170) / 5 = 1. P(X≥175) = P(Z≥1) = 0.5 - P(0≤Z≤1) = 0.5 - 0.3413 = 0.1587",
+      "expected_score": 3,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "확통_005",
+      "type": "partial",
+      "student_answer": "Z = (175-170)/5 = 1로 표준화. 그런데 P(Z≥1) = P(0≤Z≤1) = 0.3413으로 계산",
+      "expected_score": 1,
+      "expected_trust": "high"
+    },
+    {
+      "problem_id": "확통_005",
+      "type": "wrong",
+      "student_answer": "키가 175cm 이상인 비율은 (175-170)/170 = 0.029이므로 확률은 약 2.9%",
+      "expected_score": 0,
+      "expected_trust": "low"
+    }
+  ]
+}
