@@ -25,7 +25,7 @@ export default function StudentSubmit() {
       .catch((e) => setState({ phase: "error", message: e.message }));
   }, []);
 
-  // 폴링: 2초 간격, 최대 60초 (30회)
+  // 폴링: 2초 간격, 최대 60회 (120초)
   useEffect(() => {
     if (state.phase !== "polling") return;
     const { submissionId, result } = state;
@@ -35,7 +35,7 @@ export default function StudentSubmit() {
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 30) {
+      if (attempts > 60) {
         clearInterval(interval);
         return;
       }

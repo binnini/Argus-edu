@@ -118,16 +118,17 @@
 
 **Phase 4 완료 후 시작 (실제 API 연동).**
 
-- [ ] `StudentSubmit.tsx` — mock 데이터 → 실제 API 연동
-  - 제출 후 폴링 (2초 간격, 최대 60초)
+- [x] `StudentSubmit.tsx` — mock 데이터 → 실제 API 연동
+  - 제출 후 폴링 (2초 간격, 최대 60회)
   - `teacher_approved === false` 시 "검토 중" 메시지만 노출
   - `teacher_approved === true` 시 풀이 설명 노출
-- [ ] `TeacherDashboard.tsx` — 실제 API 연동
-  - 신뢰도 배지 (`TrustBadge.tsx`) — High/Low 시각화
+- [x] `TeacherDashboard.tsx` — 실제 API 연동
+  - 신뢰도 배지 (TrustBadge) — High=초록, Low=빨강
   - 승인/수정/거부 폼 (3가지 액션만, 묵시적 승인 UI 없음)
   - SLA 마감까지 남은 시간 표시
-- [ ] `ReviewCard.tsx` — 수정 액션 시 점수/풀이 편집 폼
-- [ ] React 빌드 산출물 (`dist/`) 생성 확인
+  - localStorage 비밀번호 저장
+- [x] `ReviewCard.tsx` — 수정 액션 시 점수/풀이 편집 폼
+- [x] React 빌드 산출물 (`dist/`) 생성 확인
 
 ---
 
