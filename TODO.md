@@ -8,11 +8,12 @@
 
 인프라와 로컬 개발환경을 준비한다. 이후 모든 Phase의 전제조건.
 
-- [ ] GitHub 저장소 생성 및 초기 커밋 (CLAUDE.md, docs/, TODO.md)
-- [ ] 로컬 Python 가상환경 + `requirements.txt` 초안 작성
+- [x] GitHub 저장소 생성 및 초기 커밋 (CLAUDE.md, docs/, TODO.md)
+- [x] 로컬 Python 가상환경 + `requirements.txt` 초안 작성
   - FastAPI, SQLAlchemy, asyncpg, anthropic, sentence-transformers, transformers
-- [ ] `.env.example` 작성 (모든 환경변수 목록)
-- [ ] PostgreSQL 로컬 DB 생성 (`argus_dev`)
+  > Python 3.11 venv 사용 (3.14는 asyncpg/pydantic-core 미지원). torch 버전 범위로 완화.
+- [x] `.env.example` 작성 (모든 환경변수 목록)
+- [x] PostgreSQL 로컬 DB 생성 (`argus_dev`) + 마이그레이션 적용 + seed 완료 (15개 문제)
 - [ ] AWS EC2 t3.medium 인스턴스 생성
   - Ubuntu 22.04 LTS
   - 보안 그룹: 22(SSH), 80(HTTP), 443(HTTPS) 오픈
