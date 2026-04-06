@@ -5,13 +5,16 @@ from config import settings
 
 engine = create_async_engine(settings.database_url, echo=False)
 
-SessionLocal = sessionmaker(
+AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autocommit=False,
     autoflush=False,
 )
+
+# 하위 호환 alias
+SessionLocal = AsyncSessionLocal
 
 
 async def get_session() -> AsyncSession:

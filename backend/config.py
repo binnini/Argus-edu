@@ -36,9 +36,9 @@ class Settings(BaseSettings):
     teacher_password: str = "changeme"
 
     model_config = {
-        "env_file": ".env",
+        "env_file": ("../.env", ".env"),  # backend/ 또는 루트 모두 탐색
         "env_file_encoding": "utf-8",
-        "extra": "ignore",  # VITE_* 등 프론트엔드 전용 환경변수 무시
+        "extra": "ignore",
     }
 
 

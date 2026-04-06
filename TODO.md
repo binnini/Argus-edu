@@ -100,17 +100,17 @@
 
 **Phase 2, 3 전체 완료 후 시작.**
 
-- [ ] `backend/routers/submissions.py`
+- [x] `backend/routers/submissions.py`
   - `POST /api/v1/submissions` — 제출 + 비동기 채점 파이프라인 시작
   - `GET /api/v1/submissions/{id}` — 폴링 (풀이 설명 노출 정책 적용)
   - `GET /api/v1/problems`, `GET /api/v1/problems/{id}`
-- [ ] `backend/routers/teacher.py`
+- [x] `backend/routers/teacher.py`
   - `GET /api/v1/teacher/queue` — 미처리 큐 목록
   - `POST /api/v1/teacher/queue/{id}/action` — 승인/수정/거부
   - `X-Teacher-Password` 헤더 인증 미들웨어
-- [ ] `backend/routers/feedback.py`
+- [x] `backend/routers/feedback.py`
   - `GET /api/v1/teacher/feedback/summary` — delta 집계
-- [ ] `backend/main.py` — 라우터 등록 + CORS 설정
+- [x] `backend/main.py` — 라우터 등록 + CORS 설정
 
 ---
 

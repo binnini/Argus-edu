@@ -36,10 +36,8 @@ class LLMClient:
         logger.info(f"LLM 클라이언트 초기화: provider={self.provider}")
 
         if self.provider == "anthropic":
-            import anthropic
-            self._anthropic = anthropic.AsyncAnthropic(
-                api_key=settings.anthropic_api_key
-            )
+            # anthropic 클라이언트는 실제 호출 시점에 초기화 (httpx 버전 충돌 방지)
+            self._anthropic = None
         elif self.provider == "ollama":
             import httpx
             from openai import AsyncOpenAI
@@ -92,6 +90,11 @@ class LLMClient:
         max_tokens: int,
         temperature: float,
     ) -> LLMResponse:
+        if self._anthropic is None:
+            import anthropic
+            self._anthropic = anthropic.AsyncAnthropic(
+                api_key=settings.anthropic_api_key
+            )
         message = await self._anthropic.messages.create(
             model=model,
             max_tokens=max_tokens,
