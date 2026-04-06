@@ -26,23 +26,24 @@
 **인터페이스 고정 단계. 이후 모든 Phase가 여기에 의존.**
 
 ### 1-1. 문제 데이터셋 작성
-- [ ] `data/problems/math2_differentiation.json` — 미분 문제 6개 작성
-- [ ] `data/problems/math2_integration.json` — 적분 문제 4개 작성
-- [ ] `data/problems/stats_probability.json` — 확률과 통계 문제 5개 작성
-- [ ] `data/test_answers/sample_submissions.json` — 문제당 정답/부분정답/오답 샘플
-- [ ] 전체 문제 수동 검수 체크리스트 완료 (docs/dataset.md 기준)
+- [x] `data/problems/math2_differentiation.json` — 미분 문제 6개 작성
+- [x] `data/problems/math2_integration.json` — 적분 문제 4개 작성
+- [x] `data/problems/stats_probability.json` — 확률과 통계 문제 5개 작성
+- [x] `data/test_answers/sample_submissions.json` — 문제당 정답/부분정답/오답 샘플
+- [x] 전체 문제 수동 검수 체크리스트 완료 (docs/dataset.md 기준)
 
 ### 1-2. DB 모델 + 마이그레이션
-- [ ] `backend/models/` — SQLAlchemy ORM 모델 작성 (docs/schema.md 기준)
+- [x] `backend/models/` — SQLAlchemy ORM 모델 작성 (docs/schema.md 기준)
   - `Problem`, `Submission`, `GradingResult`, `TeacherQueue`, `FeedbackLog`
-- [ ] Alembic 초기화 + 첫 마이그레이션 파일 생성
+- [x] Alembic 초기화 + 첫 마이그레이션 파일 생성
 - [ ] 로컬 DB에 마이그레이션 적용 및 검증
-- [ ] `scripts/seed.py` — `data/problems/` JSON → DB 삽입 스크립트
+  > AWS/EC2/DB 마이그레이션 실행은 스킵 (코드만 작성)
+- [x] `scripts/seed.py` — `data/problems/` JSON → DB 삽입 스크립트
 
 ### 1-3. Pydantic 스키마 + 설정
-- [ ] `backend/schemas/` — 모든 요청/응답 스키마 작성 (docs/api.md 기준)
-- [ ] `backend/config.py` — 환경변수 로딩 (`GRADING_MODEL`, `TRUST_THRESHOLD` 등)
-- [ ] `backend/db.py` — async 세션 + 의존성 주입 설정
+- [x] `backend/schemas/` — 모든 요청/응답 스키마 작성 (docs/api.md 기준)
+- [x] `backend/config.py` — 환경변수 로딩 (`GRADING_MODEL`, `TRUST_THRESHOLD` 등)
+- [x] `backend/db.py` — async 세션 + 의존성 주입 설정
 
 ---
 
@@ -51,27 +52,30 @@
 **1-2, 1-3 완료 후 시작. grading/explanation/frontend는 병렬 가능.**
 
 ### 2-1. 채점 서비스 `[P]`
-- [ ] `backend/services/grading.py`
+- [x] `backend/services/grading.py`
   - Claude API 채점 프롬프트 구현 (docs/prompts.md 기준)
   - 프롬프트 캐싱 (`cache_control` 블록) 적용
   - SBERT 유사도 계산 (reference_solution 비교)
   - JSON 구조화 출력 파싱 + 유효성 검증
   - 타임아웃 30초 + 실패 시 재시도 큐 적재
 - [ ] 샘플 10개로 채점 결과 수동 검증
+  > API 키 없이 실행 불가. Phase 4 API 연결 후 통합 검증 예정
 
 ### 2-2. 풀이 설명 서비스 `[P]`
-- [ ] `backend/services/explanation.py`
+- [x] `backend/services/explanation.py`
   - 멀티 샘플링 3회 구현 (temperature=0.7)
   - SBERT 기반 단계별 불일치율 계산
   - JSON 구조화 출력 파싱
 - [ ] 샘플 5개로 불일치 탐지 수동 검증
+  > API 키 없이 실행 불가. Phase 4 API 연결 후 통합 검증 예정
 
 ### 2-3. 프론트엔드 scaffold `[P]`
-- [ ] Vite + React + TypeScript 프로젝트 초기화
-- [ ] React Router 설정 (`/student`, `/teacher`)
-- [ ] `frontend/src/api/` — API 클라이언트 함수 작성 (docs/api.md 기준)
-- [ ] `StudentSubmit.tsx` — 문제 목록 + 답변 입력 폼 UI
-- [ ] `TeacherDashboard.tsx` — 검토 큐 목록 UI (mock 데이터)
+- [x] Vite + React + TypeScript 프로젝트 초기화
+  > vite create가 기존 frontend/ 디렉토리로 취소됨 → 파일 직접 작성
+- [x] React Router 설정 (`/student`, `/teacher`)
+- [x] `frontend/src/api/` — API 클라이언트 함수 작성 (docs/api.md 기준)
+- [x] `StudentSubmit.tsx` — 문제 목록 + 답변 입력 폼 UI
+- [x] `TeacherDashboard.tsx` — 검토 큐 목록 UI (mock 데이터)
 
 ---
 
