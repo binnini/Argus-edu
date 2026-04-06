@@ -1,9 +1,9 @@
 """
-explanation.py — 풀이 설명 생성 서비스 (멀티 샘플링 3회).
+explanation.py — LLM 기반 풀이 설명 생성 서비스 (멀티 샘플링 3회).
 
+- llm_client.py를 통해 Anthropic / Ollama 모두 지원
 - 멀티 샘플링: temperature=0.7, 동일 프롬프트 3회 호출
 - 불일치율 계산: SBERT 코사인 유사도 행렬 기반
-- JSON 구조화 출력 파싱
 - 풀이 설명은 반드시 교사 승인 후에만 노출 (이 레이어에서 제어하지 않음)
 """
 
@@ -12,11 +12,11 @@ import json
 import logging
 from dataclasses import dataclass
 
-import anthropic
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from config import settings
+from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -53,16 +53,17 @@ EXPLANATION_USER_TEMPLATE = """\
 
 @dataclass
 class ExplanationOutput:
-    """최종 선택된 풀이 설명 + 불일치율."""
     steps: list[dict]
     summary: str
     inconsistency_rate: float
-    raw_samples: list[dict]  # 3개 샘플 원본 (디버깅/로깅용)
+    model: str
+    provider: str
+    raw_samples: list[dict]
 
 
 class ExplanationService:
     def __init__(self, sbert_model: SentenceTransformer) -> None:
-        self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self._llm = LLMClient()
         self._sbert = sbert_model
 
     async def generate(
@@ -71,65 +72,59 @@ class ExplanationService:
         answer: str,
         reference_solution: str,
     ) -> ExplanationOutput:
-        """멀티 샘플링 3회 후 불일치율 계산. 실패 시 ExplanationError 발생."""
+        """멀티 샘플링 3회 후 불일치율 계산."""
         user_prompt = EXPLANATION_USER_TEMPLATE.format(
             problem_content=problem_content,
             answer=answer,
             reference_solution=reference_solution,
         )
 
-        # 3회 병렬 호출
         try:
-            raw_texts = await asyncio.wait_for(
+            responses = await asyncio.wait_for(
                 asyncio.gather(
-                    self._call_claude(user_prompt),
-                    self._call_claude(user_prompt),
-                    self._call_claude(user_prompt),
+                    self._llm.chat(
+                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
+                        user_prompt=user_prompt,
+                        model=settings.explanation_model,
+                        max_tokens=2048,
+                        temperature=0.7,
+                    ),
+                    self._llm.chat(
+                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
+                        user_prompt=user_prompt,
+                        model=settings.explanation_model,
+                        max_tokens=2048,
+                        temperature=0.7,
+                    ),
+                    self._llm.chat(
+                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
+                        user_prompt=user_prompt,
+                        model=settings.explanation_model,
+                        max_tokens=2048,
+                        temperature=0.7,
+                    ),
                 ),
-                timeout=90.0,  # 3회 × 30초
+                timeout=90.0,
             )
         except asyncio.TimeoutError:
-            raise ExplanationError("Claude API 타임아웃 (풀이 설명 3회 샘플링)")
-        except anthropic.APIError as e:
-            raise ExplanationError(f"Claude API 오류: {e}") from e
+            raise ExplanationError("LLM API 타임아웃 (풀이 설명 3회 샘플링)")
+        except Exception as e:
+            raise ExplanationError(f"LLM API 오류: {e}") from e
 
-        samples = [self._parse_response(text) for text in raw_texts]
+        samples = [self._parse_response(r.text) for r in responses]
         inconsistency_rate = self._calculate_inconsistency_rate(samples)
-
-        # 첫 번째 샘플을 대표 풀이로 사용
         best = samples[0]
 
         return ExplanationOutput(
             steps=best["steps"],
             summary=best["summary"],
             inconsistency_rate=inconsistency_rate,
+            model=responses[0].model,
+            provider=responses[0].provider,
             raw_samples=samples,
         )
 
-    async def _call_claude(self, user_prompt: str) -> str:
-        """프롬프트 캐싱 적용, temperature=0.7."""
-        message = await self._client.messages.create(
-            model=settings.explanation_model,
-            max_tokens=2048,
-            temperature=0.7,
-            system=[
-                {
-                    "type": "text",
-                    "text": EXPLANATION_SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                }
-            ],
-        )
-        return message.content[0].text
-
     def _parse_response(self, raw: str) -> dict:
-        """JSON 응답 파싱 + 유효성 검증."""
         text = raw.strip()
         if text.startswith("```"):
             lines = text.split("\n")
@@ -149,19 +144,10 @@ class ExplanationService:
         return data
 
     def _calculate_inconsistency_rate(self, samples: list[dict]) -> float:
-        """
-        3개 풀이 설명의 불일치율 계산.
-
-        알고리즘:
-        1. 각 샘플의 step content를 SBERT로 임베딩
-        2. 동일 단계 번호끼리 코사인 유사도 계산
-        3. 유사도 < 0.85인 단계 쌍을 불일치로 판정
-        4. 불일치 단계 수 / 전체 비교 단계 수 = 불일치율
-        """
+        """3개 풀이 설명의 불일치율 계산 (SBERT 코사인 유사도 기반)."""
         if len(samples) < 2:
             return 0.0
 
-        # 단계별로 모든 샘플의 content를 그룹화
         step_contents: dict[int, list[str]] = {}
         for sample in samples:
             for step in sample.get("steps", []):
@@ -176,17 +162,12 @@ class ExplanationService:
         inconsistent_count = 0
         threshold = 0.85
 
-        for step_num, contents in step_contents.items():
+        for contents in step_contents.values():
             if len(contents) < 2:
                 continue
-
             embeddings = self._sbert.encode(
-                contents,
-                convert_to_numpy=True,
-                normalize_embeddings=True,
+                contents, convert_to_numpy=True, normalize_embeddings=True
             )
-
-            # 쌍별 유사도 계산
             for i in range(len(embeddings)):
                 for j in range(i + 1, len(embeddings)):
                     sim = float(np.dot(embeddings[i], embeddings[j]))
@@ -194,13 +175,9 @@ class ExplanationService:
                     if sim < threshold:
                         inconsistent_count += 1
 
-        if total_comparisons == 0:
-            return 0.0
-
-        return inconsistent_count / total_comparisons
+        return inconsistent_count / total_comparisons if total_comparisons > 0 else 0.0
 
     def format_explanation_text(self, steps: list[dict], summary: str) -> str:
-        """풀이 설명을 마크다운 텍스트로 변환 (DB 저장 및 API 응답용)."""
         lines = []
         for step in steps:
             lines.append(f"**{step['step']}단계: {step.get('title', '')}**")
@@ -211,5 +188,4 @@ class ExplanationService:
 
 
 class ExplanationError(Exception):
-    """풀이 설명 생성 실패 예외."""
     pass

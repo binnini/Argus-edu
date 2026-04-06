@@ -196,6 +196,27 @@
 
 ---
 
+---
+
+### ADR-013 LLM 클라이언트 추상화 + Ollama 지원
+**날짜**: 2026-04-06  
+**가역성**: 🟢 가역
+
+**결정**: `services/llm_client.py`를 통해 Anthropic API와 Ollama를 동일한 인터페이스로 추상화한다. `LLM_PROVIDER` 환경변수로 전환.
+
+**근거**: 테스트 단계에서 로컬 Gemma4:26b(Ollama)로 API 비용 없이 파이프라인 전체를 검증할 수 있다. ADR-003(모델명 환경변수 분리)의 확장.
+
+**현재 설정**: `LLM_PROVIDER=ollama`, `OLLAMA_BASE_URL=http://192.168.219.101:11434`, `GRADING_MODEL=gemma4:26b`
+
+**Ollama(Gemma4) 특이사항**:
+- thinking 모델이라 reasoning 토큰을 먼저 소비 → `max_tokens`를 4배 확보
+- 응답 시간 ~30~60초 → `LLM_TIMEOUT_SECONDS=120`으로 조정
+- content 필드가 비어있을 수 있음 (max_tokens 부족 시) → 클라이언트에서 처리
+
+**프로덕션 전환**: `.env`에서 `LLM_PROVIDER=anthropic`으로 변경.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -203,3 +224,4 @@
 | - | 2026-04-06 | 초안 작성 (ADR-001 ~ ADR-010) |
 | ADR-011 | 2026-04-06 | HHEM 로컬 실행 불가 → HF Inference API 전환 |
 | ADR-012 | 2026-04-06 | Python 3.11 사용 결정 (3.14 asyncpg 미지원) |
+| ADR-013 | 2026-04-06 | LLM 추상화 레이어 + Ollama(Gemma4) 지원 추가 |

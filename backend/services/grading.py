@@ -1,10 +1,10 @@
 """
-grading.py — Claude API + SBERT 기반 채점 서비스.
+grading.py — LLM 기반 채점 서비스.
 
+- llm_client.py를 통해 Anthropic / Ollama 모두 지원
 - 채점 프롬프트: docs/prompts.md 기준
-- 프롬프트 캐싱: cache_control 블록 적용
 - 타임아웃: 30초
-- 실패 시: 재시도 큐 적재 (즉시 에러 반환 금지)
+- 실패 시: GradingError 발생 (라우터에서 재시도 큐 적재)
 """
 
 import json
@@ -13,14 +13,13 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-import anthropic
 from sentence_transformers import SentenceTransformer
 
 from config import settings
+from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
-# 채점 시스템 프롬프트 (캐시 대상)
 GRADING_SYSTEM_PROMPT = (
     "당신은 한국 고등학교 수학 채점 전문가입니다.\n"
     "학생의 답변을 루브릭 기준에 따라 단계별로 채점하고, "
@@ -66,12 +65,14 @@ class GradingOutput:
     steps: list[dict[str, Any]]
     overall_comment: str
     sbert_similarity: float
+    model: str
+    provider: str
     raw_response: str
 
 
 class GradingService:
     def __init__(self, sbert_model: SentenceTransformer) -> None:
-        self._client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        self._llm = LLMClient()
         self._sbert = sbert_model
 
     async def grade(
@@ -91,17 +92,26 @@ class GradingService:
             student_answer=student_answer,
         )
 
+        # Ollama 로컬 모델은 thinking 포함으로 응답이 느릴 수 있음
+        timeout = settings.llm_timeout_seconds
+
         try:
             response = await asyncio.wait_for(
-                self._call_claude(user_prompt),
-                timeout=30.0,
+                self._llm.chat(
+                    system_prompt=GRADING_SYSTEM_PROMPT,
+                    user_prompt=user_prompt,
+                    model=settings.grading_model,
+                    max_tokens=1024,
+                    temperature=1.0,
+                ),
+                timeout=timeout,
             )
         except asyncio.TimeoutError:
-            raise GradingError("Claude API 타임아웃 (30초)")
-        except anthropic.APIError as e:
-            raise GradingError(f"Claude API 오류: {e}") from e
+            raise GradingError(f"LLM API 타임아웃 ({timeout}초)")
+        except Exception as e:
+            raise GradingError(f"LLM API 오류: {e}") from e
 
-        parsed = self._parse_response(response)
+        parsed = self._parse_response(response.text)
         sbert_sim = self._compute_sbert_similarity(student_answer, reference_solution)
 
         return GradingOutput(
@@ -109,37 +119,16 @@ class GradingService:
             steps=parsed["steps"],
             overall_comment=parsed["overall_comment"],
             sbert_similarity=sbert_sim,
-            raw_response=response,
+            model=response.model,
+            provider=response.provider,
+            raw_response=response.text,
         )
-
-    async def _call_claude(self, user_prompt: str) -> str:
-        """프롬프트 캐싱 적용 Claude API 호출."""
-        message = await self._client.messages.create(
-            model=settings.grading_model,
-            max_tokens=1024,
-            system=[
-                {
-                    "type": "text",
-                    "text": GRADING_SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                }
-            ],
-        )
-        return message.content[0].text
 
     def _parse_response(self, raw: str) -> dict:
         """JSON 응답 파싱 + 유효성 검증."""
-        # 마크다운 코드 블록 제거
         text = raw.strip()
         if text.startswith("```"):
             lines = text.split("\n")
-            # 첫 줄(```json 등)과 마지막 줄(```) 제거
             text = "\n".join(lines[1:-1]) if lines[-1].startswith("```") else "\n".join(lines[1:])
 
         try:
@@ -170,7 +159,6 @@ class GradingService:
             normalize_embeddings=True,
         )
         sim = float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
-        # 수치 안정성: 0~1 클리핑
         return max(0.0, min(1.0, sim))
 
 
