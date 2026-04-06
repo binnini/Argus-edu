@@ -165,8 +165,41 @@
 
 ---
 
+---
+
+### ADR-011 HHEM 로컬 실행 → HF Inference API 전환
+**날짜**: 2026-04-06  
+**가역성**: 🟡 준가역
+
+**결정**: HHEM-2.1-Open을 로컬에서 직접 실행하지 않고 Hugging Face Inference API를 통해 호출한다. HF_TOKEN 미설정 시 SBERT 코사인 유사도로 fallback.
+
+**근거**: HHEM-2.1-Open의 커스텀 코드(configuration_hhem_v2.py, modeling_hhem_v2.py)가 transformers 4.x와 5.x 모두에서 AutoTokenizer 인식 오류 발생. `trust_remote_code=True`로도 해결 불가.
+
+**영향**:
+- HF_TOKEN 없는 개발 환경: SBERT fallback (정밀도 낮음, 기능은 동일)
+- HF_TOKEN 설정 시: HF Inference API (정밀도 높음, 무료 티어 rate limit 있음)
+- EC2 프로덕션: HF_TOKEN을 .env에 추가
+
+**메모리 영향**: 로컬 HHEM 미로드로 메모리 절감. SBERT만 로드 시 ~327MB (t3.medium 여유 3,637MB).
+
+**변경 조건**: HF API rate limit 문제 시 로컬 대안 모델 재검토.
+
+---
+
+### ADR-012 Python 3.11 사용 (3.14 미지원)
+**날짜**: 2026-04-06  
+**가역성**: 🟢 가역
+
+**결정**: 개발 환경에서 Python 3.14 대신 3.11을 사용한다.
+
+**근거**: asyncpg, pydantic-core가 Python 3.14 미지원 (wheel 빌드 실패). EC2 배포 환경도 Python 3.11로 통일.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
 |---|---|---|
 | - | 2026-04-06 | 초안 작성 (ADR-001 ~ ADR-010) |
+| ADR-011 | 2026-04-06 | HHEM 로컬 실행 불가 → HF Inference API 전환 |
+| ADR-012 | 2026-04-06 | Python 3.11 사용 결정 (3.14 asyncpg 미지원) |

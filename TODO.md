@@ -84,16 +84,15 @@
 
 **2-1, 2-2 완료 후 시작.**
 
-- [ ] `backend/main.py` — lifespan 이벤트에서 HHEM + SBERT 1회 로드
-- [ ] `backend/services/hallucination.py`
-  - HHEM-2.1-Open 팩추얼 일관성 스코어 계산
-  - app.state에서 모델 참조 (요청마다 로드 금지)
-- [ ] `backend/services/trust_gate.py`
+- [x] `backend/main.py` — lifespan 이벤트에서 HHEM + SBERT 1회 로드
+- [x] `backend/services/hallucination.py`
+  - HHEM 로컬 실행 불가 → HF Inference API + SBERT fallback 구조로 전환 (ADR-011)
+  - HF_TOKEN 설정 시 HF API, 미설정 시 SBERT 코사인 유사도 fallback
+- [x] `backend/services/trust_gate.py`
   - 종합 신뢰도 계산: `0.6 * hhem_score + 0.4 * (1 - inconsistency_rate)`
   - 큐 라우팅: `high` → `score_only` / `low` → `full_review`
   - SLA 마감 시각 계산 (High: 12h, Low: 24h)
-- [ ] HHEM + SBERT 동시 로드 시 메모리 사용량 측정
-  - 2GB 초과 시 → Hugging Face Inference API 전환 검토
+- [x] 메모리 사용량 측정: SBERT만 로드 시 ~327MB, t3.medium 여유 3,637MB ✅
 
 ---
 
