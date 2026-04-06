@@ -41,10 +41,15 @@ class LLMClient:
                 api_key=settings.anthropic_api_key
             )
         elif self.provider == "ollama":
+            import httpx
             from openai import AsyncOpenAI
+            # httpx 클라이언트 timeout을 설정값 기반으로 지정
+            # Gemma4 thinking 모델은 응답에 2분+ 소요될 수 있음
+            _timeout = settings.llm_timeout_seconds
             self._openai = AsyncOpenAI(
                 base_url=f"{settings.ollama_base_url}/v1",
-                api_key="ollama",  # Ollama는 API 키 불필요, 임의값
+                api_key="ollama",
+                http_client=httpx.AsyncClient(timeout=_timeout),
             )
         else:
             raise ValueError(f"지원하지 않는 LLM_PROVIDER: {self.provider}")

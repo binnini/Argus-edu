@@ -79,35 +79,38 @@ class ExplanationService:
             reference_solution=reference_solution,
         )
 
+        call_kwargs = dict(
+            system_prompt=EXPLANATION_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+            model=settings.explanation_model,
+            max_tokens=2048,
+            temperature=0.7,
+        )
+        # Ollama는 단일 GPU로 병렬 요청을 순차 처리 → 순차 호출로 타임아웃 방지
+        # Anthropic은 병렬 호출로 속도 최적화
+        per_call_timeout = settings.llm_timeout_seconds
+        total_timeout = per_call_timeout * 3
+
         try:
-            responses = await asyncio.wait_for(
-                asyncio.gather(
-                    self._llm.chat(
-                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
-                        user_prompt=user_prompt,
-                        model=settings.explanation_model,
-                        max_tokens=2048,
-                        temperature=0.7,
+            if settings.llm_provider == "ollama":
+                raw_responses = []
+                for _ in range(3):
+                    r = await asyncio.wait_for(
+                        self._llm.chat(**call_kwargs), timeout=per_call_timeout
+                    )
+                    raw_responses.append(r)
+                responses = tuple(raw_responses)
+            else:
+                responses = await asyncio.wait_for(
+                    asyncio.gather(
+                        self._llm.chat(**call_kwargs),
+                        self._llm.chat(**call_kwargs),
+                        self._llm.chat(**call_kwargs),
                     ),
-                    self._llm.chat(
-                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
-                        user_prompt=user_prompt,
-                        model=settings.explanation_model,
-                        max_tokens=2048,
-                        temperature=0.7,
-                    ),
-                    self._llm.chat(
-                        system_prompt=EXPLANATION_SYSTEM_PROMPT,
-                        user_prompt=user_prompt,
-                        model=settings.explanation_model,
-                        max_tokens=2048,
-                        temperature=0.7,
-                    ),
-                ),
-                timeout=90.0,
-            )
+                    timeout=total_timeout,
+                )
         except asyncio.TimeoutError:
-            raise ExplanationError("LLM API 타임아웃 (풀이 설명 3회 샘플링)")
+            raise ExplanationError(f"LLM API 타임아웃 (풀이 설명 3회, {total_timeout:.0f}초)")
         except Exception as e:
             raise ExplanationError(f"LLM API 오류: {e}") from e
 

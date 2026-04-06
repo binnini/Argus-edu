@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     trust_threshold: float = 0.75
 
     # LLM 타임아웃 (초) — Ollama 로컬 모델은 thinking으로 느릴 수 있음
-    llm_timeout_seconds: float = 120.0
+    # gemma4:26b 풀이 설명 프롬프트 실측 ~2분 → 300초로 여유 확보
+    llm_timeout_seconds: float = 300.0
 
     # SLA (시간 단위)
     sla_high_risk_hours: int = 12
