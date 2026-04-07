@@ -1,200 +1,146 @@
 # Argus — 전체 구현 TODO
 
-> 병렬 가능 항목은 `[P]` 표시. 순차 필수 항목은 표시 없음.
+> 병렬 가능 항목은 `[P]` 표시. 순차 필수 항목은 표시 없음.  
+> ✅ 완료 · 🔄 진행 중 · ⬜ 미시작
 
 ---
 
-## Phase 0: 환경 세팅 (Day 1 전반)
+## Phase 0~6: 완료 (기본 파이프라인)
 
-인프라와 로컬 개발환경을 준비한다. 이후 모든 Phase의 전제조건.
+| Phase | 내용 | 상태 |
+|---|---|---|
+| Phase 0 | 로컬 환경 세팅, DB, 마이그레이션, seed | ✅ |
+| Phase 1 | 데이터셋, ORM 모델, Pydantic 스키마 | ✅ |
+| Phase 2 | grading/explanation 서비스, 프론트엔드 scaffold | ✅ |
+| Phase 3 | HHEM 탐지, 신뢰도 게이트 | ✅ |
+| Phase 4 | API 라우터 11개 (submissions/teacher/feedback) | ✅ |
+| Phase 5 | 프론트엔드 실제 API 연동, 폴링, 교사 흐름 | ✅ |
+| Phase 6 | 통합 테스트 10/10 통과 | ✅ |
 
-- [x] GitHub 저장소 생성 및 초기 커밋 (CLAUDE.md, docs/, TODO.md)
-- [x] 로컬 Python 가상환경 + `requirements.txt` 초안 작성
-  - FastAPI, SQLAlchemy, asyncpg, anthropic, sentence-transformers, transformers
-  > Python 3.11 venv 사용 (3.14는 asyncpg/pydantic-core 미지원). torch 버전 범위로 완화.
-- [x] `.env.example` 작성 (모든 환경변수 목록)
-- [x] PostgreSQL 로컬 DB 생성 (`argus_dev`) + 마이그레이션 적용 + seed 완료 (15개 문제)
-- [ ] AWS EC2 t3.medium 인스턴스 생성
-  - Ubuntu 22.04 LTS
-  - 보안 그룹: 22(SSH), 80(HTTP), 443(HTTPS) 오픈
+---
+
+## Phase 7: 시스템 재설계 (설계 변경 반영)
+
+**문서 개정 완료. 코드 변경 단계.**
+
+### 7-1. AI-HUB 데이터 변환
+
+- [x] AI-HUB 데이터 다운로드 확인 (고등학교_공통수학 TL_1/2/3)
+- [ ] `scripts/convert_aihub.py` 작성
+  - TL_1(문제) + TL_2(모범답안) 병합 → Argus problems 스키마
+  - `question_type1 == "서술"` 필터링
+  - `answer_text` → `reference_solution` 단계 구조화 (LLM 보조)
+  - rubric 자동 생성 (단계 수 기반)
+- [ ] `scripts/seed.py` 업데이트 — AI-HUB 변환 데이터 삽입
+- [ ] 기존 자체 생성 데이터 15개 DB에서 제거
+- [ ] `data/ocr_samples/` 구성 — TL_3 손글씨 이미지 + labels.json
+
+### 7-2. DB 마이그레이션
+
+- [ ] `backend/alembic/versions/0002_redesign.py` 작성
+  - `submissions` 테이블: `input_type`, `ocr_raw_text`, `image_path` 컬럼 추가
+  - `grading_results` 테이블: `ai_explanation` → `ai_feedback` 컬럼 rename
+  - `teacher_queue` 테이블: `teacher_explanation` → `teacher_feedback` 컬럼 rename
+  - `problems` 테이블: `source` 컬럼 추가
+- [ ] 로컬 DB에 마이그레이션 적용 (`alembic upgrade head`)
+
+### 7-3. OCR 서비스 `[P]`
+
+- [ ] `backend/services/ocr.py` 작성
+  - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix`)
+  - pix2tex 로컬 실행 구현
+  - Mathpix API 연동 구현 (fallback)
+  - OCR 실패 시 에러 반환 (무시하지 말 것)
+- [ ] `requirements.txt` 업데이트 — pix2tex 추가
+- [ ] `POST /api/v1/submissions` — `multipart/form-data` 이미지 업로드 지원 추가
+- [ ] AI-HUB TL_3 손글씨 이미지로 OCR 정확도 검증
+
+### 7-4. 개인화 피드백 서비스 `[P]`
+
+- [ ] `backend/services/feedback.py` 작성 (기존 `explanation.py` 교체)
+  - 프롬프트: 학생 오류 분석 + 교정 방향 (docs/prompts.md v2.0 기준)
+  - 출력 스키마: `student_mistakes` + `correct_approach` + `key_concept`
+  - 멀티 샘플링 3회 + 불일치율 계산
+  - Ollama/Anthropic 양쪽 지원
+- [ ] `backend/services/hallucination.py` 업데이트
+  - premise: `reference_solution + grading_result`
+  - hypothesis: `ai_feedback.correct_approach`
+- [ ] `backend/routers/submissions.py` 업데이트
+  - `explanation_service` → `feedback_service`
+  - 응답 필드명: `explanation` → `feedback`
+- [ ] `backend/schemas/` 업데이트 — feedback 구조 반영
+
+### 7-5. 프론트엔드 개편 `[P]`
+
+- [ ] `frontend/src/components/AnswerInput.tsx` 신규
+  - 텍스트 입력 탭 / 이미지 업로드 탭 전환 UI
+  - 이미지 업로드 시 `multipart/form-data` 전송
+- [ ] `frontend/src/components/FeedbackPanel.tsx` 신규
+  - `student_mistakes` 목록 렌더링
+  - `correct_approach` 단계별 렌더링
+  - `key_concept` 요약 표시
+  - `teacher_approved === true` 일 때만 렌더링 (절대 제약)
+- [ ] `frontend/src/pages/StudentSubmit.tsx` 업데이트
+  - `AnswerInput` 컴포넌트 사용
+  - `FeedbackPanel` 컴포넌트 연결
+- [ ] `frontend/src/api/submissions.ts` 업데이트
+  - `submitAnswerText()` / `submitAnswerImage()` 분리
+- [ ] `npm run build` 빌드 성공 확인
+
+---
+
+## Phase 8: E2E 재검증
+
+**Phase 7 전체 완료 후 시작.**
+
+- [ ] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
+  - `explanation` → `feedback` 필드명 변경
+  - 이미지 업로드 테스트 시나리오 추가
+  - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
+- [ ] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
+- [ ] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
+- [ ] 통합 테스트 전체 통과 확인
+
+---
+
+## Phase 9: 배포
+
+**Phase 8 완료 후 시작.**
+
+- [ ] EC2 인스턴스 생성 (t3.medium, Ubuntu 22.04)
+  - 보안 그룹: 22(SSH), 80(HTTP), 443(HTTPS)
 - [ ] EC2 Elastic IP 연결
-- [ ] 도메인 DNS A 레코드 → Elastic IP 연결
-
----
-
-## Phase 1: 데이터 기반 (Day 1 후반 ~ Day 2 전반)
-
-**인터페이스 고정 단계. 이후 모든 Phase가 여기에 의존.**
-
-### 1-1. 문제 데이터셋 작성
-- [x] `data/problems/math2_differentiation.json` — 미분 문제 6개 작성
-- [x] `data/problems/math2_integration.json` — 적분 문제 4개 작성
-- [x] `data/problems/stats_probability.json` — 확률과 통계 문제 5개 작성
-- [x] `data/test_answers/sample_submissions.json` — 문제당 정답/부분정답/오답 샘플
-- [x] 전체 문제 수동 검수 체크리스트 완료 (docs/dataset.md 기준)
-
-### 1-2. DB 모델 + 마이그레이션
-- [x] `backend/models/` — SQLAlchemy ORM 모델 작성 (docs/schema.md 기준)
-  - `Problem`, `Submission`, `GradingResult`, `TeacherQueue`, `FeedbackLog`
-- [x] Alembic 초기화 + 첫 마이그레이션 파일 생성
-- [ ] 로컬 DB에 마이그레이션 적용 및 검증
-  > AWS/EC2/DB 마이그레이션 실행은 스킵 (코드만 작성)
-- [x] `scripts/seed.py` — `data/problems/` JSON → DB 삽입 스크립트
-
-### 1-3. Pydantic 스키마 + 설정
-- [x] `backend/schemas/` — 모든 요청/응답 스키마 작성 (docs/api.md 기준)
-- [x] `backend/config.py` — 환경변수 로딩 (`GRADING_MODEL`, `TRUST_THRESHOLD` 등)
-- [x] `backend/db.py` — async 세션 + 의존성 주입 설정
-
----
-
-## Phase 2: 핵심 서비스 레이어 (Day 2 후반 ~ Day 3)
-
-**1-2, 1-3 완료 후 시작. grading/explanation/frontend는 병렬 가능.**
-
-### 2-1. 채점 서비스 `[P]`
-- [x] `backend/services/grading.py`
-  - Claude API 채점 프롬프트 구현 (docs/prompts.md 기준)
-  - 프롬프트 캐싱 (`cache_control` 블록) 적용
-  - SBERT 유사도 계산 (reference_solution 비교)
-  - JSON 구조화 출력 파싱 + 유효성 검증
-  - 타임아웃 30초 + 실패 시 재시도 큐 적재
-- [ ] 샘플 10개로 채점 결과 수동 검증
-  > API 키 없이 실행 불가. Phase 4 API 연결 후 통합 검증 예정
-
-### 2-2. 풀이 설명 서비스 `[P]`
-- [x] `backend/services/explanation.py`
-  - 멀티 샘플링 3회 구현 (temperature=0.7)
-  - SBERT 기반 단계별 불일치율 계산
-  - JSON 구조화 출력 파싱
-- [ ] 샘플 5개로 불일치 탐지 수동 검증
-  > API 키 없이 실행 불가. Phase 4 API 연결 후 통합 검증 예정
-
-### 2-3. 프론트엔드 scaffold `[P]`
-- [x] Vite + React + TypeScript 프로젝트 초기화
-  > vite create가 기존 frontend/ 디렉토리로 취소됨 → 파일 직접 작성
-- [x] React Router 설정 (`/student`, `/teacher`)
-- [x] `frontend/src/api/` — API 클라이언트 함수 작성 (docs/api.md 기준)
-- [x] `StudentSubmit.tsx` — 문제 목록 + 답변 입력 폼 UI
-- [x] `TeacherDashboard.tsx` — 검토 큐 목록 UI (mock 데이터)
-
----
-
-## Phase 3: 할루시네이션 탐지 + 신뢰도 게이트 (Day 3)
-
-**2-1, 2-2 완료 후 시작.**
-
-- [x] `backend/main.py` — lifespan 이벤트에서 HHEM + SBERT 1회 로드
-- [x] `backend/services/hallucination.py`
-  - HHEM 로컬 실행 불가 → HF Inference API + SBERT fallback 구조로 전환 (ADR-011)
-  - HF_TOKEN 설정 시 HF API, 미설정 시 SBERT 코사인 유사도 fallback
-- [x] `backend/services/trust_gate.py`
-  - 종합 신뢰도 계산: `0.6 * hhem_score + 0.4 * (1 - inconsistency_rate)`
-  - 큐 라우팅: `high` → `score_only` / `low` → `full_review`
-  - SLA 마감 시각 계산 (High: 12h, Low: 24h)
-- [x] 메모리 사용량 측정: SBERT만 로드 시 ~327MB, t3.medium 여유 3,637MB ✅
-
----
-
-## Phase 4: API 라우터 연결 (Day 4 전반)
-
-**Phase 2, 3 전체 완료 후 시작.**
-
-- [x] `backend/routers/submissions.py`
-  - `POST /api/v1/submissions` — 제출 + 비동기 채점 파이프라인 시작
-  - `GET /api/v1/submissions/{id}` — 폴링 (풀이 설명 노출 정책 적용)
-  - `GET /api/v1/problems`, `GET /api/v1/problems/{id}`
-- [x] `backend/routers/teacher.py`
-  - `GET /api/v1/teacher/queue` — 미처리 큐 목록
-  - `POST /api/v1/teacher/queue/{id}/action` — 승인/수정/거부
-  - `X-Teacher-Password` 헤더 인증 미들웨어
-- [x] `backend/routers/feedback.py`
-  - `GET /api/v1/teacher/feedback/summary` — delta 집계
-- [x] `backend/main.py` — 라우터 등록 + CORS 설정
-
----
-
-## Phase 5: 프론트엔드 완성 (Day 4 후반)
-
-**Phase 4 완료 후 시작 (실제 API 연동).**
-
-- [x] `StudentSubmit.tsx` — mock 데이터 → 실제 API 연동
-  - 제출 후 폴링 (2초 간격, 최대 60회)
-  - `teacher_approved === false` 시 "검토 중" 메시지만 노출
-  - `teacher_approved === true` 시 풀이 설명 노출
-- [x] `TeacherDashboard.tsx` — 실제 API 연동
-  - 신뢰도 배지 (TrustBadge) — High=초록, Low=빨강
-  - 승인/수정/거부 폼 (3가지 액션만, 묵시적 승인 UI 없음)
-  - SLA 마감까지 남은 시간 표시
-  - localStorage 비밀번호 저장
-- [x] `ReviewCard.tsx` — 수정 액션 시 점수/풀이 편집 폼
-- [x] React 빌드 산출물 (`dist/`) 생성 확인
-
----
-
-## Phase 6: 통합 테스트 (Day 5)
-
-**Phase 4, 5 완료 후 시작.**
-
-- [x] 정상 흐름 E2E — 정답 제출 → 채점 → 교사 승인 → 학생 풀이 수령
-  > tests/test_integration.py::test_e2e_normal_flow 작성 완료. macOS 로컬 네트워크 권한 문제로 실행 블록 (Ollama Python 연결 차단)
-- [x] Low 신뢰도 케이스 — 오답 주입 → 전체 큐 라우팅 → 교사 수정 → 전달
-  > tests/test_integration.py::test_e2e_low_trust 작성 완료 (soft assert 적용). 동일 환경 문제
-- [x] 풀이 설명 차단 확인 — 승인 전 `/submissions/{id}` 응답에 설명 없음
-  > test_explanation_blocked_before_approval ✅ PASS
-- [ ] 할루시네이션 의도 주입 — 잘못된 수식 포함 답변 → Low 신뢰도 탐지 확인
-- [ ] Claude API 타임아웃 시뮬레이션 → 재시도 큐 동작 확인
-- [ ] SLA 초과 케이스 — deadline 임박 항목 우선 노출 확인
-- [x] 교사 비밀번호 오류 → 401 반환 확인
-  > test_teacher_auth_missing + test_teacher_auth_wrong ✅ PASS
-- [x] HHEM 메모리 사용량 모니터링 (정상 범위 확인)
-  > test_health ✅ PASS — sbert/hhem 모두 true, SBERT fallback 모드 정상 동작
-
----
-
-## Phase 7: 배포 (Day 6)
-
-**Phase 6 완료 후 시작.**
-
-- [ ] EC2에 의존성 설치 (Python, Node, PostgreSQL, Nginx)
+- [ ] EC2에 의존성 설치 (Python 3.11, Node, PostgreSQL, Nginx)
 - [ ] EC2 PostgreSQL DB 생성 + 마이그레이션 적용
-- [ ] `.env` 프로덕션 설정 (API 키, DB URL, 교사 비밀번호)
-- [ ] `scripts/seed.py` 실행 — 문제 데이터 EC2 DB 삽입
+- [ ] `.env` 프로덕션 설정 (ANTHROPIC_API_KEY, DB URL, TEACHER_PASSWORD)
+- [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 EC2 DB 삽입
 - [ ] `systemd` 서비스 파일 작성 + 등록 (`argus-backend.service`)
-  - 서버 재시작 시 FastAPI 자동 복구
 - [ ] React 빌드 산출물 → EC2 `/var/www/argus/` 복사
-- [ ] Nginx 설정
-  - `/api/*` → FastAPI (포트 8000)
-  - `/*` → React 정적 파일
+- [ ] Nginx 설정 (`/api/*` → FastAPI, `/*` → React 정적)
+- [ ] 도메인 DNS A 레코드 → Elastic IP 연결
 - [ ] Let's Encrypt HTTPS 인증서 발급 (`certbot`)
-- [ ] HTTPS 최종 접속 확인 (브라우저)
-- [ ] systemd 재시작 → 서비스 자동 복구 확인
+- [ ] HTTPS 최종 접속 확인
 
 ---
 
-## Phase 8: 파일럿 (Day 7)
+## Phase 10: 파일럿
 
-**Phase 7 완료 후 시작.**
+**Phase 9 완료 후 시작.**
 
 - [ ] 교사 파일럿 사용자 초대 + 사용 매뉴얼 전달
 - [ ] 학생 역할로 전체 문제 제출 시나리오 실행
 - [ ] 교사 역할로 검토 큐 전체 처리 시나리오 실행
 - [ ] `/api/v1/teacher/feedback/summary` — AI-교사 일치율 확인 (목표 ≥ 70%)
-- [ ] 할루시네이션 탐지 정밀도 확인 (목표 ≥ 80%)
+- [ ] 피드백 오류 탐지 정밀도 확인 (목표 ≥ 80%)
 - [ ] 교사 피드백 수집 (검토 소요 시간, UI 불편 사항)
 - [ ] 오류 로그 확인 + 핫픽스
 
 ---
 
-## 병렬 실행 요약
+## 향후 로드맵 (파일럿 이후)
 
-```
-Phase 0 → Phase 1 (순차)
-               ↓
-Phase 1 완료 후:
-  ┌── Phase 2-1 (grading)      ┐
-  ├── Phase 2-2 (explanation)  ┤ 병렬 가능
-  └── Phase 2-3 (frontend)     ┘
-               ↓
-Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 (순차)
-```
+- [ ] Canvas 직접 그리기 입력 (패드/핸드폰 손글씨)
+- [ ] 학생 QA 기능 (RAG 기반)
+- [ ] 프롬프트 최적화 (누적 feedback_log 활용)
+- [ ] JWT 인증 시스템 (다수 교사 온보딩)
+- [ ] 모바일 UI 대응
