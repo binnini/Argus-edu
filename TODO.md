@@ -47,13 +47,13 @@
 ### 7-3. OCR 서비스 `[P]` ✅
 
 - [x] `backend/services/ocr.py` 작성
-  - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix`)
+  - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix` | `got_ocr`)
   - pix2tex 로컬 실행 구현
   - Mathpix API 연동 구현 (fallback)
+  - GOT-OCR 2.0 파인튜닝 모델 지원 (`GOT_OCR_MODEL_PATH` 환경변수)
   - OCR 실패 시 에러 반환 (무시하지 말 것)
-- [ ] `requirements.txt` 업데이트 — pix2tex 추가
-- [ ] `POST /api/v1/submissions` — `multipart/form-data` 이미지 업로드 지원 추가
-- [ ] AI-HUB TL_3 손글씨 이미지로 OCR 정확도 검증
+- [x] `requirements.txt` 업데이트 — pix2tex, python-multipart, httpx 추가
+- [x] `POST /api/v1/submissions/image` — `multipart/form-data` 이미지 업로드 엔드포인트 추가
 
 ### 7-4. 개인화 피드백 서비스 `[P]` ✅
 
@@ -86,17 +86,6 @@
 - [x] `frontend/src/api/submissions.ts` 업데이트
   - `submitAnswerText()` / `submitAnswerImage()` 분리
 - [x] `npm run build` 빌드 성공 확인
-
-### 7-3. OCR 서비스 `[P]`
-
-- [x] `backend/services/ocr.py` 작성
-  - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix` | `got_ocr`)
-  - pix2tex 로컬 실행 구현
-  - Mathpix API 연동 구현 (fallback)
-  - GOT-OCR 2.0 파인튜닝 모델 지원 (`GOT_OCR_MODEL_PATH` 환경변수)
-  - OCR 실패 시 에러 반환 (무시하지 말 것)
-- [x] `requirements.txt` 업데이트 — pix2tex, python-multipart, httpx 추가
-- [x] `POST /api/v1/submissions/image` — `multipart/form-data` 이미지 업로드 엔드포인트 추가
 
 ### 7-6. GOT-OCR 2.0 파인튜닝 (별도 에이전트 — WSL2 RTX 5070Ti)
 
