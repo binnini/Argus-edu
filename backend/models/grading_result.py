@@ -11,7 +11,7 @@ class GradingResult(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     submission_id = Column(Integer, ForeignKey("submissions.id"), unique=True, nullable=False)
     ai_score = Column(SmallInteger, nullable=False)
-    ai_explanation = Column(Text, nullable=False)
+    ai_feedback = Column(Text, nullable=False)
     sbert_similarity = Column(Float, nullable=False)
     hhem_score = Column(Float, nullable=False)
     inconsistency_rate = Column(Float, nullable=False)

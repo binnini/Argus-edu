@@ -14,7 +14,7 @@ class TeacherQueue(Base):
     sla_deadline = Column(DateTime(timezone=True), nullable=False)
     action = Column(String(10), nullable=True)  # NULL | 'approve' | 'modify' | 'reject'
     teacher_score = Column(SmallInteger, nullable=True)
-    teacher_explanation = Column(Text, nullable=True)
+    teacher_feedback = Column(Text, nullable=True)
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
     queued_at = Column(DateTime(timezone=True), server_default=func.now())
 

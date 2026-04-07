@@ -9,7 +9,7 @@ class TeacherQueueItem(BaseModel):
     problem_title: str
     student_answer: str
     ai_score: int
-    ai_explanation: str
+    ai_feedback: str
     trust_score: float
     trust_level: str
     queue_type: str
@@ -25,13 +25,13 @@ class TeacherQueueResponse(BaseModel):
 class TeacherActionRequest(BaseModel):
     action: Literal["approve", "modify", "reject"]
     teacher_score: Optional[int] = None
-    teacher_explanation: Optional[str] = None
+    teacher_feedback: Optional[str] = None
 
     @model_validator(mode="after")
     def validate_modify_fields(self) -> "TeacherActionRequest":
         if self.action == "modify":
-            if self.teacher_score is None or self.teacher_explanation is None:
-                raise ValueError("modify 액션에는 teacher_score와 teacher_explanation이 필요합니다")
+            if self.teacher_score is None or self.teacher_feedback is None:
+                raise ValueError("modify 액션에는 teacher_score와 teacher_feedback이 필요합니다")
         return self
 
 

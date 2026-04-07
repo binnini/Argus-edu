@@ -263,7 +263,7 @@ def test_teacher_modify():
         json={
             "action": "modify",
             "teacher_score": 2,
-            "teacher_explanation": "풀이 방향은 맞으나 f(2) 계산이 틀렸습니다. f(2) = 4 - 8 + c 형태로 재계산 필요.",
+            "teacher_feedback": "풀이 방향은 맞으나 f(2) 계산이 틀렸습니다. f(2) = 4 - 8 + c 형태로 재계산 필요.",
         },
         headers=TEACHER_HEADERS,
     )

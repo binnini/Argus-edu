@@ -154,7 +154,7 @@ async def _run_grading_pipeline(submission_id: int, app_state) -> None:
             grading_record = GradingResult(
                 submission_id=submission_id,
                 ai_score=grading_out.total_score,
-                ai_explanation=explanation_text,
+                ai_feedback=explanation_text,
                 sbert_similarity=grading_out.sbert_similarity,
                 hhem_score=hhem_result.score,
                 inconsistency_rate=explanation_out.inconsistency_rate,
@@ -245,8 +245,8 @@ async def get_submission_status(
         ai_score=gr.ai_score,
         teacher_action=teacher_action,
         teacher_score=tq.teacher_score if tq else None,
-        teacher_explanation=tq.teacher_explanation if tq else None,
-        ai_explanation=gr.ai_explanation,
+        teacher_feedback=tq.teacher_feedback if tq else None,
+        ai_feedback=gr.ai_feedback,
     )
 
     # 상태 메시지

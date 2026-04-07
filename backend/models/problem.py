@@ -17,6 +17,7 @@ class Problem(Base):
     rubric = Column(JSONB, nullable=False)
     domain = Column(String(50), default="수학2")
     difficulty = Column(SmallInteger)
+    source = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     submissions = relationship("Submission", back_populates="problem")

@@ -65,7 +65,7 @@ async def get_queue(
                 problem_title=sub.problem.title,
                 student_answer=sub.student_answer,
                 ai_score=gr.ai_score,
-                ai_explanation=gr.ai_explanation,
+                ai_feedback=gr.ai_feedback,
                 trust_score=gr.trust_score,
                 trust_level=gr.trust_level,
                 queue_type=tq.queue_type,
@@ -106,7 +106,7 @@ async def submit_action(
 
     if body.action == "modify":
         tq.teacher_score = body.teacher_score
-        tq.teacher_explanation = body.teacher_explanation
+        tq.teacher_feedback = body.teacher_feedback
 
     # submission 상태 업데이트
     sub = tq.submission

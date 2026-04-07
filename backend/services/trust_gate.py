@@ -81,8 +81,8 @@ def get_submission_response(
     ai_score: int,
     teacher_action: str | None,
     teacher_score: int | None,
-    teacher_explanation: str | None,
-    ai_explanation: str | None,
+    teacher_feedback: str | None,
+    ai_feedback: str | None,
 ) -> dict:
     """
     /submissions/{id} 응답 생성.
@@ -93,11 +93,11 @@ def get_submission_response(
     # 최종 점수 결정
     if teacher_action == "approve":
         final_score = ai_score
-        final_explanation = ai_explanation
+        final_explanation = ai_feedback
         score_visible = True
     elif teacher_action == "modify":
         final_score = teacher_score if teacher_score is not None else ai_score
-        final_explanation = teacher_explanation
+        final_explanation = teacher_feedback
         score_visible = True
     elif teacher_action == "reject":
         final_score = None

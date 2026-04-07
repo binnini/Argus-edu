@@ -26,23 +26,23 @@
 ### 7-1. AI-HUB 데이터 변환
 
 - [x] AI-HUB 데이터 다운로드 확인 (고등학교_공통수학 TL_1/2/3)
-- [ ] `scripts/convert_aihub.py` 작성
+- [x] `scripts/convert_aihub.py` 작성
   - TL_1(문제) + TL_2(모범답안) 병합 → Argus problems 스키마
   - `question_type1 == "서술"` 필터링
   - `answer_text` → `reference_solution` 단계 구조화 (LLM 보조)
   - rubric 자동 생성 (단계 수 기반)
-- [ ] `scripts/seed.py` 업데이트 — AI-HUB 변환 데이터 삽입
-- [ ] 기존 자체 생성 데이터 15개 DB에서 제거
-- [ ] `data/ocr_samples/` 구성 — TL_3 손글씨 이미지 + labels.json
+- [x] `scripts/seed.py` 업데이트 — AI-HUB 변환 데이터 삽입
+- [x] 기존 자체 생성 데이터 15개 DB에서 제거
+- [x] `data/ocr_samples/` 구성 — TL_3 손글씨 이미지 + labels.json
 
 ### 7-2. DB 마이그레이션
 
-- [ ] `backend/alembic/versions/0002_redesign.py` 작성
+- [x] `backend/alembic/versions/0002_redesign.py` 작성
   - `submissions` 테이블: `input_type`, `ocr_raw_text`, `image_path` 컬럼 추가
   - `grading_results` 테이블: `ai_explanation` → `ai_feedback` 컬럼 rename
   - `teacher_queue` 테이블: `teacher_explanation` → `teacher_feedback` 컬럼 rename
   - `problems` 테이블: `source` 컬럼 추가
-- [ ] 로컬 DB에 마이그레이션 적용 (`alembic upgrade head`)
+- [x] 로컬 DB에 마이그레이션 적용 (`alembic upgrade head`)
 
 ### 7-3. OCR 서비스 `[P]`
 

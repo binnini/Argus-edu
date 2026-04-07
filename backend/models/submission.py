@@ -11,6 +11,9 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     problem_id = Column(Integer, ForeignKey("problems.id"), nullable=False)
     student_answer = Column(Text, nullable=False)
+    input_type = Column(String(10), default="text", nullable=False)
+    ocr_raw_text = Column(Text, nullable=True)
+    image_path = Column(String(500), nullable=True)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String(20), default="pending")  # pending | graded | approved | rejected
 
