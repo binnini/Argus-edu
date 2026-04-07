@@ -9,15 +9,24 @@
 
 ### POST /api/v1/submissions
 
-학생 답변을 제출하고 채점 파이프라인을 시작한다.
+학생 답변을 제출하고 채점 파이프라인을 시작한다.  
+텍스트 직접 입력과 이미지 업로드 두 가지 방식을 지원한다.
 
-**Request**
+**Request (텍스트 입력) — application/json**
 ```json
 {
   "problem_id": 3,
   "student_answer": "f'(x) = 3x² - 6x이고, f'(x) = 0에서 x = 0 또는 x = 2. f(2) = 1이므로 최솟값은 1"
 }
 ```
+
+**Request (이미지 업로드) — multipart/form-data**
+```
+problem_id: 3
+image: <binary image file>   # 손글씨 사진 또는 스캔 이미지
+```
+
+이미지 업로드 시 백엔드가 OCR을 수행하여 `student_answer`를 추출한다.
 
 **Response 202** — 채점 비동기 시작
 ```json
@@ -32,7 +41,7 @@
 
 ### GET /api/v1/submissions/{submission_id}
 
-채점 결과 폴링. 풀이 설명은 교사 승인 후에만 포함된다.
+채점 결과 폴링. 개인화 피드백은 교사 승인 후에만 포함된다.
 
 **Response 200 — 채점 완료, 교사 검토 대기 중**
 ```json
@@ -41,9 +50,9 @@
   "status": "graded",
   "score": 3,
   "score_visible": true,
-  "explanation": null,
+  "feedback": null,
   "teacher_approved": false,
-  "message": "교사 검토 중입니다. 풀이 설명은 검토 완료 후 확인할 수 있습니다."
+  "message": "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."
 }
 ```
 
@@ -54,7 +63,17 @@
   "status": "approved",
   "score": 3,
   "score_visible": true,
-  "explanation": "**1단계**: f(x) = x³ - 3x² + 1을 미분하면...",
+  "feedback": {
+    "student_mistakes": [
+      { "step": 2, "description": "f(2) = 8 - 12 + 1 = -3인데 f(2) = 1로 계산하여 오류" }
+    ],
+    "correct_approach": [
+      { "step": 1, "title": "도함수 계산", "content": "f'(x) = 3x² - 6x = 3x(x-2)" },
+      { "step": 2, "title": "임계점 대입", "content": "f(0)=1, f(2)=-3, f(3)=1" },
+      { "step": 3, "title": "최솟값 결정", "content": "가장 작은 f(2)=-3이 최솟값" }
+    ],
+    "key_concept": "닫힌 구간에서 최솟값은 임계점과 양 끝점 모두 비교해야 합니다."
+  },
   "teacher_approved": true,
   "message": null
 }
@@ -67,7 +86,7 @@
   "status": "graded",
   "score": null,
   "score_visible": false,
-  "explanation": null,
+  "feedback": null,
   "teacher_approved": false,
   "message": "채점 결과를 검토 중입니다."
 }
@@ -99,7 +118,8 @@
 
 ### GET /api/v1/problems/{problem_id}
 
-개별 문제 상세. `answer`와 `reference_solution`은 응답에 포함하지 않음 (학생에게 노출 금지).
+개별 문제 상세.  
+`answer`와 `reference_solution`은 응답에 포함하지 않음 (학생에게 노출 금지).
 
 ---
 
@@ -107,7 +127,7 @@
 
 ### GET /api/v1/teacher/queue
 
-검토 대기 중인 큐 목록. `action IS NULL` 항목만 반환.
+검토 대기 중인 큐 목록. `action IS NULL` 항목만 반환. SLA 마감 오름차순 정렬.
 
 **Response 200**
 ```json
@@ -118,8 +138,15 @@
       "submission_id": 42,
       "problem_title": "수2_미분_001",
       "student_answer": "f'(x) = 3x² - 6x이고...",
-      "ai_score": 3,
-      "ai_explanation": "**1단계**: ...",
+      "input_type": "text",
+      "ai_score": 2,
+      "ai_feedback": {
+        "student_mistakes": [
+          { "step": 2, "description": "f(2) 계산 오류" }
+        ],
+        "correct_approach": [...],
+        "key_concept": "..."
+      },
       "trust_score": 0.61,
       "trust_level": "low",
       "queue_type": "full_review",
@@ -149,7 +176,7 @@
 {
   "action": "modify",
   "teacher_score": 2,
-  "teacher_explanation": "2단계 계산 오류로 1점 감점. 올바른 풀이는..."
+  "teacher_feedback": "2단계에서 f(2)를 잘못 계산했습니다. f(2) = 8 - 12 + 1 = -3이 맞습니다. 닫힌 구간 최솟값은 임계점과 양 끝점을 모두 비교해야 합니다."
 }
 ```
 
