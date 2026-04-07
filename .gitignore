@@ -28,3 +28,9 @@ frontend/dist/
 # DB
 *.db
 *.sqlite3
+
+# data (생성 파일 — convert_aihub.py로 재생성)
+data/AI_HUB/
+data/problems/*.json
+data/ocr_samples/labels.json
+data/ocr_samples/images/

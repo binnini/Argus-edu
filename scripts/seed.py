@@ -42,7 +42,7 @@ def build_problem(data: dict) -> Problem:
     return Problem(
         title=str(data["title"]),
         content=data["content"],
-        answer=str(data["answer"])[:500],  # answer 컬럼 길이 대비 안전 처리
+        answer=str(data["answer"]),
         reference_solution=ref_sol,
         rubric=data["rubric"],
         domain=data.get("domain", "고등학교_공통수학"),

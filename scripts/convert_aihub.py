@@ -5,8 +5,8 @@ convert_aihub.py — AI-HUB 수학 데이터를 Argus problems 스키마로 변�
     python scripts/convert_aihub.py
 
 출력:
-    data/problems/aihub_고등학교_공통수학.json
-    data/ocr_samples/labels.json
+    data/problems/aihub_전과정_수학.json  — Argus 채점 문제 DB (초·중·고 전체)
+    data/ocr_samples/labels.json         — OCR 파인튜닝 데이터 (초·중·고 전체)
 """
 
 import json
@@ -18,14 +18,60 @@ BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data"
 LABEL_DIR = DATA_DIR / "AI_HUB" / "3.개방데이터" / "1.데이터" / "Training" / "02.라벨링데이터"
 
-TL1_ZIP = LABEL_DIR / "TL_1.문제_고등학교_공통수학.zip"
-TL2_ZIP = LABEL_DIR / "TL_2.모범답안_고등학교_공통수학.zip"
-TL3_ZIP = LABEL_DIR / "TL_3.손글씨풀이_고등학교_공통수학.zip"
-
-OUTPUT_FILE = DATA_DIR / "problems" / "aihub_고등학교_공통수학.json"
+OUTPUT_FILE = DATA_DIR / "problems" / "aihub_전과정_수학.json"
 OCR_LABELS_FILE = DATA_DIR / "ocr_samples" / "labels.json"
 
-SOURCE = "AI-HUB_고등학교_공통수학"
+# 초·중·고 전체 학년 TL_1/TL_2/TL_3 세트
+GRADE_SETS = [
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_초등학교_3학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_초등학교_3학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_초등학교_3학년.zip",
+        "source": "AI-HUB_초등학교_3학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_초등학교_4학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_초등학교_4학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_초등학교_4학년.zip",
+        "source": "AI-HUB_초등학교_4학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_초등학교_5학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_초등학교_5학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_초등학교_5학년.zip",
+        "source": "AI-HUB_초등학교_5학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_초등학교_6학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_초등학교_6학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_초등학교_6학년.zip",
+        "source": "AI-HUB_초등학교_6학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_중학교_1학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_중학교_1학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_중학교_1학년.zip",
+        "source": "AI-HUB_중학교_1학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_중학교_2학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_중학교_2학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_중학교_2학년.zip",
+        "source": "AI-HUB_중학교_2학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_중학교_3학년.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_중학교_3학년.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_중학교_3학년.zip",
+        "source": "AI-HUB_중학교_3학년",
+    },
+    {
+        "tl1": LABEL_DIR / "TL_1.문제_고등학교_공통수학.zip",
+        "tl2": LABEL_DIR / "TL_2.모범답안_고등학교_공통수학.zip",
+        "tl3": LABEL_DIR / "TL_3.손글씨풀이_고등학교_공통수학.zip",
+        "source": "AI-HUB_고등학교_공통수학",
+    },
+]
 
 
 def extract_answer(answer_bbox: list, answer_text: str) -> str | None:
@@ -80,17 +126,22 @@ def load_tl2_index(zf2: zipfile.ZipFile) -> dict[str, str]:
     return index
 
 
-def convert() -> None:
-    print(f"[INFO] TL_1 로드 중: {TL1_ZIP.name}")
-    print(f"[INFO] TL_2 로드 중: {TL2_ZIP.name}")
+def convert_grade(tl1_zip: Path, tl2_zip: Path, source: str) -> tuple[list, int, dict]:
+    """단일 학년 TL_1+TL_2 zip에서 problems 목록 변환."""
+    if not tl1_zip.exists():
+        print(f"[WARN] TL_1 없음 (스킵): {tl1_zip.name}")
+        return [], 0, {}
+    if not tl2_zip.exists():
+        print(f"[WARN] TL_2 없음 (스킵): {tl2_zip.name}")
+        return [], 0, {}
 
-    zf1 = zipfile.ZipFile(TL1_ZIP)
-    zf2 = zipfile.ZipFile(TL2_ZIP)
+    print(f"[INFO] 변환 중: {tl1_zip.name}")
+    zf1 = zipfile.ZipFile(tl1_zip)
+    zf2 = zipfile.ZipFile(tl2_zip)
 
     t1_names = [n for n in zf1.namelist() if n.endswith(".json")]
     tl2_index = load_tl2_index(zf2)
-
-    print(f"[INFO] TL_1 문제 수: {len(t1_names)}")
+    print(f"  TL_1 파일 수: {len(t1_names)}")
 
     problems = []
     skipped = 0
@@ -100,7 +151,7 @@ def convert() -> None:
         try:
             t1_data = json.loads(zf1.read(t1_path).decode("utf-8-sig"))
         except Exception as e:
-            print(f"[WARN] TL_1 읽기 실패: {t1_path} — {e}")
+            print(f"  [WARN] TL_1 읽기 실패: {t1_path} — {e}")
             skipped += 1
             skip_reasons["read_error"] = skip_reasons.get("read_error", 0) + 1
             continue
@@ -121,11 +172,10 @@ def convert() -> None:
             continue
 
         # TL_2 매핑
-        t1_filename = Path(t1_path).stem  # e.g. H_1_01_25766_84187
+        t1_filename = Path(t1_path).stem
         t2_filename = t1_filename + "_A.json"
         t2_path = tl2_index.get(t2_filename)
         if not t2_path:
-            print(f"[WARN] TL_2 없음: {t2_filename}")
             skipped += 1
             skip_reasons["no_tl2"] = skip_reasons.get("no_tl2", 0) + 1
             continue
@@ -133,7 +183,7 @@ def convert() -> None:
         try:
             t2_data = json.loads(zf2.read(t2_path).decode("utf-8-sig"))
         except Exception as e:
-            print(f"[WARN] TL_2 읽기 실패: {t2_path} — {e}")
+            print(f"  [WARN] TL_2 읽기 실패: {t2_path} — {e}")
             skipped += 1
             skip_reasons["tl2_read_error"] = skip_reasons.get("tl2_read_error", 0) + 1
             continue
@@ -146,7 +196,6 @@ def convert() -> None:
 
         answer = extract_answer(answer_bbox, answer_text)
         if not answer:
-            print(f"[WARN] answer 추출 실패, 스킵: {pid}")
             skipped += 1
             skip_reasons["no_answer"] = skip_reasons.get("no_answer", 0) + 1
             continue
@@ -162,7 +211,7 @@ def convert() -> None:
         except (TypeError, ValueError):
             difficulty = 3
 
-        domain = q_info.get("question_topic_name") or "고등학교_공통수학"
+        domain = q_info.get("question_topic_name") or source.replace("AI-HUB_", "")
 
         problems.append(
             {
@@ -174,82 +223,100 @@ def convert() -> None:
                 "rubric": rubric,
                 "domain": domain,
                 "difficulty": difficulty,
-                "source": SOURCE,
+                "source": source,
             }
         )
 
     zf1.close()
     zf2.close()
+    print(f"  → {len(problems)}개 변환, {skipped}개 스킵 {skip_reasons}")
+    return problems, skipped, skip_reasons
 
-    print(f"\n[INFO] 변환 완료: {len(problems)}개 문제")
-    print(f"[INFO] 스킵: {skipped}개 — {skip_reasons}")
 
-    # 출력 저장
+def convert() -> None:
+    all_problems = []
+    total_skipped = 0
+
+    for grade in GRADE_SETS:
+        problems, skipped, _ = convert_grade(grade["tl1"], grade["tl2"], grade["source"])
+        all_problems.extend(problems)
+        total_skipped += skipped
+
+    print(f"\n[INFO] 전체 변환 완료: {len(all_problems)}개 문제 (스킵 {total_skipped}개)")
+
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(problems, f, ensure_ascii=False, indent=2)
+        json.dump(all_problems, f, ensure_ascii=False, indent=2)
     print(f"[INFO] 저장: {OUTPUT_FILE}")
 
-    # 샘플 1개 출력
-    if problems:
+    if all_problems:
         print("\n[SAMPLE] 첫 번째 문제:")
-        print(json.dumps(problems[0], ensure_ascii=False, indent=2))
+        print(json.dumps(all_problems[0], ensure_ascii=False, indent=2))
 
-    # TL_3 → OCR labels.json
-    convert_ocr_labels(problems)
+    # TL_3 → OCR labels.json (전 학년)
+    convert_ocr_labels()
 
 
-def convert_ocr_labels(problems: list) -> None:
-    """TL_3 손글씨 풀이로 ocr_samples/labels.json 생성."""
-    print(f"\n[INFO] TL_3 로드 중: {TL3_ZIP.name}")
-    zf3 = zipfile.ZipFile(TL3_ZIP)
+def convert_ocr_labels() -> None:
+    """전 학년 TL_3 손글씨 풀이로 ocr_samples/labels.json 생성.
 
-    # problem id → DB 삽입 후 id를 모르므로 title(=pid) 기준으로 매핑
-    pid_set = {p["id"] for p in problems}
-
+    OCR 파인튜닝용 데이터이므로 problem_id 필터링 없이 전체 수집.
+    문제 난이도와 무관하게 손글씨 이미지 + ground truth 텍스트만 필요.
+    """
     labels = []
-    skipped = 0
+    total_skipped = 0
 
-    for t3_path in zf3.namelist():
-        if not t3_path.endswith(".json"):
+    for grade in GRADE_SETS:
+        tl3_zip = grade["tl3"]
+        source = grade["source"]
+        if not tl3_zip.exists():
+            print(f"[WARN] TL_3 없음 (스킵): {tl3_zip.name}")
             continue
 
-        try:
-            t3_data = json.loads(zf3.read(t3_path).decode("utf-8-sig"))
-        except Exception as e:
-            print(f"[WARN] TL_3 읽기 실패: {t3_path} — {e}")
-            skipped += 1
-            continue
+        print(f"[INFO] TL_3 로드 중: {tl3_zip.name}")
+        zf3 = zipfile.ZipFile(tl3_zip)
+        skipped = 0
+        count_before = len(labels)
 
-        pid = t3_data.get("id", "")
-        if pid not in pid_set:
-            skipped += 1
-            continue
+        for t3_path in zf3.namelist():
+            if not t3_path.endswith(".json"):
+                continue
 
-        e_info = t3_data.get("explanation_info", [{}])[0]
-        filename = e_info.get("explanation_filename") or ""
-        text = (e_info.get("explanation_text") or "").strip()
-        correct = e_info.get("explanation_correct", 0)
+            try:
+                t3_data = json.loads(zf3.read(t3_path).decode("utf-8-sig"))
+            except Exception as e:
+                print(f"[WARN] TL_3 읽기 실패: {t3_path} — {e}")
+                skipped += 1
+                continue
 
-        if not filename or not text:
-            skipped += 1
-            continue
+            e_info = t3_data.get("explanation_info", [{}])[0]
+            filename = e_info.get("explanation_filename") or ""
+            text = (e_info.get("explanation_text") or "").strip()
+            correct = e_info.get("explanation_correct", 0)
 
-        labels.append(
-            {
-                "image": f"images/{filename}",
-                "problem_id": pid,  # DB 삽입 후 실제 int id로 교체 필요
-                "ground_truth_text": text,
-                "expected_result": "correct" if correct == 1 else "wrong",
-            }
-        )
+            if not filename or not text:
+                skipped += 1
+                continue
 
-    zf3.close()
+            labels.append(
+                {
+                    "image": f"images/{filename}",
+                    "ground_truth_text": text,
+                    "expected_result": "correct" if correct == 1 else "wrong",
+                    "source": source,
+                }
+            )
+
+        zf3.close()
+        added = len(labels) - count_before
+        total_skipped += skipped
+        print(f"  → {added}개 추가 (스킵 {skipped}개)")
 
     OCR_LABELS_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(OCR_LABELS_FILE, "w", encoding="utf-8") as f:
         json.dump(labels, f, ensure_ascii=False, indent=2)
-    print(f"[INFO] OCR labels 저장: {OCR_LABELS_FILE} ({len(labels)}개, 스킵 {skipped}개)")
+    print(f"\n[INFO] OCR labels 저장: {OCR_LABELS_FILE}")
+    print(f"[INFO] 전체 {len(labels)}개 (전체 스킵 {total_skipped}개)")
 
 
 if __name__ == "__main__":
