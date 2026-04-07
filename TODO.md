@@ -89,23 +89,24 @@
 
 ### 7-6. GOT-OCR 2.0 파인튜닝 (별도 에이전트 — WSL2 RTX 5070Ti)
 
-- [ ] Mac → WSL2 데이터 전송 (TS_3 zip 8개 + labels.json)
-  ```bash
-  rsync -avz "data/AI_HUB/.../01.원천데이터/" yebin@192.168.219.101:~/argus_ocr/data/raw_zips/source/
-  rsync -avz data/ocr_samples/labels.json yebin@192.168.219.101:~/argus_ocr/data/
+> WSL2에 AI-HUB 데이터 및 labels.json 이미 존재 (`~/workSpace/Argus` 동일 경로).  
+> 에이전트 프롬프트: `docs/ocr_agent_prompt.md`
+
+- [x] 데이터 준비 완료 (WSL2에 이미 존재)
+  - TS_3 zip 8개: `data/AI_HUB/.../01.원천데이터/TS_3.손글씨풀이_*.zip`
+  - 라벨: `data/ocr_samples/labels.json` (160,015개)
+- [ ] 에이전트 실행 — WSL2 Claude Code 세션에서 `docs/ocr_agent_prompt.md` 내용으로 시작
+  - Step 0: 환경 확인 + `ocr_training/requirements.txt` 설치
+  - Step 1: `ocr_training/scripts/extract_images.py` — TS_3 zip → `data/ocr_samples/images/`
+  - Step 2: `ocr_training/scripts/prepare_dataset.py` — labels.json → `data/ocr_samples/dataset/train.jsonl` / `test.jsonl`
+  - Step 3: `ocr_training/scripts/train.py` — QLoRA 파인튜닝 (3 epoch, ~7~8시간)
+  - Step 4: `ocr_training/scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
+  - Step 5: `ocr_training/scripts/merge_lora.py` — LoRA merge → `ocr_training/output/got_ocr_merged/`
+- [ ] `.env` 전환
+  ```env
+  OCR_MODEL=got_ocr
+  GOT_OCR_MODEL_PATH=/home/yebin/workSpace/Argus/ocr_training/output/got_ocr_merged
   ```
-- [ ] 에이전트 실행 (`docs/ocr_agent_prompt.md` 참조)
-  - `scripts/extract_images.py` — TS_3 zip → 이미지 추출
-  - `scripts/prepare_dataset.py` — labels.json → GOT-OCR 포맷 (train/test.jsonl)
-  - `scripts/train.py` — QLoRA 파인튜닝 (3 epoch, ~7~8시간)
-  - `scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
-  - `scripts/merge_lora.py` — LoRA 어댑터 merge → 단일 모델 파일
-- [ ] 완료된 모델 Mac으로 전송
-  ```bash
-  rsync -avz ~/argus_ocr/output/got_ocr_merged/ \
-    "yebin@{mac_ip}:/Users/yebin/workSpace/Argus/models/got_ocr_merged/"
-  ```
-- [ ] `.env` 전환: `OCR_MODEL=got_ocr`, `GOT_OCR_MODEL_PATH=models/got_ocr_merged`
 - [ ] OCR E2E 검증 — AI-HUB 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 
 ---
