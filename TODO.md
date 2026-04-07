@@ -92,16 +92,34 @@
 > WSL2에 AI-HUB 데이터 및 labels.json 이미 존재 (`~/workSpace/Argus` 동일 경로).  
 > 에이전트 프롬프트: `docs/ocr_agent_prompt.md`
 
-- [x] 데이터 준비 완료 (WSL2에 이미 존재)
-  - TS_3 zip 8개: `data/AI_HUB/.../01.원천데이터/TS_3.손글씨풀이_*.zip`
-  - 라벨: `data/ocr_samples/labels.json` (160,015개)
-- [ ] 에이전트 실행 — WSL2 Claude Code 세션에서 `docs/ocr_agent_prompt.md` 내용으로 시작
-  - Step 0: 환경 확인 + `ocr_training/requirements.txt` 설치
-  - Step 1: `ocr_training/scripts/extract_images.py` — TS_3 zip → `data/ocr_samples/images/`
-  - Step 2: `ocr_training/scripts/prepare_dataset.py` — labels.json → `data/ocr_samples/dataset/train.jsonl` / `test.jsonl`
-  - Step 3: `ocr_training/scripts/train.py` — QLoRA 파인튜닝 (3 epoch, ~7~8시간)
-  - Step 4: `ocr_training/scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
-  - Step 5: `ocr_training/scripts/merge_lora.py` — LoRA merge → `ocr_training/output/got_ocr_merged/`
+**데이터 구성 (총 ~279k 이미지)**
+- [x] TS_3 zip 8개 + labels.json 160,015개 (기존)
+- [x] 038 손글씨 zip 9개 (손초4~6, 손중1~3, 손고1~3) — 119,233개 추가 활용 결정
+
+**전처리 추가 작업 (038 데이터)**
+- [ ] `prepare_dataset.py`에 038 파서 추가
+  - 이미지당 JSON 1개 (`segments[]`) 구조 파싱
+  - `type == '수식/텍스트'` segment만 필터링 (낙서기호·도형 제외)
+  - `\displaystyle` 정규화 제거 (TS_3 라벨과 스타일 통일)
+  - multi-segment 이미지: 각 segment의 `equation`을 줄바꿈으로 이어붙이기
+
+**속도 최적화 (PyTorch SDPA)**
+- [x] flash-attn → CUDA 13 미지원으로 포기, PyTorch 내장 SDPA로 대체
+  - `attn_implementation="sdpa"` (별도 설치 불필요, 메모리 절감 효과 유사)
+- [x] `per_device_train_batch_size` 4 → 8
+- [x] `gradient_accumulation_steps` 4 → 2 (effective batch 16 유지)
+- [x] `dataloader_num_workers` 4 → 8, `dataloader_pin_memory=True`
+- 예상 학습 시간: 3 epoch 기준 **9~12시간**
+
+**에이전트 실행 순서**
+- [x] Step 0: 환경 확인 + `ocr_training/requirements.txt` + flash-attn 설치
+- [x] Step 1: `ocr_training/scripts/extract_images.py` — TS_3 zip + 038 손글씨 zip → `data/ocr_samples/images/`
+- [x] Step 2: `ocr_training/scripts/prepare_dataset.py` — labels.json + 038 JSON → `train.jsonl` / `test.jsonl` (~251k / ~28k)
+- [ ] Step 3: `ocr_training/scripts/train.py` — QLoRA 파인튜닝 (3 epoch, Flash Attn2, batch=8)
+- [ ] Step 4: `ocr_training/scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
+- [ ] Step 5: `ocr_training/scripts/merge_lora.py` — LoRA merge → `ocr_training/output/got_ocr_merged/`
+
+**완료 후**
 - [ ] `.env` 전환
   ```env
   OCR_MODEL=got_ocr
