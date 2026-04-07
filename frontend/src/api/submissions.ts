@@ -9,9 +9,21 @@ export interface Problem {
   total_score: number;
 }
 
-export interface SubmissionRequest {
-  problem_id: number;
-  student_answer: string;
+export interface FeedbackMistake {
+  step: number;
+  description: string;
+}
+
+export interface FeedbackStep {
+  step: number;
+  title: string;
+  content: string;
+}
+
+export interface Feedback {
+  student_mistakes: FeedbackMistake[];
+  correct_approach: FeedbackStep[];
+  key_concept: string;
 }
 
 export interface SubmissionCreateResponse {
@@ -25,7 +37,7 @@ export interface SubmissionStatusResponse {
   status: string;
   score: number | null;
   score_visible: boolean;
-  explanation: string | null;
+  feedback: Feedback | null;  // 교사 승인 후에만 노출
   teacher_approved: boolean;
   message: string | null;
 }
@@ -43,17 +55,37 @@ export async function getProblem(problemId: number): Promise<Problem> {
   return res.json();
 }
 
-export async function submitAnswer(
-  payload: SubmissionRequest
+export async function submitAnswerText(
+  problemId: number,
+  studentAnswer: string
 ): Promise<SubmissionCreateResponse> {
   const res = await fetch(`${API_BASE}/submissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ problem_id: problemId, student_answer: studentAnswer }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail ?? `제출 실패: ${res.status}`);
+    throw new Error((err as { detail?: string }).detail ?? `제출 실패: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function submitAnswerImage(
+  problemId: number,
+  imageFile: File
+): Promise<SubmissionCreateResponse> {
+  const formData = new FormData();
+  formData.append("problem_id", String(problemId));
+  formData.append("image", imageFile);
+
+  const res = await fetch(`${API_BASE}/submissions/image`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail ?? `이미지 제출 실패: ${res.status}`);
   }
   return res.json();
 }

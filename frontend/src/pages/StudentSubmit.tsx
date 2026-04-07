@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import {
   getProblems,
-  submitAnswer,
+  submitAnswerText,
+  submitAnswerImage,
   getSubmissionStatus,
   Problem,
   SubmissionStatusResponse,
 } from "../api/submissions";
+import AnswerInput from "../components/AnswerInput";
+import FeedbackPanel from "../components/FeedbackPanel";
 
 type AppState =
   | { phase: "loading" }
@@ -16,7 +19,6 @@ type AppState =
 
 export default function StudentSubmit() {
   const [state, setState] = useState<AppState>({ phase: "loading" });
-  const [answer, setAnswer] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export default function StudentSubmit() {
       .catch((e) => setState({ phase: "error", message: e.message }));
   }, []);
 
-  // 폴링: 2초 간격, 최대 60회 (120초)
+  // 폴링: 2초 간격, teacher_approved 또는 rejected될 때까지 지속
   useEffect(() => {
     if (state.phase !== "polling") return;
     const { submissionId, result } = state;
@@ -35,7 +37,8 @@ export default function StudentSubmit() {
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts > 60) {
+      if (attempts > 300) {
+        // 10분 폴링 상한
         clearInterval(interval);
         return;
       }
@@ -48,26 +51,34 @@ export default function StudentSubmit() {
           clearInterval(interval);
         }
       } catch {
-        // 폴링 중 네트워크 오류는 무시하고 계속
+        // 폴링 중 네트워크 오류 무시
       }
     }, 2000);
 
     return () => clearInterval(interval);
   }, [state.phase === "polling" ? state.submissionId : null]);
 
-  async function handleSubmit() {
+  async function handleSubmitText(answer: string) {
     if (state.phase !== "form") return;
-    if (!answer.trim()) return;
     setSubmitting(true);
     try {
-      const resp = await submitAnswer({
-        problem_id: state.selectedId,
-        student_answer: answer,
-      });
+      const resp = await submitAnswerText(state.selectedId, answer);
       setState({ phase: "polling", submissionId: resp.submission_id, result: null });
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "제출 실패";
-      setState({ phase: "error", message: msg });
+    } catch (e) {
+      setState({ phase: "error", message: e instanceof Error ? e.message : "제출 실패" });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleSubmitImage(file: File) {
+    if (state.phase !== "form") return;
+    setSubmitting(true);
+    try {
+      const resp = await submitAnswerImage(state.selectedId, file);
+      setState({ phase: "polling", submissionId: resp.submission_id, result: null });
+    } catch (e) {
+      setState({ phase: "error", message: e instanceof Error ? e.message : "이미지 제출 실패" });
     } finally {
       setSubmitting(false);
     }
@@ -120,21 +131,13 @@ export default function StudentSubmit() {
         </button>
         <h2>{problem.title}</h2>
         <div style={styles.problemBox}>{problem.content}</div>
-        <p>배점: {problem.total_score}점</p>
-        <textarea
-          style={styles.textarea}
-          placeholder="풀이와 답을 입력하세요..."
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          rows={6}
+        <p style={{ color: "#666", fontSize: "0.9rem" }}>배점: {problem.total_score}점</p>
+
+        <AnswerInput
+          onSubmitText={handleSubmitText}
+          onSubmitImage={handleSubmitImage}
+          disabled={submitting}
         />
-        <button
-          style={styles.submitBtn}
-          onClick={handleSubmit}
-          disabled={submitting || !answer.trim()}
-        >
-          {submitting ? "제출 중..." : "답변 제출"}
-        </button>
       </div>
     );
   }
@@ -145,39 +148,39 @@ export default function StudentSubmit() {
       <div style={styles.container}>
         <h2>채점 결과</h2>
 
-        {!result && <p>채점 중입니다. 잠시 기다려 주세요...</p>}
+        {!result && (
+          <div style={styles.waitingBox}>
+            <p>채점 중입니다. 잠시 기다려 주세요...</p>
+            <div style={styles.spinner} />
+          </div>
+        )}
 
         {result && (
           <div style={styles.resultBox}>
             {result.score_visible && result.score !== null && (
-              <p>
-                <strong>점수:</strong> {result.score}점
-              </p>
-            )}
-
-            {/* 풀이 설명은 teacher_approved === true일 때만 표시 */}
-            {result.teacher_approved && result.explanation ? (
-              <div>
-                <strong>풀이 설명:</strong>
-                <div style={styles.explanationBox}>{result.explanation}</div>
-              </div>
-            ) : (
-              <p style={{ color: "#666" }}>
-                {result.message ?? "교사 검토 중입니다. 풀이 설명은 검토 완료 후 확인할 수 있습니다."}
+              <p style={styles.scoreText}>
+                점수: <strong>{result.score}점</strong>
               </p>
             )}
 
             <p>
               <strong>상태:</strong> {statusLabel(result.status)}
             </p>
+
+            {/* 개인화 피드백 — teacher_approved === true일 때만 */}
+            {result.teacher_approved && result.feedback ? (
+              <FeedbackPanel feedback={result.feedback} />
+            ) : (
+              <p style={styles.waitingMsg}>
+                {result.message ?? "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."}
+              </p>
+            )}
           </div>
         )}
 
         <button
-          style={{ marginTop: "1rem" }}
-          onClick={() =>
-            setState({ phase: "loading" })
-          }
+          style={{ marginTop: "1.5rem" }}
+          onClick={() => setState({ phase: "loading" })}
         >
           새 문제 풀기
         </button>
@@ -194,6 +197,7 @@ function statusLabel(status: string): string {
     graded: "채점 완료 (교사 검토 중)",
     approved: "교사 승인 완료",
     rejected: "교사 거부",
+    error: "오류 발생",
   };
   return map[status] ?? status;
 }
@@ -224,17 +228,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     padding: "1rem",
     margin: "1rem 0",
-  },
-  textarea: { width: "100%", padding: "0.75rem", fontSize: "1rem", borderRadius: 8, border: "1px solid #ccc", boxSizing: "border-box" },
-  submitBtn: {
-    marginTop: "1rem",
-    padding: "0.75rem 2rem",
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: 8,
-    fontSize: "1rem",
-    cursor: "pointer",
+    whiteSpace: "pre-wrap",
   },
   resultBox: {
     background: "#f0f7ff",
@@ -242,12 +236,27 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     padding: "1.5rem",
   },
-  explanationBox: {
-    background: "white",
-    border: "1px solid #e0e0e0",
-    borderRadius: 8,
-    padding: "1rem",
-    marginTop: "0.5rem",
-    whiteSpace: "pre-wrap",
+  scoreText: {
+    fontSize: "1.2rem",
+    margin: "0 0 0.75rem",
+  },
+  waitingBox: {
+    textAlign: "center",
+    padding: "2rem",
+    color: "#666",
+  },
+  spinner: {
+    margin: "1rem auto",
+    width: 32,
+    height: 32,
+    border: "3px solid #e0e0e0",
+    borderTop: "3px solid #2563eb",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+  },
+  waitingMsg: {
+    color: "#555",
+    marginTop: "1rem",
+    fontSize: "0.9rem",
   },
 };

@@ -82,37 +82,48 @@ def get_submission_response(
     teacher_action: str | None,
     teacher_score: int | None,
     teacher_feedback: str | None,
-    ai_feedback: str | None,
+    ai_feedback: dict | None,
 ) -> dict:
     """
     /submissions/{id} 응답 생성.
-    풀이 설명은 teacher_action == 'approve' | 'modify' 일 때만 포함.
+    개인화 피드백은 teacher_action == 'approve' | 'modify' 일 때만 포함.
 
-    절대 제약: teacher_action이 없으면 explanation은 None.
+    절대 제약: teacher_action이 없으면 feedback은 None (ADR-001).
+    ai_feedback: 구조화된 피드백 dict {student_mistakes, correct_approach, key_concept}
+    teacher_feedback: 교사가 수정한 피드백 (문자열 또는 dict)
     """
-    # 최종 점수 결정
     if teacher_action == "approve":
         final_score = ai_score
-        final_explanation = ai_feedback
+        final_feedback = ai_feedback
         score_visible = True
     elif teacher_action == "modify":
         final_score = teacher_score if teacher_score is not None else ai_score
-        final_explanation = teacher_feedback
+        # 교사 수정 피드백은 문자열로 저장되어 있으므로 key_concept으로 래핑
+        if isinstance(teacher_feedback, dict):
+            final_feedback = teacher_feedback
+        elif teacher_feedback:
+            final_feedback = {
+                "student_mistakes": [],
+                "correct_approach": [],
+                "key_concept": teacher_feedback,
+            }
+        else:
+            final_feedback = ai_feedback
         score_visible = True
     elif teacher_action == "reject":
         final_score = None
-        final_explanation = None
+        final_feedback = None
         score_visible = False
     else:
-        # 교사 미검토 상태
+        # 교사 미검토 — 피드백 절대 노출 금지
         final_score = ai_score if trust_result.score_visible else None
-        final_explanation = None   # 절대 노출 금지
+        final_feedback = None
         score_visible = trust_result.score_visible
 
     return {
         "score": final_score,
         "score_visible": score_visible,
-        "explanation": final_explanation,
+        "feedback": final_feedback,
         "teacher_approved": teacher_action in ("approve", "modify"),
         "trust_score": trust_result.trust_score,
         "trust_level": trust_result.trust_level,

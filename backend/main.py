@@ -3,7 +3,7 @@ main.py — FastAPI 엔트리포인트.
 
 lifespan:
   - SBERT + HHEM detector를 서버 시작 시 1회 로드 → app.state에 상주
-  - GradingService, ExplanationService 인스턴스도 app.state에 보관
+  - GradingService, FeedbackService, OCRService 인스턴스도 app.state에 보관
 """
 
 import logging
@@ -15,7 +15,8 @@ from sentence_transformers import SentenceTransformer
 
 from services.hallucination import load_hhem_detector
 from services.grading import GradingService
-from services.explanation import ExplanationService
+from services.feedback import FeedbackService
+from services.ocr import OCRService
 from routers import submissions, teacher, feedback
 
 logging.basicConfig(
@@ -37,7 +38,8 @@ async def lifespan(app: FastAPI):
     logger.info("HHEM detector 준비 완료")
 
     app.state.grading_service = GradingService(sbert)
-    app.state.explanation_service = ExplanationService(sbert)
+    app.state.feedback_service = FeedbackService(sbert)
+    app.state.ocr_service = OCRService()
     logger.info("서비스 인스턴스 초기화 완료. 서버 준비됨.")
 
     yield
@@ -47,7 +49,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Argus — 교육자 HITL 채점 시스템",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 

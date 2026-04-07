@@ -56,8 +56,28 @@ class HallucinationDetector:
     def score_grading(self, reference_solution: str, grading_reason: str) -> HHEMOutput:
         return self.score(premise=reference_solution, hypothesis=grading_reason)
 
-    def score_explanation(self, reference_solution: str, explanation_text: str) -> HHEMOutput:
-        return self.score(premise=reference_solution, hypothesis=explanation_text)
+    def score_feedback(
+        self,
+        reference_solution: str,
+        grading_steps: list[dict],
+        correct_approach_text: str,
+    ) -> HHEMOutput:
+        """피드백 정확성 검증 (ADR-016).
+
+        premise: 모범 풀이 + 감점 단계 요약 (학생이 실제로 틀린 부분)
+        hypothesis: AI가 생성한 correct_approach (교정 방향)
+
+        피드백이 학생의 실제 오류를 올바르게 짚었는지 검증한다.
+        """
+        # 감점 단계만 추출하여 premise에 포함
+        wrong_steps = [
+            f"{s.get('step')}단계: {s.get('reason', '')}"
+            for s in grading_steps
+            if s.get("earned_score", 1) < s.get("max_score", 1)
+        ]
+        wrong_summary = "\n".join(wrong_steps) if wrong_steps else "전 단계 정답"
+        premise = f"{reference_solution}\n\n[감점 단계]\n{wrong_summary}"
+        return self.score(premise=premise, hypothesis=correct_approach_text)
 
     def _score_via_hf_api(self, premise: str, hypothesis: str) -> HHEMOutput:
         """HF Inference API 호출."""

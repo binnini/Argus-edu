@@ -13,11 +13,28 @@ class SubmissionCreateResponse(BaseModel):
     message: str
 
 
+class FeedbackMistake(BaseModel):
+    step: int
+    description: str
+
+
+class FeedbackStep(BaseModel):
+    step: int
+    title: str
+    content: str
+
+
+class FeedbackSchema(BaseModel):
+    student_mistakes: list[FeedbackMistake]
+    correct_approach: list[FeedbackStep]
+    key_concept: str
+
+
 class SubmissionStatusResponse(BaseModel):
     submission_id: int
     status: str
     score: Optional[int]
     score_visible: bool
-    explanation: Optional[str]
+    feedback: Optional[FeedbackSchema]   # 교사 승인 후에만 노출
     teacher_approved: bool
     message: Optional[str]

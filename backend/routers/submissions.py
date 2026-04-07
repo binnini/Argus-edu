@@ -1,17 +1,21 @@
 """
 routers/submissions.py — 학생 답변 제출 + 채점 파이프라인.
 
-POST /api/v1/submissions       — 제출 + 비동기 채점 시작
+POST /api/v1/submissions       — 텍스트 답변 제출 (JSON)
+POST /api/v1/submissions/image — 이미지 업로드 제출 (multipart/form-data)
 GET  /api/v1/submissions/{id}  — 결과 폴링
 GET  /api/v1/problems          — 문제 목록
 GET  /api/v1/problems/{id}     — 문제 상세 (answer/reference_solution 제외)
 """
 
 import asyncio
+import json
 import logging
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -28,6 +32,10 @@ from services.trust_gate import calculate_trust, get_submission_response
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["submissions"])
+
+UPLOAD_DIR = Path("uploads")
+ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
 # ── 문제 조회 ────────────────────────────────────────────────
@@ -66,7 +74,7 @@ async def get_problem(problem_id: int, db: AsyncSession = Depends(get_session)):
     )
 
 
-# ── 답변 제출 ────────────────────────────────────────────────
+# ── 텍스트 답변 제출 ─────────────────────────────────────────
 
 @router.post("/submissions", response_model=SubmissionCreateResponse, status_code=202)
 async def create_submission(
@@ -74,22 +82,20 @@ async def create_submission(
     request: Request,
     db: AsyncSession = Depends(get_session),
 ):
-    # 문제 존재 확인
     problem = await db.get(Problem, body.problem_id)
     if not problem:
         raise HTTPException(status_code=404, detail="문제를 찾을 수 없습니다")
 
-    # submission 생성
     submission = Submission(
         problem_id=body.problem_id,
         student_answer=body.student_answer,
+        input_type="text",
         status="pending",
     )
     db.add(submission)
     await db.commit()
     await db.refresh(submission)
 
-    # 채점 파이프라인 비동기 실행 (응답 먼저 반환)
     asyncio.create_task(
         _run_grading_pipeline(submission.id, request.app.state)
     )
@@ -101,13 +107,83 @@ async def create_submission(
     )
 
 
-async def _run_grading_pipeline(submission_id: int, app_state) -> None:
-    """채점 + 풀이 설명 + 신뢰도 게이트 파이프라인."""
+# ── 이미지 업로드 제출 ────────────────────────────────────────
+
+@router.post("/submissions/image", response_model=SubmissionCreateResponse, status_code=202)
+async def create_submission_image(
+    request: Request,
+    problem_id: int = Form(...),
+    image: UploadFile = File(...),
+    db: AsyncSession = Depends(get_session),
+):
+    """손글씨 이미지 업로드 → OCR → 채점 파이프라인."""
+    # 파일 타입 검증
+    if image.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"지원하지 않는 이미지 형식: {image.content_type}. JPEG/PNG/WEBP만 허용합니다.",
+        )
+
+    # 크기 제한
+    image_bytes = await image.read()
+    if len(image_bytes) > MAX_IMAGE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"이미지 크기가 너무 큽니다 ({len(image_bytes) // 1024}KB). 최대 10MB입니다.",
+        )
+
+    problem = await db.get(Problem, problem_id)
+    if not problem:
+        raise HTTPException(status_code=404, detail="문제를 찾을 수 없습니다")
+
+    # 이미지 저장
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    import uuid
+    ext = Path(image.filename or "image.jpg").suffix or ".jpg"
+    filename = f"{uuid.uuid4().hex}{ext}"
+    image_path = UPLOAD_DIR / filename
+    image_path.write_bytes(image_bytes)
+
+    submission = Submission(
+        problem_id=problem_id,
+        student_answer="",  # OCR 완료 후 채워짐
+        input_type="image",
+        image_path=str(image_path),
+        status="pending",
+    )
+    db.add(submission)
+    await db.commit()
+    await db.refresh(submission)
+
+    asyncio.create_task(
+        _run_grading_pipeline(
+            submission.id,
+            request.app.state,
+            image_bytes=image_bytes,
+            image_content_type=image.content_type,
+        )
+    )
+
+    return SubmissionCreateResponse(
+        submission_id=submission.id,
+        status="pending",
+        message="이미지가 접수되었습니다. OCR 및 채점 후 결과를 확인할 수 있습니다.",
+    )
+
+
+# ── 채점 파이프라인 ───────────────────────────────────────────
+
+async def _run_grading_pipeline(
+    submission_id: int,
+    app_state,
+    image_bytes: bytes | None = None,
+    image_content_type: str | None = None,
+) -> None:
+    """채점 + 개인화 피드백 + 신뢰도 게이트 파이프라인."""
     from db import AsyncSessionLocal
 
     async with AsyncSessionLocal() as db:
         try:
-            # 데이터 로드
             result = await db.execute(
                 select(Submission)
                 .options(selectinload(Submission.problem))
@@ -117,8 +193,26 @@ async def _run_grading_pipeline(submission_id: int, app_state) -> None:
             problem = submission.problem
 
             grading_svc = app_state.grading_service
-            explanation_svc = app_state.explanation_service
+            feedback_svc = app_state.feedback_service
             hhem = app_state.hhem
+
+            student_answer = submission.student_answer
+
+            # OCR (이미지 입력 시)
+            if submission.input_type == "image" and image_bytes:
+                ocr_svc = app_state.ocr_service
+                try:
+                    ocr_text = await ocr_svc.recognize(image_bytes, image_content_type or "image/jpeg")
+                except Exception as e:
+                    logger.error(f"OCR 실패 submission_id={submission_id}: {e}")
+                    submission.status = "error"
+                    await db.commit()
+                    return
+
+                student_answer = ocr_text
+                submission.student_answer = ocr_text
+                submission.ocr_raw_text = ocr_text
+                await db.commit()
 
             # 채점
             grading_out = await grading_svc.grade(
@@ -126,44 +220,47 @@ async def _run_grading_pipeline(submission_id: int, app_state) -> None:
                 answer=problem.answer,
                 reference_solution=problem.reference_solution,
                 rubric=problem.rubric,
-                student_answer=submission.student_answer,
+                student_answer=student_answer,
             )
 
-            # 풀이 설명 생성
-            explanation_out = await explanation_svc.generate(
+            # 개인화 피드백 생성
+            feedback_out = await feedback_svc.generate(
                 problem_content=problem.content,
                 answer=problem.answer,
                 reference_solution=problem.reference_solution,
+                student_answer=student_answer,
+                grading_steps=grading_out.steps,
             )
 
-            # HHEM 스코어
-            explanation_text = explanation_svc.format_explanation_text(
-                explanation_out.steps, explanation_out.summary
+            # HHEM 검증 (피드백 정확성 — ADR-016)
+            correct_approach_text = feedback_svc.format_correct_approach_text(
+                feedback_out.correct_approach
             )
-            hhem_result = hhem.score_explanation(
-                problem.reference_solution, explanation_text
+            hhem_result = hhem.score_feedback(
+                reference_solution=problem.reference_solution,
+                grading_steps=grading_out.steps,
+                correct_approach_text=correct_approach_text,
             )
 
             # 신뢰도 계산
             trust = calculate_trust(
                 hhem_score=hhem_result.score,
-                inconsistency_rate=explanation_out.inconsistency_rate,
+                inconsistency_rate=feedback_out.inconsistency_rate,
             )
 
-            # GradingResult 저장
+            # GradingResult 저장 (ai_feedback은 JSON 문자열로 저장)
             grading_record = GradingResult(
                 submission_id=submission_id,
                 ai_score=grading_out.total_score,
-                ai_feedback=explanation_text,
+                ai_feedback=json.dumps(feedback_out.to_dict(), ensure_ascii=False),
                 sbert_similarity=grading_out.sbert_similarity,
                 hhem_score=hhem_result.score,
-                inconsistency_rate=explanation_out.inconsistency_rate,
+                inconsistency_rate=feedback_out.inconsistency_rate,
                 trust_score=trust.trust_score,
                 trust_level=trust.trust_level,
             )
             db.add(grading_record)
 
-            # TeacherQueue 등록
             queue_record = TeacherQueue(
                 submission_id=submission_id,
                 queue_type=trust.queue_type,
@@ -171,7 +268,6 @@ async def _run_grading_pipeline(submission_id: int, app_state) -> None:
             )
             db.add(queue_record)
 
-            # 상태 업데이트
             submission.status = "graded"
             await db.commit()
 
@@ -182,7 +278,6 @@ async def _run_grading_pipeline(submission_id: int, app_state) -> None:
 
         except Exception as e:
             logger.error(f"채점 파이프라인 오류 submission_id={submission_id}: {e}")
-            # 실패 시 상태를 'error'로 업데이트
             try:
                 result = await db.execute(
                     select(Submission).where(Submission.id == submission_id)
@@ -214,14 +309,13 @@ async def get_submission_status(
     if not submission:
         raise HTTPException(status_code=404, detail="제출을 찾을 수 없습니다")
 
-    # 채점 미완료
     if submission.status == "pending" or not submission.grading_result:
         return SubmissionStatusResponse(
             submission_id=submission_id,
             status=submission.status,
             score=None,
             score_visible=False,
-            explanation=None,
+            feedback=None,
             teacher_approved=False,
             message="채점 중입니다. 잠시 후 다시 확인해주세요.",
         )
@@ -240,18 +334,26 @@ async def get_submission_status(
     )
 
     teacher_action = tq.action if tq else None
+
+    # ai_feedback: JSON 문자열 → dict
+    ai_feedback_dict = None
+    if gr.ai_feedback:
+        try:
+            ai_feedback_dict = json.loads(gr.ai_feedback)
+        except (json.JSONDecodeError, TypeError):
+            ai_feedback_dict = None
+
     resp_data = get_submission_response(
         trust_result=trust,
         ai_score=gr.ai_score,
         teacher_action=teacher_action,
         teacher_score=tq.teacher_score if tq else None,
         teacher_feedback=tq.teacher_feedback if tq else None,
-        ai_feedback=gr.ai_feedback,
+        ai_feedback=ai_feedback_dict,
     )
 
-    # 상태 메시지
     if teacher_action is None:
-        message = "교사 검토 중입니다. 풀이 설명은 검토 완료 후 확인할 수 있습니다."
+        message = "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."
     elif teacher_action == "reject":
         message = "채점이 반려되었습니다. 교사에게 문의해주세요."
     else:
@@ -262,7 +364,7 @@ async def get_submission_status(
         status=submission.status,
         score=resp_data["score"],
         score_visible=resp_data["score_visible"],
-        explanation=resp_data["explanation"],
+        feedback=resp_data["feedback"],
         teacher_approved=resp_data["teacher_approved"],
         message=message,
     )
