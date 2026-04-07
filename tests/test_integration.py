@@ -1,12 +1,15 @@
 """
-tests/test_integration.py — Argus 통합 테스트
+tests/test_integration.py — Argus Phase 8 통합 테스트
 
 모든 테스트는 실제 HTTP 요청을 localhost:8000에 보낸다.
-Ollama 파이프라인(채점+설명 3회) 완료까지 최대 900초 폴링.
+Ollama 파이프라인(채점+피드백 3회) 완료까지 최대 900초 폴링.
 """
 
+import io
+import struct
 import time
 import warnings
+import zlib
 
 import pytest
 import requests
@@ -62,6 +65,32 @@ def find_queue_item(submission_id: int) -> dict | None:
     return None
 
 
+def _make_dummy_png(width: int = 10, height: int = 10) -> bytes:
+    """PIL 없이 순수 표준 라이브러리로 흰 배경 PNG를 생성한다."""
+
+    def _pack_chunk(chunk_type: bytes, data: bytes) -> bytes:
+        length = struct.pack(">I", len(data))
+        crc = struct.pack(">I", zlib.crc32(chunk_type + data) & 0xFFFFFFFF)
+        return length + chunk_type + data + crc
+
+    # IHDR: width, height, bit depth=8, color type=2(RGB), compress/filter/interlace=0
+    ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    ihdr_chunk = _pack_chunk(b"IHDR", ihdr_data)
+
+    # IDAT: 흰색 픽셀(255,255,255) 채우기
+    raw_rows = b""
+    for _ in range(height):
+        # 각 행 앞에 filter type 0 (None)
+        raw_rows += b"\x00" + b"\xFF\xFF\xFF" * width
+    compressed = zlib.compress(raw_rows)
+    idat_chunk = _pack_chunk(b"IDAT", compressed)
+
+    iend_chunk = _pack_chunk(b"IEND", b"")
+
+    png_signature = b"\x89PNG\r\n\x1a\n"
+    return png_signature + ihdr_chunk + idat_chunk + iend_chunk
+
+
 # ── 기본 테스트 ─────────────────────────────────────────────────
 
 
@@ -78,11 +107,11 @@ def test_health():
 
 @pytest.mark.timeout(30)
 def test_problems_list():
-    """GET /api/v1/problems → 문제 15개."""
+    """GET /api/v1/problems → 문제 30050개."""
     resp = requests.get(f"{BASE_URL}/api/v1/problems")
     assert resp.status_code == 200
     problems = resp.json()["problems"]
-    assert len(problems) == 15, f"문제 수가 15개가 아님: {len(problems)}개"
+    assert len(problems) == 30050, f"문제 수가 30050개가 아님: {len(problems)}개"
 
 
 @pytest.mark.timeout(30)
@@ -122,8 +151,8 @@ def test_teacher_auth_wrong():
 def test_e2e_normal_flow():
     """
     정상 흐름 E2E:
-    정답 수준 답변 제출 → graded 대기 → explanation=None 확인
-    → 교사 큐 존재 확인 → approve → approved + explanation 존재 확인
+    정답 수준 답변 제출 → graded 대기 → feedback=None 확인
+    → 교사 큐 존재 확인 → approve → approved + feedback 존재 확인
     """
     # 1) 제출
     sid = submit_answer(
@@ -140,11 +169,11 @@ def test_e2e_normal_flow():
     data = wait_until_graded(sid)
     assert data["status"] in ("graded", "approved"), f"예상치 않은 상태: {data['status']}"
 
-    # 3) 승인 전 explanation=None 확인 (풀이 설명 차단 정책)
+    # 3) 승인 전 feedback=None 확인 (풀이 설명 차단 정책)
     # graded 상태일 때만 확인 (이미 approved면 다른 테스트에서 처리된 경우)
     if data["status"] == "graded":
-        assert data["explanation"] is None, (
-            f"승인 전인데 explanation이 노출됩니다: {data['explanation'][:50]}..."
+        assert data["feedback"] is None, (
+            f"승인 전인데 feedback이 노출됩니다: {str(data['feedback'])[:50]}..."
         )
 
     # 4) 교사 큐에 해당 submission 존재 확인
@@ -162,13 +191,15 @@ def test_e2e_normal_flow():
     action_data = action_resp.json()
     assert action_data["action"] == "approve"
 
-    # 6) approved 상태 + explanation 존재 확인
+    # 6) approved 상태 + feedback 존재 및 구조 확인
     final_resp = requests.get(f"{BASE_URL}/api/v1/submissions/{sid}")
     assert final_resp.status_code == 200
     final = final_resp.json()
     assert final["teacher_approved"] is True, "teacher_approved가 True가 아닙니다"
-    assert final["explanation"] is not None, "approved 후에도 explanation이 None입니다"
-    assert len(final["explanation"]) > 0, "explanation이 빈 문자열입니다"
+    assert final["feedback"] is not None, "approved 후에도 feedback이 None입니다"
+    assert isinstance(final["feedback"], dict), "feedback이 dict가 아닙니다"
+    for key in ("student_mistakes", "correct_approach", "key_concept"):
+        assert key in final["feedback"], f"feedback에 '{key}' 키가 없습니다"
 
 
 @pytest.mark.timeout(1000)
@@ -216,10 +247,10 @@ def test_e2e_low_trust():
 
 
 @pytest.mark.timeout(1000)
-def test_explanation_blocked_before_approval():
+def test_feedback_blocked_before_approval():
     """
-    풀이 설명 차단 정책:
-    제출 → graded 대기 → explanation=None 확인 (교사 승인 전).
+    풀이 피드백 차단 정책:
+    제출 → graded 대기 → feedback=None 확인 (교사 승인 전).
     """
     sid = submit_answer(
         problem_id=3,
@@ -231,8 +262,8 @@ def test_explanation_blocked_before_approval():
     data = wait_until_graded(sid)
     # graded 상태(아직 교사 미처리)여야 함
     if data["status"] == "graded":
-        assert data["explanation"] is None, (
-            "HITL 정책 위반: 교사 승인 전에 explanation이 노출됩니다!"
+        assert data["feedback"] is None, (
+            "HITL 정책 위반: 교사 승인 전에 feedback이 노출됩니다!"
         )
     # approved면 다른 테스트가 승인한 것 — 패스
     elif data["status"] in ("approved", "rejected"):
@@ -243,7 +274,7 @@ def test_explanation_blocked_before_approval():
 def test_teacher_modify():
     """
     교사 수정 흐름:
-    제출 → graded 대기 → modify 액션(점수+풀이) → approved 상태 확인.
+    제출 → graded 대기 → modify 액션(점수+teacher_feedback) → approved 상태 확인.
     """
     sid = submit_answer(
         problem_id=4,
@@ -257,7 +288,7 @@ def test_teacher_modify():
     assert queue_item is not None, f"submission_id={sid}가 교사 큐에 없습니다"
     queue_id = queue_item["queue_id"]
 
-    # 수정 액션
+    # 수정 액션 — teacher_feedback 필드로 교사 의견 전달
     action_resp = requests.post(
         f"{BASE_URL}/api/v1/teacher/queue/{queue_id}/action",
         json={
@@ -307,3 +338,128 @@ def test_feedback_summary():
     assert isinstance(data["total_reviewed"], int)
     assert isinstance(data["approved"], int)
     assert 0.0 <= data["approval_rate"] <= 1.0, f"approval_rate 범위 오류: {data['approval_rate']}"
+
+
+# ── Phase 8 신규 테스트 ──────────────────────────────────────────
+
+
+@pytest.mark.timeout(1000)
+def test_feedback_structure():
+    """
+    feedback 구조 검증:
+    정답 수준 답변 제출 → graded 대기 → 교사 승인 → feedback 필드 구조 상세 검증.
+    - feedback["student_mistakes"]: list
+    - feedback["correct_approach"]: list, 각 항목에 step/title/content 키 존재
+    - feedback["key_concept"]: 비어있지 않은 str
+    """
+    sid = submit_answer(
+        problem_id=5,
+        student_answer=(
+            "등비수열 {aₙ}의 공비를 r이라 하면 a₁=2, a₃=18이므로 "
+            "a₃ = a₁ · r² = 2r² = 18, r² = 9, r = 3 (r > 0). "
+            "따라서 a₅ = a₁ · r⁴ = 2 · 81 = 162."
+        ),
+    )
+
+    # graded 대기
+    data = wait_until_graded(sid)
+    assert data["status"] in ("graded", "approved"), f"예상치 않은 상태: {data['status']}"
+
+    # 교사 큐에서 queue_id 획득
+    queue_item = find_queue_item(sid)
+    assert queue_item is not None, f"submission_id={sid}가 교사 큐에 없습니다"
+    queue_id = queue_item["queue_id"]
+
+    # 교사 승인
+    action_resp = requests.post(
+        f"{BASE_URL}/api/v1/teacher/queue/{queue_id}/action",
+        json={"action": "approve"},
+        headers=TEACHER_HEADERS,
+    )
+    assert action_resp.status_code == 200, (
+        f"승인 실패: {action_resp.status_code} {action_resp.text}"
+    )
+
+    # 승인 후 feedback 구조 검증
+    final_resp = requests.get(f"{BASE_URL}/api/v1/submissions/{sid}")
+    assert final_resp.status_code == 200
+    final = final_resp.json()
+
+    assert final["teacher_approved"] is True, "teacher_approved가 True가 아닙니다"
+    feedback = final["feedback"]
+    assert feedback is not None, "approved 후에도 feedback이 None입니다"
+    assert isinstance(feedback, dict), f"feedback이 dict가 아닙니다: {type(feedback)}"
+
+    # student_mistakes: list
+    assert "student_mistakes" in feedback, "feedback에 'student_mistakes' 키가 없습니다"
+    assert isinstance(feedback["student_mistakes"], list), (
+        f"student_mistakes가 list가 아닙니다: {type(feedback['student_mistakes'])}"
+    )
+
+    # correct_approach: list, 각 항목에 step/title/content 키 존재
+    assert "correct_approach" in feedback, "feedback에 'correct_approach' 키가 없습니다"
+    assert isinstance(feedback["correct_approach"], list), (
+        f"correct_approach가 list가 아닙니다: {type(feedback['correct_approach'])}"
+    )
+    for idx, step_item in enumerate(feedback["correct_approach"]):
+        assert isinstance(step_item, dict), (
+            f"correct_approach[{idx}]가 dict가 아닙니다: {type(step_item)}"
+        )
+        for key in ("step", "title", "content"):
+            assert key in step_item, (
+                f"correct_approach[{idx}]에 '{key}' 키가 없습니다: {step_item}"
+            )
+
+    # key_concept: 비어있지 않은 str
+    assert "key_concept" in feedback, "feedback에 'key_concept' 키가 없습니다"
+    assert isinstance(feedback["key_concept"], str), (
+        f"key_concept가 str가 아닙니다: {type(feedback['key_concept'])}"
+    )
+    assert len(feedback["key_concept"].strip()) > 0, "key_concept가 빈 문자열입니다"
+
+
+@pytest.mark.timeout(30)
+def test_image_upload_pipeline():
+    """
+    이미지 업로드 파이프라인 확인:
+    POST /api/v1/submissions/image 엔드포인트 존재 여부 확인.
+    pix2tex 미설치 상태를 고려하여 202 또는 4xx 응답만 허용 (500 불허).
+
+    - 작은 흰 배경 더미 PNG(10x10px)를 표준 라이브러리로 직접 생성해 전송
+    - 202: submission_id 존재 확인
+    - 4xx: detail 메시지 존재 확인
+    - OCR 엔진 미설치로 인한 에러는 soft assert로 경고 처리
+    """
+    dummy_png = _make_dummy_png(width=10, height=10)
+
+    resp = requests.post(
+        f"{BASE_URL}/api/v1/submissions/image",
+        data={"problem_id": "1"},
+        files={"image": ("test_dummy.png", io.BytesIO(dummy_png), "image/png")},
+    )
+
+    # 서버 내부 오류(5xx)는 절대 허용하지 않음
+    assert resp.status_code < 500, (
+        f"서버 내부 오류 발생: {resp.status_code} {resp.text[:200]}"
+    )
+
+    if resp.status_code == 202:
+        data = resp.json()
+        assert "submission_id" in data, (
+            f"202 응답에 submission_id가 없습니다: {data}"
+        )
+    elif 400 <= resp.status_code < 500:
+        data = resp.json()
+        assert "detail" in data, (
+            f"4xx 응답에 detail 메시지가 없습니다: {data}"
+        )
+        # OCR 엔진 미설치 등 정상 예외는 soft assert
+        warnings.warn(
+            f"[SOFT] 이미지 업로드 4xx 응답 (OCR 미설치 가능성): "
+            f"status={resp.status_code}, detail={data.get('detail', '')}",
+            UserWarning,
+        )
+    else:
+        pytest.fail(
+            f"예상치 못한 응답 코드: {resp.status_code} {resp.text[:200]}"
+        )
