@@ -44,9 +44,9 @@
   - `problems` 테이블: `source` 컬럼 추가
 - [x] 로컬 DB에 마이그레이션 적용 (`alembic upgrade head`)
 
-### 7-3. OCR 서비스 `[P]`
+### 7-3. OCR 서비스 `[P]` ✅
 
-- [ ] `backend/services/ocr.py` 작성
+- [x] `backend/services/ocr.py` 작성
   - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix`)
   - pix2tex 로컬 실행 구현
   - Mathpix API 연동 구현 (fallback)
@@ -55,37 +55,69 @@
 - [ ] `POST /api/v1/submissions` — `multipart/form-data` 이미지 업로드 지원 추가
 - [ ] AI-HUB TL_3 손글씨 이미지로 OCR 정확도 검증
 
-### 7-4. 개인화 피드백 서비스 `[P]`
+### 7-4. 개인화 피드백 서비스 `[P]` ✅
 
-- [ ] `backend/services/feedback.py` 작성 (기존 `explanation.py` 교체)
+- [x] `backend/services/feedback.py` 작성 (기존 `explanation.py` 교체)
   - 프롬프트: 학생 오류 분석 + 교정 방향 (docs/prompts.md v2.0 기준)
   - 출력 스키마: `student_mistakes` + `correct_approach` + `key_concept`
   - 멀티 샘플링 3회 + 불일치율 계산
   - Ollama/Anthropic 양쪽 지원
-- [ ] `backend/services/hallucination.py` 업데이트
+- [x] `backend/services/hallucination.py` 업데이트
   - premise: `reference_solution + grading_result`
   - hypothesis: `ai_feedback.correct_approach`
-- [ ] `backend/routers/submissions.py` 업데이트
+- [x] `backend/routers/submissions.py` 업데이트
   - `explanation_service` → `feedback_service`
   - 응답 필드명: `explanation` → `feedback`
-- [ ] `backend/schemas/` 업데이트 — feedback 구조 반영
+- [x] `backend/schemas/` 업데이트 — feedback 구조 반영
 
-### 7-5. 프론트엔드 개편 `[P]`
+### 7-5. 프론트엔드 개편 `[P]` ✅
 
-- [ ] `frontend/src/components/AnswerInput.tsx` 신규
+- [x] `frontend/src/components/AnswerInput.tsx` 신규
   - 텍스트 입력 탭 / 이미지 업로드 탭 전환 UI
   - 이미지 업로드 시 `multipart/form-data` 전송
-- [ ] `frontend/src/components/FeedbackPanel.tsx` 신규
+- [x] `frontend/src/components/FeedbackPanel.tsx` 신규
   - `student_mistakes` 목록 렌더링
   - `correct_approach` 단계별 렌더링
   - `key_concept` 요약 표시
   - `teacher_approved === true` 일 때만 렌더링 (절대 제약)
-- [ ] `frontend/src/pages/StudentSubmit.tsx` 업데이트
+- [x] `frontend/src/pages/StudentSubmit.tsx` 업데이트
   - `AnswerInput` 컴포넌트 사용
   - `FeedbackPanel` 컴포넌트 연결
-- [ ] `frontend/src/api/submissions.ts` 업데이트
+- [x] `frontend/src/api/submissions.ts` 업데이트
   - `submitAnswerText()` / `submitAnswerImage()` 분리
-- [ ] `npm run build` 빌드 성공 확인
+- [x] `npm run build` 빌드 성공 확인
+
+### 7-3. OCR 서비스 `[P]`
+
+- [x] `backend/services/ocr.py` 작성
+  - `OCR_MODEL` 환경변수로 엔진 선택 (`pix2tex` | `mathpix` | `got_ocr`)
+  - pix2tex 로컬 실행 구현
+  - Mathpix API 연동 구현 (fallback)
+  - GOT-OCR 2.0 파인튜닝 모델 지원 (`GOT_OCR_MODEL_PATH` 환경변수)
+  - OCR 실패 시 에러 반환 (무시하지 말 것)
+- [x] `requirements.txt` 업데이트 — pix2tex, python-multipart, httpx 추가
+- [x] `POST /api/v1/submissions/image` — `multipart/form-data` 이미지 업로드 엔드포인트 추가
+
+### 7-6. GOT-OCR 2.0 파인튜닝 (별도 에이전트 — WSL2 RTX 5070Ti)
+
+- [ ] Mac → WSL2 데이터 전송 (TS_3 zip 8개 + labels.json)
+  ```bash
+  rsync -avz "data/AI_HUB/.../01.원천데이터/" yebin@192.168.219.101:~/argus_ocr/data/raw_zips/source/
+  rsync -avz data/ocr_samples/labels.json yebin@192.168.219.101:~/argus_ocr/data/
+  ```
+- [ ] 에이전트 실행 (`docs/ocr_agent_prompt.md` 참조)
+  - `scripts/extract_images.py` — TS_3 zip → 이미지 추출
+  - `scripts/prepare_dataset.py` — labels.json → GOT-OCR 포맷 (train/test.jsonl)
+  - `scripts/train.py` — QLoRA 파인튜닝 (3 epoch, ~7~8시간)
+  - `scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
+  - `scripts/merge_lora.py` — LoRA 어댑터 merge → 단일 모델 파일
+- [ ] 완료된 모델 Mac으로 전송
+  ```bash
+  rsync -avz ~/argus_ocr/output/got_ocr_merged/ \
+    "yebin@{mac_ip}:/Users/yebin/workSpace/Argus/models/got_ocr_merged/"
+  ```
+- [ ] `.env` 전환: `OCR_MODEL=got_ocr`, `GOT_OCR_MODEL_PATH=models/got_ocr_merged`
+- [ ] OCR E2E 검증 — AI-HUB 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 
 ---
 
