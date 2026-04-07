@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, SmallInteger, Float, String, DateTime, ForeignKey
+from sqlalchemy import Column, Computed, Integer, SmallInteger, Float, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -12,9 +12,8 @@ class FeedbackLog(Base):
     submission_id = Column(Integer, ForeignKey("submissions.id"), nullable=False)
     ai_score = Column(SmallInteger, nullable=False)
     teacher_score = Column(SmallInteger, nullable=False)
-    # score_delta: GENERATED ALWAYS AS (teacher_score - ai_score) STORED
-    # SQLAlchemy에서 컬럼 정의만 선언 (마이그레이션 SQL에서 GENERATED 설정)
-    score_delta = Column(SmallInteger, nullable=True)
+    # PostgreSQL GENERATED ALWAYS AS (teacher_score - ai_score) STORED
+    score_delta = Column(SmallInteger, Computed("teacher_score - ai_score", persisted=True))
     action = Column(String(10), nullable=False)  # 'approve' | 'modify' | 'reject'
     trust_score = Column(Float, nullable=False)
     trust_level = Column(String(10), nullable=False)

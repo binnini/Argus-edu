@@ -3,7 +3,7 @@ platform darwin -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0 -- /Users/yebin/wo
 cachedir: .pytest_cache
 rootdir: /Users/yebin/workSpace/Argus
 plugins: timeout-2.4.0, anyio-4.13.0
-timeout: 700.0s
+timeout: 1000.0s
 timeout method: signal
 timeout func_only: False
 collecting ... collected 10 items
@@ -13,83 +13,10 @@ tests/test_integration.py::test_problems_list PASSED                     [ 20%]
 tests/test_integration.py::test_problem_no_answer_leak PASSED            [ 30%]
 tests/test_integration.py::test_teacher_auth_missing PASSED              [ 40%]
 tests/test_integration.py::test_teacher_auth_wrong PASSED                [ 50%]
-tests/test_integration.py::test_e2e_normal_flow FAILED                   [ 60%]
-tests/test_integration.py::test_e2e_low_trust FAILED                     [ 70%]
+tests/test_integration.py::test_e2e_normal_flow PASSED                   [ 60%]
+tests/test_integration.py::test_e2e_low_trust PASSED                     [ 70%]
 tests/test_integration.py::test_explanation_blocked_before_approval PASSED [ 80%]
-tests/test_integration.py::test_teacher_modify FAILED                    [ 90%]
+tests/test_integration.py::test_teacher_modify PASSED                    [ 90%]
 tests/test_integration.py::test_feedback_summary PASSED                  [100%]
 
-=================================== FAILURES ===================================
-_____________________________ test_e2e_normal_flow _____________________________
-
-    @pytest.mark.timeout(700)
-    def test_e2e_normal_flow():
-        """
-        정상 흐름 E2E:
-        정답 수준 답변 제출 → graded 대기 → explanation=None 확인
-        → 교사 큐 존재 확인 → approve → approved + explanation 존재 확인
-        """
-        # 1) 제출
-        sid = submit_answer(
-            problem_id=1,
-            student_answer=(
-                "f(x) = x³ - 3x² + 1을 미분하면 f'(x) = 3x² - 6x = 3x(x-2)이다. "
-                "f'(x) = 0에서 x = 0 또는 x = 2. "
-                "f(0) = 1, f(2) = 8 - 12 + 1 = -3, f(3) = 27 - 27 + 1 = 1. "
-                "따라서 [0, 3]에서 최솟값은 f(2) = -3이다."
-            ),
-        )
-    
-        # 2) graded 대기
-        data = wait_until_graded(sid)
->       assert data["status"] in ("graded", "approved"), f"예상치 않은 상태: {data['status']}"
-E       AssertionError: 예상치 않은 상태: error
-E       assert 'error' in ('graded', 'approved')
-
-tests/test_integration.py:141: AssertionError
-______________________________ test_e2e_low_trust ______________________________
-
-    @pytest.mark.timeout(700)
-    def test_e2e_low_trust():
-        """
-        Low 신뢰도 케이스:
-        명백히 틀린 답변 제출 → graded 대기 → trust_level/queue_type 확인 (soft assert).
-        deterministic하지 않으므로 실패해도 경고만 출력.
-        """
-        sid = submit_answer(
-            problem_id=2,
-            student_answer="모르겠습니다. 답은 100입니다. 계산 과정 없음.",
-        )
-    
-        data = wait_until_graded(sid)
->       assert data["status"] in ("graded", "approved", "rejected"), (
-            f"예상치 않은 상태: {data['status']}"
-        )
-E       AssertionError: 예상치 않은 상태: error
-E       assert 'error' in ('graded', 'approved', 'rejected')
-
-tests/test_integration.py:187: AssertionError
-_____________________________ test_teacher_modify ______________________________
-
-    @pytest.mark.timeout(700)
-    def test_teacher_modify():
-        """
-        교사 수정 흐름:
-        제출 → graded 대기 → modify 액션(점수+풀이) → approved 상태 확인.
-        """
-        sid = submit_answer(
-            problem_id=4,
-            student_answer="도함수를 구하면 f'(x) = 2x - 4이고, f'(x)=0에서 x=2. f(2)=0이다.",
-        )
-    
-        data = wait_until_graded(sid)
->       assert data["status"] in ("graded", "approved"), f"예상치 않은 상태: {data['status']}"
-E       AssertionError: 예상치 않은 상태: error
-E       assert 'error' in ('graded', 'approved')
-
-tests/test_integration.py:254: AssertionError
-=========================== short test summary info ============================
-FAILED tests/test_integration.py::test_e2e_normal_flow - AssertionError: 예상...
-FAILED tests/test_integration.py::test_e2e_low_trust - AssertionError: 예상치...
-FAILED tests/test_integration.py::test_teacher_modify - AssertionError: 예상...
-========================= 3 failed, 7 passed in 20.27s =========================
+======================= 10 passed in 1806.71s (0:30:06) ========================

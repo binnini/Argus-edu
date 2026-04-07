@@ -8,6 +8,7 @@ grading.py — LLM 기반 채점 서비스.
 """
 
 import json
+import re
 import asyncio
 import logging
 from dataclasses import dataclass
@@ -133,8 +134,13 @@ class GradingService:
 
         try:
             data = json.loads(text)
-        except json.JSONDecodeError as e:
-            raise GradingError(f"채점 결과 JSON 파싱 실패: {e}\n원문: {raw[:200]}") from e
+        except json.JSONDecodeError:
+            # LaTeX 수식(\frac, \cdot 등) 등 잘못된 escape 시퀀스 정규화 후 재시도
+            text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError as e:
+                raise GradingError(f"채점 결과 JSON 파싱 실패: {e}\n원문: {raw[:200]}") from e
 
         required = {"total_score", "steps", "overall_comment"}
         if not required.issubset(data.keys()):

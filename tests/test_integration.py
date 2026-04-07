@@ -2,7 +2,7 @@
 tests/test_integration.py — Argus 통합 테스트
 
 모든 테스트는 실제 HTTP 요청을 localhost:8000에 보낸다.
-Ollama 파이프라인(채점+설명 3회) 완료까지 최대 600초 폴링.
+Ollama 파이프라인(채점+설명 3회) 완료까지 최대 900초 폴링.
 """
 
 import time
@@ -18,7 +18,7 @@ TEACHER_HEADERS = {"X-Teacher-Password": TEACHER_PASSWORD}
 # ── 헬퍼 ────────────────────────────────────────────────────────
 
 
-def wait_until_graded(submission_id: int, timeout: int = 600, interval: int = 5) -> dict:
+def wait_until_graded(submission_id: int, timeout: int = 900, interval: int = 5) -> dict:
     """
     submission이 'graded' 또는 'approved'/'rejected' 상태가 될 때까지 폴링.
     최대 timeout초 대기. 초과 시 pytest.fail().
@@ -118,7 +118,7 @@ def test_teacher_auth_wrong():
 # ── E2E 테스트 ──────────────────────────────────────────────────
 
 
-@pytest.mark.timeout(700)
+@pytest.mark.timeout(1000)
 def test_e2e_normal_flow():
     """
     정상 흐름 E2E:
@@ -171,7 +171,7 @@ def test_e2e_normal_flow():
     assert len(final["explanation"]) > 0, "explanation이 빈 문자열입니다"
 
 
-@pytest.mark.timeout(700)
+@pytest.mark.timeout(1000)
 def test_e2e_low_trust():
     """
     Low 신뢰도 케이스:
@@ -215,7 +215,7 @@ def test_e2e_low_trust():
     assert queue_item.get("queue_id") is not None, "queue_id가 없습니다"
 
 
-@pytest.mark.timeout(700)
+@pytest.mark.timeout(1000)
 def test_explanation_blocked_before_approval():
     """
     풀이 설명 차단 정책:
@@ -239,7 +239,7 @@ def test_explanation_blocked_before_approval():
         pass  # 이미 처리된 경우는 검증 불가
 
 
-@pytest.mark.timeout(700)
+@pytest.mark.timeout(1000)
 def test_teacher_modify():
     """
     교사 수정 흐름:

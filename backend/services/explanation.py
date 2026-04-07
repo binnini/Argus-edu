@@ -9,6 +9,7 @@ explanation.py — LLM 기반 풀이 설명 생성 서비스 (멀티 샘플링 3
 
 import asyncio
 import json
+import re
 import logging
 from dataclasses import dataclass
 
@@ -135,8 +136,13 @@ class ExplanationService:
 
         try:
             data = json.loads(text)
-        except json.JSONDecodeError as e:
-            raise ExplanationError(f"풀이 설명 JSON 파싱 실패: {e}\n원문: {raw[:200]}") from e
+        except json.JSONDecodeError:
+            # LaTeX 수식(\frac, \cdot 등) 등 잘못된 escape 시퀀스 정규화 후 재시도
+            text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError as e:
+                raise ExplanationError(f"풀이 설명 JSON 파싱 실패: {e}\n원문: {raw[:200]}") from e
 
         if "steps" not in data or "summary" not in data:
             raise ExplanationError("풀이 설명 필드 누락: steps, summary 필요")
