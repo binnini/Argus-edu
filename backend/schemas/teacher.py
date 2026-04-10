@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Literal, Optional
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class TeacherQueueItem(BaseModel):
@@ -8,6 +8,8 @@ class TeacherQueueItem(BaseModel):
     submission_id: int
     problem_title: str
     student_answer: str
+    student_name: str = ""
+    student_id: Optional[str] = None
     ai_score: int
     ai_feedback: str
     trust_score: float
@@ -49,3 +51,26 @@ class FeedbackSummaryResponse(BaseModel):
     approval_rate: float
     avg_score_delta: float
     low_trust_detection_precision: float
+
+
+class SubmissionOverviewItem(BaseModel):
+    submission_id: int
+    problem_id: int
+    problem_title: str
+    student_name: str
+    student_id: Optional[str] = None
+    input_type: str
+    status: str
+    ai_score: Optional[int] = None
+    final_score: Optional[int] = None
+    trust_level: Optional[str] = None
+    submitted_at: datetime
+    reviewed_at: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SubmissionOverviewResponse(BaseModel):
+    submissions: list[SubmissionOverviewItem]
+    total: int
+    page: int
+    page_size: int

@@ -57,12 +57,19 @@ export async function getProblem(problemId: number): Promise<Problem> {
 
 export async function submitAnswerText(
   problemId: number,
-  studentAnswer: string
+  studentAnswer: string,
+  studentName: string,
+  studentId?: string,
 ): Promise<SubmissionCreateResponse> {
   const res = await fetch(`${API_BASE}/submissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ problem_id: problemId, student_answer: studentAnswer }),
+    body: JSON.stringify({
+      problem_id: problemId,
+      student_answer: studentAnswer,
+      student_name: studentName,
+      student_id: studentId ?? null,
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -73,11 +80,17 @@ export async function submitAnswerText(
 
 export async function submitAnswerImage(
   problemId: number,
-  imageFile: File
+  imageFile: File,
+  studentName: string,
+  studentId?: string,
 ): Promise<SubmissionCreateResponse> {
   const formData = new FormData();
   formData.append("problem_id", String(problemId));
   formData.append("image", imageFile);
+  formData.append("student_name", studentName);
+  if (studentId) {
+    formData.append("student_id", studentId);
+  }
 
   const res = await fetch(`${API_BASE}/submissions/image`, {
     method: "POST",

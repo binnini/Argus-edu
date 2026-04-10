@@ -5,6 +5,8 @@ from pydantic import BaseModel
 class SubmissionRequest(BaseModel):
     problem_id: int
     student_answer: str
+    student_name: str = ""
+    student_id: Optional[str] = None
 
 
 class SubmissionCreateResponse(BaseModel):

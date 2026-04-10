@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, SmallInteger, String, Text, DateTime
+from sqlalchemy import Boolean, Column, Integer, SmallInteger, String, Text, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -19,5 +19,6 @@ class Problem(Base):
     difficulty = Column(SmallInteger)
     source = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    soft_deleted = Column(Boolean, default=False, nullable=False, server_default="false")
 
     submissions = relationship("Submission", back_populates="problem")

@@ -16,6 +16,8 @@ class Submission(Base):
     image_path = Column(String(500), nullable=True)
     submitted_at = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(String(20), default="pending")  # pending | graded | approved | rejected
+    student_name = Column(String(50), nullable=False, default="")
+    student_id = Column(String(20), nullable=True)
 
     problem = relationship("Problem", back_populates="submissions")
     grading_result = relationship("GradingResult", back_populates="submission", uselist=False)

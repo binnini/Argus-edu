@@ -14,6 +14,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy import select
@@ -91,6 +92,8 @@ async def create_submission(
         student_answer=body.student_answer,
         input_type="text",
         status="pending",
+        student_name=body.student_name,
+        student_id=body.student_id,
     )
     db.add(submission)
     await db.commit()
@@ -114,6 +117,8 @@ async def create_submission_image(
     request: Request,
     problem_id: int = Form(...),
     image: UploadFile = File(...),
+    student_name: str = Form(default=""),
+    student_id: Optional[str] = Form(default=None),
     db: AsyncSession = Depends(get_session),
 ):
     """손글씨 이미지 업로드 → OCR → 채점 파이프라인."""
@@ -150,6 +155,8 @@ async def create_submission_image(
         input_type="image",
         image_path=str(image_path),
         status="pending",
+        student_name=student_name,
+        student_id=student_id,
     )
     db.add(submission)
     await db.commit()

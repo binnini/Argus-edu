@@ -17,7 +17,7 @@ from services.hallucination import load_hhem_detector
 from services.grading import GradingService
 from services.feedback import FeedbackService
 from services.ocr import OCRService
-from routers import submissions, teacher, feedback
+from routers import submissions, teacher, feedback, problems
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,6 +64,7 @@ app.add_middleware(
 app.include_router(submissions.router)
 app.include_router(teacher.router)
 app.include_router(feedback.router)
+app.include_router(problems.router)
 
 
 @app.get("/health")
