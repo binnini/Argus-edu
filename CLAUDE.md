@@ -33,7 +33,7 @@
 ```python
 GRADING_MODEL  = os.getenv("GRADING_MODEL", "claude-sonnet-4-6")
 FEEDBACK_MODEL = os.getenv("FEEDBACK_MODEL", "claude-sonnet-4-6")
-OCR_MODEL      = os.getenv("OCR_MODEL", "pix2tex")  # MVP: pix2tex | mathpix
+OCR_MODEL      = os.getenv("OCR_MODEL", "got_ocr")  # got_ocr | pix2tex | mathpix
 ```
 
 ## 기술 스택
@@ -41,12 +41,12 @@ OCR_MODEL      = os.getenv("OCR_MODEL", "pix2tex")  # MVP: pix2tex | mathpix
 | 레이어 | 기술 |
 |---|---|
 | 백엔드 | FastAPI (Python 3.11+) + PostgreSQL |
-| OCR | pix2tex (오픈소스) 또는 Mathpix API (환경변수로 선택) |
+| OCR | GOT-OCR 2.0 파인튜닝 모델 (Mac Mini M4 MPS 서빙) |
 | AI 채점 | Claude API + SBERT (all-MiniLM-L6-v2) |
 | 개인화 피드백 | Claude API (학생 오류 분석 + 교정 방향 생성) |
 | 할루시네이션 탐지 | SBERT 유사도 fallback (HF_TOKEN 설정 시 HHEM API) |
 | 프론트엔드 | React + Vite (TypeScript) |
-| 배포 | AWS EC2 t3.medium + Nginx + systemd |
+| 배포 | Mac Mini M4 (24GB) 직접 서빙 + Cloudflare Tunnel (ADR-019) |
 
 ## 성공 지표
 

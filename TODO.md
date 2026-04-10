@@ -108,11 +108,17 @@
 
 **남은 작업**
 - [ ] Step 4: `evaluate_ocr.py` — base vs fine-tuned CER 비교 (목표 < 5%)
-- [ ] Step 5: `merge_lora.py` — LoRA merge → `got_ocr_merged/`
-- [ ] `.env` 전환
+- [ ] Step 5: WSL에서 `merge_lora.py` 실행 (파인튜닝 완료 후)
+  ```bash
+  LORA_DIR=ocr_training/output/got_ocr_finetuned_v2/checkpoint-XXXX \
+      python ocr_training/scripts/merge_lora.py
+  ```
+- [x] Mac에서 `merge_lora.py` 실행 (checkpoint-8000.zip 기반, 검증용)
+- [x] `_GotOcrEngine` 수정 — `model.chat()` 방식 + `modeling_GOT.py` device-agnostic 패치
+- [ ] WSL `.env` 전환
   ```env
   OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=~/projects/Argus-edu/ocr_training/output/got_ocr_merged
+  GOT_OCR_MODEL_PATH=/home/yebin/projects/Argus-edu/ocr_training/output/got_ocr_merged
   ```
 - [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 

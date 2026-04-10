@@ -299,6 +299,75 @@ OCR: <|im_end|>
 
 ---
 
+### ADR-019 배포 전략 — Mac Mini M4 직접 서빙 + Cloudflare Tunnel (ADR-007 대체)
+**날짜**: 2026-04-10  
+**가역성**: 🟡 준가역  
+**대체**: ADR-007 (단일 EC2 인스턴스 구성) 철회
+
+**결정**: EC2 인스턴스 대신 Mac Mini M4(24GB)를 서버로 직접 사용하고 Cloudflare Tunnel로 공개한다.
+
+**실측 근거**:
+
+| 항목 | 수치 |
+|------|------|
+| GOT-OCR MPS 추론 속도 | 1.5~2.5초/이미지 |
+| 모델 로딩 시간 | 1.2초 (서버 기동 시 1회) |
+| 모델 로드 후 메모리 | 16.2 GB / 24 GB (여유 7.8 GB) |
+| 모델 메모리 세부 | GOT-OCR 2.1 GB + SBERT 90 MB + OS+FastAPI ~2 GB |
+
+**동시 사용자 수용 한계**:
+- 텍스트 제출: **30~50명** (Claude API 비동기 병렬)
+- 이미지 제출 혼합: **10~15명** 쾌적 (OCR MPS 직렬 큐잉)
+- 학교 교실 1개(30명) 동시 수업 대응 가능
+
+**비용 비교**:
+- EC2 t3.xlarge + RDS: 월 ~$145
+- Mac Mini 직접 서빙: Claude API 사용료만 (월 $5~20 추정)
+
+**구성**:
+```
+Mac Mini M4 (24GB)
+├── FastAPI + PostgreSQL
+├── GOT-OCR 2.0 (MPS, float32)
+├── SBERT all-MiniLM-L6-v2 (CPU)
+└── HHEM → HF Inference API
+Cloudflare Tunnel → 외부 공개 (DDoS 보호, SSL 자동)
+LLM → Claude API (외부)
+```
+
+**트레이드오프**:
+- 단점: 가정용 인터넷 의존, 단일 장애점
+- 완화: Cloudflare Tunnel(가용성 보강), UPS 전원 관리 권장
+
+**변경 조건**: 파일럿 이후 학교 수 3개 이상 or 동시 접속 50명 초과 시 AWS 이전 검토.
+
+---
+
+### ADR-020 GOT-OCR 서빙 전략 — Mac Mini MPS + model.chat()
+**날짜**: 2026-04-10  
+**가역성**: 🟡 준가역
+
+**결정**: merge된 GOT-OCR 2.0 모델을 Mac Mini M4 MPS에서 float32로 서빙하고, 추론은 `model.chat()` 방식을 사용한다.
+
+**근거**:
+- 학습(train.py)의 입력 포맷이 `model.chat()`의 내부 포맷과 동일하게 설계됨(ADR-018)
+- LoRA merge 후에는 커스텀 텐서 전처리 없이 `chat()`으로 올바른 추론 가능
+- MPS는 bfloat16 미지원 → float32 사용 (성능 패널티 허용 범위 내)
+
+**구현 사항**:
+- `modeling_GOT.py`의 `.cuda()` 하드코딩을 `next(self.parameters()).device`로 패치 (Mac/WSL 겸용)
+- `_GotOcrEngine.recognize()`: image_bytes → 임시 파일 → `model.chat(path, ocr_type='ocr')`
+- 모델 로드: `get_class_from_dynamic_module` 사용 (GOT-OCR 커스텀 모듈 필수)
+- 디바이스 자동 선택: CUDA → float32/bfloat16, MPS → float32, CPU → float32
+
+**WSL(CUDA) 환경**: `model.chat()` 내부 `.cuda()` 호출이 그대로 동작하므로 패치 불필요.
+
+**제약**:
+- OCR 요청은 MPS 단일 컨텍스트로 직렬 처리 → 동시 이미지 요청 시 내부 큐잉 필요
+- 임시 파일 I/O 포함 (image_bytes → tmpfile → chat()) — SSD 환경에서 무시 가능한 오버헤드
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -313,3 +382,6 @@ OCR: <|im_end|>
 | ADR-016 | 2026-04-07 | 할루시네이션 탐지 방향 변경 (피드백 정확성 검증) |
 | ADR-017 | 2026-04-09 | OCR 파인튜닝 데이터셋 구성 (TS_3 + 038 혼합) |
 | ADR-018 | 2026-04-10 | GOT-OCR2 파인튜닝 전략 (chat() 포맷 정렬 + LoRA) |
+| ADR-007 | 2026-04-10 | **철회** — ADR-019로 대체 (EC2 → Mac Mini) |
+| ADR-019 | 2026-04-10 | Mac Mini M4 직접 서빙 + Cloudflare Tunnel 배포 결정 |
+| ADR-020 | 2026-04-10 | GOT-OCR 서빙 전략 (Mac Mini MPS + model.chat()) |
