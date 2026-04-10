@@ -154,9 +154,15 @@ class _MathpixEngine:
 class _GotOcrEngine:
     """GOT-OCR 2.0 파인튜닝 모델 엔진.
 
-    사용자가 파인튜닝 후 업로드한 모델 파라미터를 사용.
+    merge_lora.py로 병합된 모델 디렉토리를 사용.
     GOT_OCR_MODEL_PATH 환경변수로 모델 디렉토리 지정.
+    학습 시와 동일한 텐서 전처리 방식으로 추론.
     """
+
+    # 학습(train.py)과 동일한 이미지 전처리
+    _MEAN = [0.48145466, 0.4578275, 0.40821073]
+    _STD  = [0.26862954, 0.26130258, 0.27577711]
+    _MAX_NEW_TOKENS = 512
 
     def __init__(self) -> None:
         model_path = os.getenv("GOT_OCR_MODEL_PATH", "")
@@ -169,23 +175,49 @@ class _GotOcrEngine:
             raise OCRError(f"GOT-OCR 모델 경로가 존재하지 않습니다: {model_path}")
 
         try:
-            from transformers import AutoTokenizer, AutoModelForCausalLM
             import torch
+            import torchvision.transforms as T
+            from transformers import AutoConfig, AutoTokenizer
+            from transformers.dynamic_module_utils import get_class_from_dynamic_module
+
+            # 디바이스: CUDA → MPS → CPU 순으로 선택
+            if torch.cuda.is_available():
+                self._device = torch.device("cuda")
+                self._dtype = torch.bfloat16
+            elif torch.backends.mps.is_available():
+                self._device = torch.device("mps")
+                self._dtype = torch.float32  # MPS는 bfloat16 미지원
+            else:
+                self._device = torch.device("cpu")
+                self._dtype = torch.float32
+
+            self._transform = T.Compose([
+                T.Resize((1024, 1024)),
+                T.ToTensor(),
+                T.Normalize(mean=self._MEAN, std=self._STD),
+            ])
 
             self._tokenizer = AutoTokenizer.from_pretrained(
                 model_path, trust_remote_code=True
             )
-            self._model = AutoModelForCausalLM.from_pretrained(
-                model_path,
-                trust_remote_code=True,
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                device_map="auto",
+            if self._tokenizer.pad_token_id is None:
+                self._tokenizer.pad_token_id = self._tokenizer.eos_token_id
+
+            config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+            model_class = get_class_from_dynamic_module(
+                config.auto_map["AutoModel"], model_path
             )
+            self._model = model_class.from_pretrained(
+                model_path,
+                config=config,
+                trust_remote_code=True,
+                torch_dtype=self._dtype,
+            ).to(self._device)
             self._model.eval()
-            logger.info(f"GOT-OCR 모델 로드 완료: {model_path}")
+            logger.info(f"GOT-OCR 모델 로드 완료: {model_path} (device={self._device})")
         except ImportError as e:
             raise OCRError(
-                "transformers 또는 torch가 설치되어 있지 않습니다."
+                "transformers, torch, torchvision 중 설치되지 않은 패키지가 있습니다."
             ) from e
         except Exception as e:
             raise OCRError(f"GOT-OCR 모델 로드 실패: {e}") from e
@@ -209,12 +241,26 @@ class _GotOcrEngine:
         return result
 
     def _run_inference(self, image) -> str:
+        """학습 시와 동일한 텐서 전처리 방식으로 추론 (evaluate_ocr.py의 run_ocr_direct 참조)."""
         import torch
 
+        images = (
+            self._transform(image)
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .to(dtype=self._dtype, device=self._device)
+        )
+        bos_id = self._tokenizer.bos_token_id or self._tokenizer.eos_token_id
+        input_ids = torch.tensor([[bos_id]], device=self._device)
+
         with torch.no_grad():
-            result = self._model.chat(
-                self._tokenizer,
-                image,
-                ocr_type="format",
+            out = self._model.generate(
+                input_ids=input_ids,
+                images=images,
+                max_new_tokens=self._MAX_NEW_TOKENS,
+                do_sample=False,
+                pad_token_id=self._tokenizer.pad_token_id,
+                eos_token_id=self._tokenizer.eos_token_id,
             )
-        return result
+        generated = out[0, input_ids.shape[1]:]
+        return self._tokenizer.decode(generated, skip_special_tokens=True).strip()
