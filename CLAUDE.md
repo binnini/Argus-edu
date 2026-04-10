@@ -25,6 +25,7 @@
 - **개인화 피드백 자동 승인 금지**: 신뢰도 High여도 반드시 교사 승인 후 노출
 - **모델명 하드코딩 금지**: 반드시 환경변수로 분리 (`GRADING_MODEL`, `FEEDBACK_MODEL`, `OCR_MODEL`)
 - **MVP 범위 외 구현 금지**: QA 기능, 회원가입, 실시간 손글씨 인식, 킬러 문항 지원
+- **캔버스 입력 가역성 유지**: `CanvasInput.tsx` + `CANVAS_ENABLED` 플래그로만 제어, 백엔드 종속 금지
 
 ## AI 모델 구성
 
@@ -45,7 +46,8 @@ OCR_MODEL      = os.getenv("OCR_MODEL", "got_ocr")  # got_ocr | pix2tex | mathpi
 | AI 채점 | Claude API + SBERT (all-MiniLM-L6-v2) |
 | 개인화 피드백 | Claude API (학생 오류 분석 + 교정 방향 생성) |
 | 할루시네이션 탐지 | SBERT 유사도 fallback (HF_TOKEN 설정 시 HHEM API) |
-| 프론트엔드 | React + Vite (TypeScript) |
+| 프론트엔드 | React + Vite (TypeScript) + Tailwind CSS + shadcn/ui |
+| 수식 렌더링 | KaTeX (`react-katex`) |
 | 배포 | Mac Mini M4 (24GB) 직접 서빙 + Cloudflare Tunnel (ADR-019) |
 
 ## 성공 지표
@@ -61,6 +63,7 @@ OCR_MODEL      = os.getenv("OCR_MODEL", "got_ocr")  # got_ocr | pix2tex | mathpi
 |---|---|
 | DB 스키마 (전체 SQL) | `docs/schema.md` |
 | API 요청/응답 스펙 | `docs/api.md` |
+| 프론트엔드 설계 (컴포넌트·디자인 시스템) | `docs/frontend.md` |
 | 채점·피드백 프롬프트 템플릿 | `docs/prompts.md` |
 | 데이터셋 구조 및 확보 전략 | `docs/dataset.md` |
 | 주요 의사결정 기록 (ADR) | `docs/decisions.md` |

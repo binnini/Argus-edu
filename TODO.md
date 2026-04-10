@@ -122,6 +122,76 @@
   ```
 - [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 
+### 7-7. UX 재설계 (ADR-021) `[P]`
+
+> 참고: ADR-021, docs/frontend.md, docs/api.md, docs/schema.md
+
+#### 7-7-1. 백엔드
+
+- [ ] `backend/alembic/versions/0003_add_student_info.py` 작성
+  - `submissions`: `student_name VARCHAR(50) NOT NULL`, `student_id VARCHAR(20)` 추가
+  - `problems`: `soft_deleted BOOLEAN DEFAULT FALSE` 추가
+  - 인덱스 추가 (student_name, problem_id, soft_deleted)
+- [ ] `alembic upgrade head` 로컬 적용
+- [ ] `backend/routers/submissions.py` 업데이트
+  - `SubmissionRequest`: `student_name`, `student_id` 필드 추가
+  - `POST /api/v1/submissions/image`: multipart에 `student_name`, `student_id` 파라미터 추가
+  - `input_type`: `'canvas'` 값 추가 허용
+- [ ] `backend/routers/teacher.py` 업데이트
+  - `GET /api/v1/teacher/queue`: `trust_level` 쿼리 필터 추가, 응답에 `student_name`/`student_id` 포함
+  - `GET /api/v1/teacher/submissions` 신규 (페이지네이션, 필터)
+  - `GET /api/v1/teacher/problems/{id}/submissions` 신규
+- [ ] `backend/routers/problems.py` (교사 CRUD) 신규
+  - `POST /api/v1/teacher/problems`
+  - `GET /api/v1/teacher/problems`
+  - `PUT /api/v1/teacher/problems/{id}`
+  - `DELETE /api/v1/teacher/problems/{id}` (soft delete 로직)
+- [ ] `backend/schemas/` 업데이트 — 신규 엔드포인트 스키마 반영
+
+#### 7-7-2. 프론트엔드 환경 세팅
+
+- [ ] Tailwind CSS v3 설치 및 설정 (`tailwind.config.js`, `globals.css`)
+- [ ] shadcn/ui 초기화 (`npx shadcn-ui@latest init`)
+  - 필요 컴포넌트 추가: `button`, `card`, `tabs`, `input`, `textarea`, `select`, `dialog`, `badge`, `skeleton`, `toast`
+- [ ] Pretendard 폰트 설정 (`@fontsource/pretendard`)
+- [ ] KaTeX 설치 (`react-katex`, `katex`)
+- [ ] `react-signature-canvas` 설치 (캔버스용)
+- [ ] Lucide React 설치
+
+#### 7-7-3. 프론트엔드 학생 화면 `[P]`
+
+- [ ] `StudentInfoForm.tsx` — 이름·학번 입력 (sessionStorage 저장)
+- [ ] `AnswerInput.tsx` 확장 — 3탭 구조 (이미지/카메라/캔버스)
+  - `capture="environment"` 카메라 탭
+  - `CanvasInput.tsx` — react-signature-canvas, CANVAS_ENABLED 플래그
+- [ ] `GradingStatus.tsx` — Skeleton 로딩, ScoreBadge, PendingReviewBanner
+- [ ] `StudentPage.tsx` — 상태 머신 재작성 (info → problem → answer → polling → done)
+- [ ] `FeedbackPanel.tsx` — KaTeX 수식 렌더링 적용
+
+#### 7-7-4. 프론트엔드 교사 화면 `[P]`
+
+- [ ] `PasswordGate.tsx` — shadcn/ui Card + Input + Button
+- [ ] `DashboardHeader.tsx` — 탭 외부 헤더 (통계 요약, 로그아웃)
+- [ ] `ProblemManager.tsx` — 문제 목록 테이블
+- [ ] `ProblemFormDialog.tsx` — 등록·수정 모달 (RubricEditor 포함)
+- [ ] `SubmissionOverview.tsx` — 제출 현황 테이블 (필터, 페이지네이션)
+- [ ] `SubmissionDetailDialog.tsx` — 제출 상세 모달 (이미지·OCR·채점 결과)
+- [ ] `ReviewQueue.tsx` — 검토 큐 (TrustFilter + ReviewCard 재사용)
+- [ ] `TeacherPage.tsx` — 탭 3개 통합
+
+#### 7-7-5. API 레이어 `[P]`
+
+- [ ] `frontend/src/api/problems.ts` 신규 — 문제 조회(학생) + CRUD(교사)
+- [ ] `frontend/src/api/submissions.ts` 업데이트 — `student_name`/`student_id` 포함
+- [ ] `frontend/src/api/teacher.ts` 업데이트 — 현황 조회, trust_level 필터
+
+#### 7-7-6. 빌드 검증
+
+- [ ] `npm run build` 빌드 성공 확인
+- [ ] 다크모드 토글 동작 확인
+- [ ] 수식 렌더링 확인 (KaTeX)
+- [ ] 캔버스 → 이미지 제출 E2E 확인
+
 ---
 
 ## Phase 8: E2E 재검증
@@ -132,6 +202,9 @@
   - `explanation` → `feedback` 필드명 변경
   - 이미지 업로드 테스트 시나리오 추가
   - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
+  - `student_name` 필드 포함 제출 시나리오
+  - 교사 제출 현황 API 검증
+  - 문제 CRUD API 검증
 - [ ] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
 - [ ] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
 - [ ] 통합 테스트 전체 통과 확인

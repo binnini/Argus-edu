@@ -19,6 +19,7 @@ CREATE TABLE problems (
     domain          VARCHAR(50) DEFAULT '수학2',
     difficulty      SMALLINT CHECK (difficulty BETWEEN 1 AND 5),
     source          VARCHAR(100),                    -- 데이터 출처 (예: 'AI-HUB_수학_v1')
+    soft_deleted    BOOLEAN DEFAULT FALSE,           -- 제출이 있는 문제 삭제 시 soft delete (ADR-021)
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -39,14 +40,18 @@ CREATE TABLE problems (
 CREATE TABLE submissions (
     id              SERIAL PRIMARY KEY,
     problem_id      INTEGER REFERENCES problems(id) NOT NULL,
-    input_type      VARCHAR(10) NOT NULL DEFAULT 'text',  -- 'text' | 'image'
+    student_name    VARCHAR(50) NOT NULL,            -- 학생 이름 (인증 없이 자유 입력, ADR-021)
+    student_id      VARCHAR(20),                     -- 학번 (optional, 동명이인 구분)
+    input_type      VARCHAR(10) NOT NULL DEFAULT 'text',  -- 'text' | 'image' | 'canvas'
     student_answer  TEXT NOT NULL,                   -- 최종 텍스트 답변 (OCR 결과 또는 직접 입력)
-    ocr_raw_text    TEXT,                            -- OCR 원본 출력 (input_type='image' 시 저장)
-    image_path      VARCHAR(500),                    -- 업로드 이미지 경로 (input_type='image' 시)
+    ocr_raw_text    TEXT,                            -- OCR 원본 출력 (input_type='image'|'canvas' 시 저장)
+    image_path      VARCHAR(500),                    -- 업로드 이미지 경로 (input_type='image'|'canvas' 시)
     submitted_at    TIMESTAMPTZ DEFAULT NOW(),
     status          VARCHAR(20) DEFAULT 'pending'    -- pending | graded | approved | rejected | error
 );
 ```
+
+> **마이그레이션**: `backend/alembic/versions/0003_add_student_info.py`
 
 ### grading_results — AI 채점 결과
 
@@ -108,6 +113,9 @@ CREATE TABLE feedback_log (
 CREATE INDEX idx_teacher_queue_action_null  ON teacher_queue(queued_at) WHERE action IS NULL;
 CREATE INDEX idx_teacher_queue_sla          ON teacher_queue(sla_deadline) WHERE action IS NULL;
 CREATE INDEX idx_submissions_status         ON submissions(status);
+CREATE INDEX idx_submissions_student_name   ON submissions(student_name);
+CREATE INDEX idx_submissions_problem_id     ON submissions(problem_id);
+CREATE INDEX idx_problems_soft_deleted      ON problems(soft_deleted) WHERE soft_deleted = FALSE;
 CREATE INDEX idx_feedback_log_logged_at     ON feedback_log(logged_at);
 ```
 

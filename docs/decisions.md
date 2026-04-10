@@ -368,6 +368,96 @@ LLM → Claude API (외부)
 
 ---
 
+---
+
+### ADR-021 UX 전면 재설계 — 학생 신원·교사 탭·문제 관리·캔버스·모던 디자인
+**날짜**: 2026-04-10  
+**가역성**: 🟡 준가역
+
+**배경**: Phase 5까지의 프론트엔드는 기능 검증 중심의 최소 UI였다. 파일럿 준비 단계에서 실제 교사·학생 사용 시나리오를 충족하기 위해 UX 전면 재설계가 필요하다.
+
+---
+
+#### 21-1. 학생 신원 추가 (student_name / student_id)
+
+**결정**: 회원가입 없이 제출 시 이름·학번을 입력받아 `submissions` 테이블에 저장한다.
+
+**근거**: 교사가 "누가 어떤 문제를 풀었는지"를 확인하려면 최소한의 신원 정보가 필요하다. JWT 인증 시스템은 MVP 범위 외(ADR-010)이므로, 이름+학번 자유 입력으로 대체한다.
+
+**DB 변경**: `submissions` 테이블에 `student_name VARCHAR(50) NOT NULL`, `student_id VARCHAR(20)` 컬럼 추가 (마이그레이션 `0003_add_student_info.py`).
+
+**제약**: 동명이인 구분은 학번으로만 한다. 인증이 없으므로 학번 위조 가능 — MVP 단계에서 허용.
+
+---
+
+#### 21-2. 학생 입력 방식 확장 — 이미지 업로드·카메라·캔버스
+
+**결정**: `AnswerInput.tsx`를 3-탭 구조로 확장한다.
+- **Tab 1 — 이미지 업로드**: 기존 파일 선택 (유지)
+- **Tab 2 — 카메라 촬영**: `<input type="file" accept="image/*" capture="environment">` — 모바일에서 카메라 직접 호출
+- **Tab 3 — 캔버스 드로잉**: 마우스/터치 손글씨 입력 (신규, 가역적)
+
+**캔버스 구현 전략**:
+- `CanvasInput.tsx`를 독립 컴포넌트로 분리 (제거 시 탭 1개만 숨기면 됨)
+- 라이브러리: `react-signature-canvas` (경량, 터치 지원)
+- 출력: `canvas.toBlob()` → PNG → 기존 `POST /api/v1/submissions/image` 재사용 (백엔드 변경 없음)
+- Feature flag: `AnswerInput.tsx` 상단 `const CANVAS_ENABLED = true` 한 줄로 제거 가능
+
+**근거**: 카메라 입력은 `capture` 속성만으로 구현 가능(코스트 0). 캔버스는 별도 백엔드 없이 기존 이미지 파이프라인을 재사용하므로 리스크가 낮다. 수식 OCR 정확도는 파인튜닝 모델 성능에 의존하므로 별도 검증 필요.
+
+---
+
+#### 21-3. 교사 대시보드 탭 기반 재설계
+
+**결정**: `TeacherDashboard.tsx`를 3-탭 구조로 재설계한다.
+
+| 탭 | 컴포넌트 | 내용 |
+|---|---|---|
+| 문제 관리 | `ProblemManager.tsx` | 문제 등록·수정·삭제 |
+| 풀이 현황 | `SubmissionOverview.tsx` | 학생별·문제별 제출 현황 테이블 |
+| 검토 큐 | `ReviewQueue.tsx` (기존 `ReviewCard.tsx` 재사용) | 할루시네이션 가능성 높은 피드백 검토 |
+
+**근거**: 현재 교사 화면이 큐 전용이라 문제 관리와 현황 파악이 불가능하다. 탭 구조는 컴포넌트 간 독립성을 유지하면서 화면 전환 비용을 최소화한다.
+
+---
+
+#### 21-4. 문제 관리 API 추가
+
+**결정**: 교사 전용 문제 CRUD API를 추가한다 (`X-Teacher-Password` 인증 동일 적용).
+
+```
+POST   /api/v1/teacher/problems          # 문제 등록
+GET    /api/v1/teacher/problems          # 교사용 문제 목록 (정답·루브릭 포함)
+PUT    /api/v1/teacher/problems/{id}     # 문제 수정
+DELETE /api/v1/teacher/problems/{id}     # 문제 삭제 (제출이 있으면 soft delete)
+GET    /api/v1/teacher/submissions       # 전체 제출 현황 (문제·학생별 필터)
+GET    /api/v1/teacher/problems/{id}/submissions  # 문제별 제출 현황
+```
+
+**근거**: seed.py로만 문제를 등록하면 파일럿 교사가 직접 문제를 추가할 수 없다.
+
+---
+
+#### 21-5. 모던 디자인 시스템 도입
+
+**결정**: Tailwind CSS + shadcn/ui + KaTeX를 디자인 시스템으로 채택한다.
+
+| 선택 | 이유 |
+|---|---|
+| **Tailwind CSS** | 유틸리티 클래스, 빠른 iteration, 커스터마이징 용이 |
+| **shadcn/ui** | Radix UI 기반, 접근성 보장, 컴포넌트를 프로젝트 내 코드로 소유 (번들 최소화) |
+| **KaTeX** | LaTeX 수식 렌더링 (문제 본문·풀이 과정 수식 지원) |
+| **Lucide React** | 아이콘 라이브러리 (shadcn/ui 기본 채택) |
+
+**디자인 방향**:
+- 색상: Zinc(중립) + Indigo(액센트) 팔레트
+- 다크모드: Tailwind `dark:` 클래스 + `next-themes` 방식 (shadcn/ui 권장)
+- 타이포그래피: Pretendard (한국어 최적화 고딕체) + 시스템 monospace
+
+**트레이드오프**: 기존 인라인 스타일·CSS 모듈을 Tailwind로 전면 교체해야 함. 기존 코드가 소규모이므로 비용 낮음.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -385,3 +475,4 @@ LLM → Claude API (외부)
 | ADR-007 | 2026-04-10 | **철회** — ADR-019로 대체 (EC2 → Mac Mini) |
 | ADR-019 | 2026-04-10 | Mac Mini M4 직접 서빙 + Cloudflare Tunnel 배포 결정 |
 | ADR-020 | 2026-04-10 | GOT-OCR 서빙 전략 (Mac Mini MPS + model.chat()) |
+| ADR-021 | 2026-04-10 | UX 전면 재설계 (학생 신원, 교사 탭, 문제 관리, 캔버스, 모던 디자인) |
