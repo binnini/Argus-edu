@@ -138,23 +138,45 @@
 
 ---
 
-## Phase 9: 배포
+## Phase 9: 배포 (Mac Mini M4 + Cloudflare Tunnel)
+
+> ADR-019 참고. EC2 방안 철회 — Mac Mini M4 (24GB) 로컬 서빙으로 결정.
 
 **Phase 8 완료 후 시작.**
 
-- [ ] EC2 인스턴스 생성 (t3.medium, Ubuntu 22.04)
-  - 보안 그룹: 22(SSH), 80(HTTP), 443(HTTPS)
-- [ ] EC2 Elastic IP 연결
-- [ ] EC2에 의존성 설치 (Python 3.11, Node, PostgreSQL, Nginx)
-- [ ] EC2 PostgreSQL DB 생성 + 마이그레이션 적용
-- [ ] `.env` 프로덕션 설정 (ANTHROPIC_API_KEY, DB URL, TEACHER_PASSWORD)
-- [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 EC2 DB 삽입
+### 9-1. 서버 환경 준비
+- [ ] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
+- [ ] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
+- [ ] `.env` 프로덕션 설정
+  ```env
+  ANTHROPIC_API_KEY=...
+  DATABASE_URL=postgresql://...
+  TEACHER_PASSWORD=...
+  OCR_MODEL=got_ocr
+  GOT_OCR_MODEL_PATH=/path/to/got_ocr_merged
+  GRADING_MODEL=claude-sonnet-4-6
+  FEEDBACK_MODEL=claude-sonnet-4-6
+  ```
+- [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
+
+### 9-2. 백엔드 서비스
 - [ ] `systemd` 서비스 파일 작성 + 등록 (`argus-backend.service`)
-- [ ] React 빌드 산출물 → EC2 `/var/www/argus/` 복사
-- [ ] Nginx 설정 (`/api/*` → FastAPI, `/*` → React 정적)
-- [ ] 도메인 DNS A 레코드 → Elastic IP 연결
-- [ ] Let's Encrypt HTTPS 인증서 발급 (`certbot`)
-- [ ] HTTPS 최종 접속 확인
+  - 워킹 디렉토리, 환경변수 파일 경로, 재시작 정책 설정
+- [ ] `uvicorn` 프로덕션 실행 확인 (로컬 8000포트)
+
+### 9-3. 프론트엔드
+- [ ] `npm run build` 빌드 산출물 생성
+- [ ] Nginx 설정 (`/api/*` → FastAPI 8000, `/*` → React 정적)
+- [ ] Nginx 서비스 등록 + 시작
+
+### 9-4. Cloudflare Tunnel
+- [ ] Cloudflare 계정 + 도메인 준비
+- [ ] `cloudflared` 설치 (`brew install cloudflare/cloudflare/cloudflared`)
+- [ ] Tunnel 생성 + 인증 (`cloudflared tunnel create argus`)
+- [ ] `config.yml` 작성 — Tunnel → localhost:80(Nginx) 라우팅
+- [ ] `cloudflared` launchd 서비스 등록 (Mac 부팅 시 자동 시작)
+- [ ] Cloudflare DNS CNAME → Tunnel ID 연결
+- [ ] HTTPS 최종 접속 확인 (Cloudflare 자동 TLS)
 
 ---
 
