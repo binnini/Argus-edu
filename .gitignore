@@ -34,3 +34,10 @@ data/AI_HUB/
 data/problems/*.json
 data/ocr_samples/labels.json
 data/ocr_samples/images/
+data/ocr_samples/dataset/
+
+# OCR 학습 출력물 (모델 가중치, 체크포인트, 로그)
+ocr_training/output/
+*.safetensors
+*.bin
+*.tiktoken

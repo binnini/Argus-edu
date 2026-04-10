@@ -87,45 +87,34 @@
   - `submitAnswerText()` / `submitAnswerImage()` 분리
 - [x] `npm run build` 빌드 성공 확인
 
-### 7-6. GOT-OCR 2.0 파인튜닝 (별도 에이전트 — WSL2 RTX 5070Ti)
+### 7-6. GOT-OCR 2.0 파인튜닝 (WSL2 RTX 5070Ti)
 
-> WSL2에 AI-HUB 데이터 및 labels.json 이미 존재 (`~/workSpace/Argus` 동일 경로).  
-> 에이전트 프롬프트: `docs/ocr_agent_prompt.md`
+> 참고: ADR-017 (데이터셋 구성), ADR-018 (파인튜닝 전략)
 
 **데이터 구성 (총 ~279k 이미지)**
-- [x] TS_3 zip 8개 + labels.json 160,015개 (기존)
-- [x] 038 손글씨 zip 9개 (손초4~6, 손중1~3, 손고1~3) — 119,233개 추가 활용 결정
+- [x] TS_3 zip 8개 + labels.json 160,015개
+- [x] 038 손글씨 zip 9개 (초4~6, 중1~3, 고1~3) 119,233개
+- [x] `prepare_dataset.py` — train ~251k / test ~28k split 완료
 
-**전처리 추가 작업 (038 데이터)**
-- [ ] `prepare_dataset.py`에 038 파서 추가
-  - 이미지당 JSON 1개 (`segments[]`) 구조 파싱
-  - `type == '수식/텍스트'` segment만 필터링 (낙서기호·도형 제외)
-  - `\displaystyle` 정규화 제거 (TS_3 라벨과 스타일 통일)
-  - multi-segment 이미지: 각 segment의 `equation`을 줄바꿈으로 이어붙이기
+**학습 환경**
+- [x] flash-attn 미지원 (RTX 5070Ti, CUDA 13 / Blackwell sm_120) → PyTorch SDPA 사용
+- [x] `batch=2, grad_accum=16` (effective 32), `MAX_LENGTH=640`
 
-**속도 최적화 (PyTorch SDPA)**
-- [x] flash-attn → CUDA 13 미지원으로 포기, PyTorch 내장 SDPA로 대체
-  - `attn_implementation="sdpa"` (별도 설치 불필요, 메모리 절감 효과 유사)
-- [x] `per_device_train_batch_size` 4 → 8
-- [x] `gradient_accumulation_steps` 4 → 2 (effective batch 16 유지)
-- [x] `dataloader_num_workers` 4 → 8, `dataloader_pin_memory=True`
-- 예상 학습 시간: 3 epoch 기준 **9~12시간**
+**파인튜닝**
+- [x] v1 실패: 학습 포맷이 `chat()` 추론 포맷과 불일치 → degenerate 출력
+- [x] v2: `train.py` 재작성 — `chat()` 대화 포맷 정렬, `OcrTrainer` 커스텀 (ADR-018)
+- 🔄 **v2 학습 진행 중** (`got_ocr_finetuned_v2/`, 3 epoch, ~44시간)
+  - checkpoint-4000 (epoch 0.52) 검증: 5샘플 완전 일치 2건, 수식 구조 정확 3건
 
-**에이전트 실행 순서**
-- [x] Step 0: 환경 확인 + `ocr_training/requirements.txt` + flash-attn 설치
-- [x] Step 1: `ocr_training/scripts/extract_images.py` — TS_3 zip + 038 손글씨 zip → `data/ocr_samples/images/`
-- [x] Step 2: `ocr_training/scripts/prepare_dataset.py` — labels.json + 038 JSON → `train.jsonl` / `test.jsonl` (~251k / ~28k)
-- [ ] Step 3: `ocr_training/scripts/train.py` — QLoRA 파인튜닝 (3 epoch, Flash Attn2, batch=8)
-- [ ] Step 4: `ocr_training/scripts/evaluate_ocr.py` — CER 평가 (목표 < 5%)
-- [ ] Step 5: `ocr_training/scripts/merge_lora.py` — LoRA merge → `ocr_training/output/got_ocr_merged/`
-
-**완료 후**
+**남은 작업**
+- [ ] Step 4: `evaluate_ocr.py` — base vs fine-tuned CER 비교 (목표 < 5%)
+- [ ] Step 5: `merge_lora.py` — LoRA merge → `got_ocr_merged/`
 - [ ] `.env` 전환
   ```env
   OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=/home/yebin/workSpace/Argus/ocr_training/output/got_ocr_merged
+  GOT_OCR_MODEL_PATH=~/projects/Argus-edu/ocr_training/output/got_ocr_merged
   ```
-- [ ] OCR E2E 검증 — AI-HUB 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
+- [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 
 ---
 

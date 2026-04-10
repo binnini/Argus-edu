@@ -235,6 +235,70 @@
 
 ---
 
+---
+
+### ADR-017 OCR 파인튜닝 데이터셋 — AI-HUB TS_3 + 038 손글씨 혼합
+**날짜**: 2026-04-09  
+**가역성**: 🟡 준가역
+
+**결정**: GOT-OCR 2.0 파인튜닝에 AI-HUB의 두 데이터셋을 혼합하여 사용한다.
+- **TS_3** (수식 인식): 손글씨 수식 이미지 + LaTeX 라벨 160,015개
+- **038 손글씨** (초4~6, 중1~3, 고1~3): 손글씨 텍스트/수식 혼합 이미지 119,233개
+- 최종 split: train ~251k / test ~28k
+
+**근거**:
+- TS_3만으로는 수식 전용 편향이 강해, 한국어 텍스트(예: "직선", "합동")와 수식 혼합 답안 인식이 약함
+- 038 데이터가 초중고 전 학년 실제 손글씨 스타일을 포함하여 도메인 다양성 확보
+- 혼합 결과 train 약 251k → 3 epoch 기준 약 44시간 학습
+
+**038 데이터 전처리 규칙**:
+- `type == '수식/텍스트'` segment만 사용 (낙서·기호·도형 제외)
+- multi-segment 이미지: 각 segment의 `equation` 값을 줄바꿈으로 연결
+- `\displaystyle` 접두사 제거 (TS_3 라벨 스타일 통일)
+
+**트레이드오프**: 데이터 이질성으로 인한 학습 복잡도 증가. 단, 실제 수학 답안은 수식+텍스트 혼합이 일반적이므로 허용.
+
+---
+
+### ADR-018 GOT-OCR 2.0 파인튜닝 전략 — chat() 포맷 정렬 + LoRA
+**날짜**: 2026-04-10  
+**가역성**: 🟡 준가역
+
+**결정**: GOT-OCR 2.0을 LoRA로 파인튜닝할 때, 학습 입력을 모델의 `chat()` 메서드가 실제로 사용하는 대화 포맷과 동일하게 구성한다.
+
+**학습 입력 포맷**:
+```
+<|im_start|>system
+        You should follow the instructions...<|im_end|>
+<|im_start|>user
+<img><imgpad>×256</img>
+OCR: <|im_end|>
+<|im_start|>assistant
+{ground_truth}<|im_end|>
+```
+- `input_ids`: 위 전체 시퀀스 토크나이즈 (MAX_LENGTH=640)
+- `labels`: `<|im_start|>assistant\n` 이전 구간은 `-100`으로 마스킹 → ground_truth 부분만 loss 계산
+- `images`: `list[Tensor(1, 3, 1024, 1024)]`, `bfloat16`
+
+**이전 학습(v1)의 실패 원인**:
+- 학습 시: `images 텐서 + ground_truth 토큰`만 입력 (대화 포맷 없음)
+- 추론 시: `chat()`이 system/user 프롬프트를 앞에 붙여 전달 → 포맷 불일치
+- 결과: 이미지 무시하고 `$$$$의수의수...` 같은 degenerate 출력 생성
+
+**LoRA 설정**:
+- `r=16, lora_alpha=32, dropout=0.05`
+- target: `q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj`
+- Vision encoder는 model forward 내 `set_grad_enabled(False)`로 자동 동결 → LoRA 불필요
+
+**기타 학습 설정**:
+- `batch=2, grad_accum=16` (effective 32), `MAX_LENGTH=640`
+- `attn_implementation="sdpa"` (flash-attn은 CUDA 13/Blackwell 미지원)
+- `OcrTrainer`: `_prepare_inputs` override로 `images` list를 GPU로 수동 이동
+
+**검증**: checkpoint-4000 (epoch 0.52) 시점에서 5개 샘플 테스트 결과 LaTeX 수식 구조 정상 출력 확인. 완전 일치 2건, 수식 구조 정확 3건.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -247,3 +311,5 @@
 | ADR-014 | 2026-04-07 | 일반 풀이 설명 → 개인화 피드백으로 전환 |
 | ADR-015 | 2026-04-07 | OCR 전략 결정 (MVP: AI-HUB + pix2tex) |
 | ADR-016 | 2026-04-07 | 할루시네이션 탐지 방향 변경 (피드백 정확성 검증) |
+| ADR-017 | 2026-04-09 | OCR 파인튜닝 데이터셋 구성 (TS_3 + 038 혼합) |
+| ADR-018 | 2026-04-10 | GOT-OCR2 파인튜닝 전략 (chat() 포맷 정렬 + LoRA) |
