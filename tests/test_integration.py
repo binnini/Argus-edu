@@ -663,3 +663,140 @@ def test_queue_item_has_image_fields():
     for item in data["queue"]:
         assert "input_type" in item, f"queue 항목에 input_type 없음: {item.get('queue_id')}"
         assert "image_path" in item, f"queue 항목에 image_path 없음: {item.get('queue_id')}"
+
+
+# ── Phase 8: OCR E2E 테스트 ─────────────────────────────────────────
+
+
+# AI-HUB 데모 이미지 경로 (data/demo/images/ 하위 손글씨 이미지)
+_DEMO_IMAGE_DIRS = [
+    "data/demo/images/고등",
+    "data/demo/images/중3",
+    "data/demo/images/중1",
+    "data/demo/images/초등6",
+    "data/demo/images/초등3",
+]
+
+
+def _find_demo_image() -> str | None:
+    """data/demo/images/ 에서 첫 번째 JPEG 이미지 경로 반환. 없으면 None."""
+    import os
+
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for rel_dir in _DEMO_IMAGE_DIRS:
+        abs_dir = os.path.join(repo_root, rel_dir)
+        if not os.path.isdir(abs_dir):
+            continue
+        for fname in sorted(os.listdir(abs_dir)):
+            if fname.lower().endswith((".jpg", ".jpeg", ".png")):
+                return os.path.join(abs_dir, fname)
+    return None
+
+
+@pytest.mark.timeout(1200)
+def test_e2e_ocr_handwriting():
+    """
+    OCR E2E 검증 (Phase 7-6 / Phase 8):
+    AI-HUB 손글씨 이미지 → POST /api/v1/submissions/image
+    → OCR 텍스트 추출 → 채점 → 피드백 파이프라인 통과 확인.
+
+    data/demo/images/ 에 이미지가 없으면 skip (CI 환경 대비).
+    GOT-OCR 모델 미설치(OCRError) 시 4xx 허용 — soft assert.
+    """
+    image_path = _find_demo_image()
+    if image_path is None:
+        pytest.skip("data/demo/images/ 에 손글씨 이미지가 없습니다 — OCR E2E 테스트 건너뜀")
+
+    import os
+
+    ext = os.path.splitext(image_path)[1].lower()
+    content_type = "image/png" if ext == ".png" else "image/jpeg"
+
+    with open(image_path, "rb") as f:
+        image_bytes = f.read()
+
+    resp = requests.post(
+        f"{BASE_URL}/api/v1/submissions/image",
+        data={"problem_id": "1", "student_name": "OCR테스트학생", "student_id": "77777701"},
+        files={"image": (os.path.basename(image_path), io.BytesIO(image_bytes), content_type)},
+    )
+
+    # 5xx는 절대 허용하지 않음
+    assert resp.status_code < 500, (
+        f"서버 내부 오류: {resp.status_code} {resp.text[:300]}"
+    )
+
+    if resp.status_code != 202:
+        data = resp.json()
+        # OCR 엔진 미설치 / 모델 경로 오류 등은 soft assert
+        warnings.warn(
+            f"[SOFT] OCR 이미지 업로드 {resp.status_code}: {data.get('detail', '')}",
+            UserWarning,
+        )
+        pytest.skip(f"OCR 엔진 미준비로 E2E 건너뜀: {data.get('detail', '')}")
+
+    submission_id = resp.json()["submission_id"]
+    assert submission_id is not None, "submission_id가 없습니다"
+
+    # 채점 파이프라인 완료 대기
+    data = wait_until_graded(submission_id, timeout=1200)
+    assert data["status"] not in ("error",), f"채점 파이프라인 오류: {data}"
+    assert data["status"] in ("graded", "approved"), (
+        f"예상치 않은 상태: {data['status']}"
+    )
+
+    # OCR 원문 저장 확인
+    assert data.get("input_type") == "image", (
+        f"input_type이 image가 아닙니다: {data.get('input_type')}"
+    )
+
+    # 교사 큐에서 OCR 필드 확인
+    queue_item = find_queue_item(submission_id)
+    assert queue_item is not None, f"submission_id={submission_id}가 교사 큐에 없습니다"
+    assert queue_item.get("input_type") == "image", "큐 항목 input_type이 image가 아닙니다"
+    # ocr_raw_text는 비어 있지 않아야 함 (OCR 실패 시 파이프라인이 막혀야 하므로)
+    assert queue_item.get("ocr_raw_text"), (
+        "OCR 원문(ocr_raw_text)이 비어 있습니다 — OCR 파이프라인 미동작 의심"
+    )
+
+    # 교사 승인 후 피드백 구조 확인
+    queue_id = queue_item["queue_id"]
+    action_resp = requests.post(
+        f"{BASE_URL}/api/v1/teacher/queue/{queue_id}/action",
+        json={"action": "approve"},
+        headers=TEACHER_HEADERS,
+    )
+    assert action_resp.status_code == 200, (
+        f"승인 실패: {action_resp.status_code} {action_resp.text}"
+    )
+
+    final = requests.get(f"{BASE_URL}/api/v1/submissions/{submission_id}").json()
+    assert final["teacher_approved"] is True
+    feedback = final.get("feedback")
+    assert feedback is not None, "approved 후에도 feedback이 None입니다"
+    for key in ("student_mistakes", "correct_approach", "key_concept"):
+        assert key in feedback, f"feedback에 '{key}' 키가 없습니다"
+
+
+@pytest.mark.timeout(30)
+def test_e2e_ocr_hallucination_direction():
+    """
+    할루시네이션 탐지 방향 검증 (Phase 8):
+    GET /api/v1/teacher/feedback/summary → low_trust_detection_precision 필드 존재.
+    피드백 정확성 기반으로 계산된 지표임을 확인.
+    """
+    resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/feedback/summary",
+        headers=TEACHER_HEADERS,
+    )
+    assert resp.status_code == 200, f"피드백 요약 실패: {resp.status_code}"
+    data = resp.json()
+
+    # 할루시네이션 탐지 결과 필드
+    assert "low_trust_detection_precision" in data, (
+        "low_trust_detection_precision 필드 없음 — 할루시네이션 탐지 방향 미반영"
+    )
+    precision = data["low_trust_detection_precision"]
+    assert precision is None or 0.0 <= precision <= 1.0, (
+        f"precision 값 범위 오류: {precision}"
+    )

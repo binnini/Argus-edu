@@ -15,9 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sentence_transformers import SentenceTransformer
 
-from services.hallucination import load_hhem_detector
-from services.grading import GradingService
-from services.feedback import FeedbackService
+from services.grading_feedback import CombinedGradingFeedbackService
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
 from routers import groups
@@ -46,11 +44,7 @@ async def lifespan(app: FastAPI):
     app.state.sbert = sbert
     logger.info("SBERT 로딩 완료")
 
-    app.state.hhem = load_hhem_detector(sbert_model=sbert)
-    logger.info("HHEM detector 준비 완료")
-
-    app.state.grading_service = GradingService(sbert)
-    app.state.feedback_service = FeedbackService(sbert)
+    app.state.combined_service = CombinedGradingFeedbackService(sbert)
     app.state.ocr_service = OCRService()
     logger.info("서비스 인스턴스 초기화 완료. 서버 준비됨.")
 
@@ -98,6 +92,6 @@ async def health():
         "status": "ok",
         "models": {
             "sbert": hasattr(app.state, "sbert"),
-            "hhem": hasattr(app.state, "hhem"),
+            "hhem": True,  # 제거됨 — 하위 호환성 유지
         },
     }

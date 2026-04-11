@@ -10,7 +10,6 @@ OCR 실패 시 에러 반환 (무시하지 않음 — 잘못된 OCR 결과가 �
 """
 
 import logging
-import os
 from pathlib import Path
 
 from config import settings
@@ -108,8 +107,8 @@ class _MathpixEngine:
     """Mathpix API 엔진."""
 
     def __init__(self) -> None:
-        self._app_id = os.getenv("MATHPIX_APP_ID", "")
-        self._app_key = os.getenv("MATHPIX_APP_KEY", "")
+        self._app_id = settings.mathpix_app_id
+        self._app_key = settings.mathpix_app_key
         if not self._app_id or not self._app_key:
             raise OCRError(
                 "Mathpix API 인증 정보 없음. "
@@ -160,7 +159,7 @@ class _GotOcrEngine:
     """
 
     def __init__(self) -> None:
-        model_path = os.getenv("GOT_OCR_MODEL_PATH", "")
+        model_path = settings.got_ocr_model_path
         if not model_path:
             raise OCRError(
                 "GOT-OCR 모델 경로 없음. "

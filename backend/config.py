@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     feedback_model: str = "claude-sonnet-4-6"
     ocr_model: str = "pix2tex"  # pix2tex | mathpix | got_ocr
 
+    # OCR 모델 경로 (got_ocr 사용 시)
+    got_ocr_model_path: str = ""
+    # Mathpix API 인증 (mathpix 사용 시)
+    mathpix_app_id: str = ""
+    mathpix_app_key: str = ""
+
     # 신뢰도 게이트
     trust_threshold: float = 0.75
 

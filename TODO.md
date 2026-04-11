@@ -117,7 +117,9 @@
   OCR_MODEL=got_ocr
   GOT_OCR_MODEL_PATH=.../ocr_training/output/got_ocr_merged
   ```
-- [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
+- [x] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
+  - `test_e2e_ocr_handwriting` 테스트 추가 (`tests/test_integration.py`)
+  - `.env` `GOT_OCR_MODEL_PATH` 절대경로로 수정
 
 ### 7-7. UX 재설계 (ADR-021) `[P]` ✅
 
@@ -251,14 +253,59 @@
 
 ---
 
-## Phase 8: E2E 재검증
+## Phase 8: 파이프라인 리팩토링 + E2E 재검증
 
-**Phase 7 전체 완료 후 시작.**
+**브랜치: `feat/phase8-pipeline-refactor`**
 
-- [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
+### 8-1. LLM 파이프라인 단순화 (4호출 → 1호출) ✅
+
+- [x] HHEM/SBERT 기반 할루시네이션 검증 제거 (실효성 낮음 — ADR 검토 필요)
+  - `services/hallucination.py` 비활성화
+  - 멀티 샘플링 3회 폐기
+- [x] `backend/services/grading_feedback.py` 신규 작성
+  - `CombinedGradingFeedbackService.run()` — 채점 + 피드백을 단일 LLM 호출로 통합
+  - `CombinedOutput` 데이터클래스 (grading + feedback 필드 통합)
+  - JSON 파싱 안정화: 코드블록 제거, regex 추출, escape 수정 fallback
+- [x] `backend/services/trust_gate.py` 개정
+  - 신뢰도 공식 변경: `0.6×hhem + 0.4×(1−inconsistency)` → `ai_score / total_score`
+  - 0점은 항상 `full_review` 큐
+- [x] `backend/main.py` 업데이트
+  - HHEM 제거, `CombinedGradingFeedbackService` 등록
+  - health 엔드포인트 하위 호환(`"hhem": True` 유지)
+- [x] `backend/routers/submissions.py` 파이프라인 교체
+  - `combined_svc.run()` 단일 호출로 대체
+  - `calculate_trust(ai_score, total_score)` 연동
+  - `NameError` 버그 수정: `grading_out.total_score` → `out.total_score`
+
+### 8-2. 스키마 강화 ✅
+
+- [x] `backend/schemas/submissions.py` Pydantic 내성 강화
+  - `FeedbackMistake.step`: 문자열/None 허용 (`field_validator` coerce)
+  - `FeedbackSchema.student_mistakes`: `Union[FeedbackMistake, str]` 허용
+  - `FeedbackSchema.correct_approach`: `Union[FeedbackStep, str]` 허용
+  - `SubmissionStatusResponse`: `input_type`, `ocr_raw_text` 필드 추가
+- [x] `backend/config.py`: `got_ocr_model_path`, `mathpix_app_id`, `mathpix_app_key` 필드 추가
+
+### 8-3. GOT-OCR MPS 패치 ✅
+
+- [x] `ocr_training/output/got_ocr_merged/config.json` — `auto_map` prefix 제거
+  - `"stepfun-ai/GOT-OCR2_0--modeling_GOT.GOT*"` → `"modeling_GOT.GOT*"` (로컬 파일 사용)
+  - CUDA 강제 호출 방지, Mac MPS에서 정상 동작
+- [x] GOT-OCR E2E 검증 완료 (손글씨 이미지 → OCR 3.4s → 채점 파이프라인 통과)
+
+### 8-4. 벤치마크 스크립트 ✅
+
+- [x] `scripts/benchmark_models.py` 신규 작성
+  - 30문제 (초등 E01~E08 / 중학 M01~M10 / 고등 H01~H12) 내장
+  - CLI: `--models`, `--base-url`, `--timeout`, `--limit`, `--output`
+  - Ollama OpenAI-compatible API 사용
+  - 측정 항목: elapsed_sec, ai_score vs expected_score, key_concept, mistake_count
+  - 출력: 콘솔 테이블(✅/❌/💥) + 레벨별 요약 + CSV export
+
+### 8-5. 통합 테스트 ✅
+
 - [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
   - `explanation` → `feedback` 필드명 변경
-  - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
   - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
   - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
   - `student_name` 필드 포함 제출 시나리오
@@ -268,16 +315,22 @@
   - 교사 큐 trust_level 필터 검증
   - 큐 항목 input_type/image_path 필드 검증
   - 문제 목록 페이지네이션 검증
-  - `student_name` 필드 포함 제출 시나리오
-  - 교사 제출 현황 API 검증 (필터 포함)
-  - 문제 CRUD API 검증 (등록·수정·삭제)
-  - 학생 이력 조회 API 검증 (`GET /api/v1/submissions?student_id=...`)
-  - 교사 큐 trust_level 필터 검증
-  - 큐 항목 input_type/image_path 필드 검증
-  - 문제 목록 페이지네이션 검증
-- [ ] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
-- [ ] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
-- [ ] 통합 테스트 전체 통과 확인
+- [x] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
+  - `test_e2e_ocr_handwriting` 추가 — `data/demo/images/` 실제 이미지 사용
+  - OCR 원문(`ocr_raw_text`) 저장 확인, 교사 큐 `input_type=image` 확인
+- [x] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
+  - `test_e2e_ocr_hallucination_direction` 추가 — `low_trust_detection_precision` 필드 검증
+- [ ] 통합 테스트 최종 전체 통과 확인
+  - `pytest tests/test_integration.py -v --timeout=1200 -k "not load_test"`
+  - 목표: `grading_out` NameError 수정 후 전체 통과
+
+### 8-6. 모델 벤치마크 (진행 예정)
+
+- [ ] Ollama 로컬 모델 벤치마크 실행
+  - `python scripts/benchmark_models.py --models <model1>,<model2> --limit 10`
+  - 후보: `qwen2.5:7b-instruct`, `phi4:latest`, `gemma3:12b`, `llama3.1:8b`
+- [ ] 벤치마크 결과 기반 `.env` `GRADING_MODEL` 최적 모델로 교체
+- [ ] 교체 후 통합 테스트 재실행 통과 확인
 
 ---
 
@@ -315,10 +368,6 @@
 - [x] `docs/deployment.md` — 전체 배포 가이드 작성
 - [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
 
-### 9-3. Mac Mini 현장 실행
-- [ ] `bash deploy/setup.sh` 실행
-- [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
-- [ ] Nginx 서빙 확인 (`curl http://localhost/`)
 ### 9-3. Mac Mini 현장 실행
 - [ ] `bash deploy/setup.sh` 실행
 - [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)

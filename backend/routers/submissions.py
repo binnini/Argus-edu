@@ -232,10 +232,7 @@ async def _run_grading_pipeline(
             submission = result.scalar_one()
             problem = submission.problem
 
-            grading_svc = app_state.grading_service
-            feedback_svc = app_state.feedback_service
-            hhem = app_state.hhem
-
+            combined_svc = app_state.combined_service
             student_answer = submission.student_answer
 
             # OCR (이미지 입력 시)
@@ -249,7 +246,6 @@ async def _run_grading_pipeline(
                     await db.commit()
                     return
 
-                # 최종 답 prefix가 있으면 유지하고 풀이 과정 추가
                 existing_prefix = submission.student_answer or ""
                 if existing_prefix:
                     student_answer = existing_prefix + "[풀이 과정]\n" + ocr_text
@@ -259,8 +255,8 @@ async def _run_grading_pipeline(
                 submission.ocr_raw_text = ocr_text
                 await db.commit()
 
-            # 채점
-            grading_out = await grading_svc.grade(
+            # 채점 + 피드백 단일 호출
+            out = await combined_svc.run(
                 problem_content=problem.content,
                 answer=problem.answer,
                 reference_solution=problem.reference_solution,
@@ -268,39 +264,27 @@ async def _run_grading_pipeline(
                 student_answer=student_answer,
             )
 
-            # 개인화 피드백 생성
-            feedback_out = await feedback_svc.generate(
-                problem_content=problem.content,
-                answer=problem.answer,
-                reference_solution=problem.reference_solution,
-                student_answer=student_answer,
-                grading_steps=grading_out.steps,
-            )
-
-            # HHEM 검증 (피드백 정확성 — ADR-016)
-            correct_approach_text = feedback_svc.format_correct_approach_text(
-                feedback_out.correct_approach
-            )
-            hhem_result = hhem.score_feedback(
-                reference_solution=problem.reference_solution,
-                grading_steps=grading_out.steps,
-                correct_approach_text=correct_approach_text,
-            )
-
-            # 신뢰도 계산
+            # 신뢰도: 점수 비율 기반
+            total_score = problem.rubric.get("total_score", 1)
             trust = calculate_trust(
-                hhem_score=hhem_result.score,
-                inconsistency_rate=feedback_out.inconsistency_rate,
+                ai_score=out.total_score,
+                total_score=total_score,
             )
 
-            # GradingResult 저장 (ai_feedback은 JSON 문자열로 저장)
+            ai_feedback_dict = {
+                "student_mistakes": out.student_mistakes,
+                "correct_approach": out.correct_approach,
+                "key_concept": out.key_concept,
+            }
+
+            # GradingResult 저장
             grading_record = GradingResult(
                 submission_id=submission_id,
-                ai_score=grading_out.total_score,
-                ai_feedback=json.dumps(feedback_out.to_dict(), ensure_ascii=False),
-                sbert_similarity=grading_out.sbert_similarity,
-                hhem_score=hhem_result.score,
-                inconsistency_rate=feedback_out.inconsistency_rate,
+                ai_score=out.total_score,
+                ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
+                sbert_similarity=out.sbert_similarity,
+                hhem_score=None,
+                inconsistency_rate=0.0,
                 trust_score=trust.trust_score,
                 trust_level=trust.trust_level,
             )
@@ -318,7 +302,7 @@ async def _run_grading_pipeline(
 
             logger.info(
                 f"채점 완료 submission_id={submission_id} "
-                f"score={grading_out.total_score} trust={trust.trust_level}"
+                f"score={out.total_score} trust={trust.trust_level}"
             )
 
         except Exception as e:
@@ -563,6 +547,11 @@ async def get_submission_status(
         raise HTTPException(status_code=404, detail="제출을 찾을 수 없습니다")
 
     if submission.status == "pending" or not submission.grading_result:
+        message = (
+            "채점 중 오류가 발생했습니다. 관리자에게 문의하세요."
+            if submission.status == "error"
+            else "채점 중입니다. 잠시 후 다시 확인해주세요."
+        )
         return SubmissionStatusResponse(
             submission_id=submission_id,
             status=submission.status,
@@ -570,9 +559,11 @@ async def get_submission_status(
             score_visible=False,
             feedback=None,
             teacher_approved=False,
-            message="채점 중입니다. 잠시 후 다시 확인해주세요.",
+            message=message,
             problem_title=submission.problem.title if submission.problem else None,
             problem_content=submission.problem.content if submission.problem else None,
+            input_type=submission.input_type,
+            ocr_raw_text=submission.ocr_raw_text,
         )
 
     gr = submission.grading_result
@@ -624,6 +615,8 @@ async def get_submission_status(
         message=message,
         problem_title=submission.problem.title if submission.problem else None,
         problem_content=submission.problem.content if submission.problem else None,
+        input_type=submission.input_type,
+        ocr_raw_text=submission.ocr_raw_text,
     )
 
 
