@@ -599,7 +599,7 @@ def run_mlx_benchmark(
                 tokenizer,
                 prompt=prompt,
                 max_tokens=max_tokens,
-                temp=temp,
+                temperature=temp,
                 verbose=False,
             )
             parsed = parse_response(raw, is_deepseek=deepseek)
@@ -632,7 +632,7 @@ def run_mlx_benchmark(
     del model, tokenizer
     try:
         import mlx.core as mx
-        mx.metal.clear_cache()
+        mx.clear_cache()
     except Exception:
         pass
 
