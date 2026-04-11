@@ -41,3 +41,4 @@ ocr_training/output/
 *.safetensors
 *.bin
 *.tiktoken
+.aider*

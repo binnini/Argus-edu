@@ -22,7 +22,7 @@ MAX_NEW_TOKENS = 512
 
 BASE       = Path.home() / "projects/Argus-edu"
 BASE_MODEL = "stepfun-ai/GOT-OCR2_0"
-LORA_PATH  = BASE / "ocr_training/output/got_ocr_finetuned"
+LORA_PATH  = BASE / "ocr_training/output/got_ocr_finetuned_v2"
 TEST_DATA  = BASE / "data/ocr_samples/dataset/test.jsonl"
 OUTPUT_DIR = BASE / "ocr_training/output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
