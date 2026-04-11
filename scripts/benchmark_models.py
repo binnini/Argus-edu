@@ -547,13 +547,17 @@ def build_prompt_mlx(tokenizer, problem: dict) -> str:
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
-    # apply_chat_template이 없는 토크나이저 대비 fallback
-    if hasattr(tokenizer, "apply_chat_template"):
-        return tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-    # fallback: 수동 조합
-    return f"{SYSTEM_PROMPT}\n\n{user_content}\n"
+    # chat_template이 실제로 설정된 경우에만 apply_chat_template 사용
+    chat_template = getattr(tokenizer, "chat_template", None)
+    if chat_template:
+        try:
+            return tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+        except Exception:
+            pass
+    # fallback: Instruct 형식 수동 조합
+    return f"<s>[INST] {SYSTEM_PROMPT}\n\n{user_content} [/INST]"
 
 
 def run_mlx_benchmark(
