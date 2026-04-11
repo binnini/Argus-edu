@@ -7,6 +7,8 @@ export interface QueueItem {
   student_answer: string;
   student_name: string;
   student_id: string | null;
+  input_type: string;
+  image_path: string | null;
   ai_score: number;
   ai_feedback: string;
   trust_score: number;

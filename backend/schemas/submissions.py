@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -40,3 +41,18 @@ class SubmissionStatusResponse(BaseModel):
     feedback: Optional[FeedbackSchema]   # 교사 승인 후에만 노출
     teacher_approved: bool
     message: Optional[str]
+
+
+class StudentHistoryItem(BaseModel):
+    submission_id: int
+    problem_title: str
+    problem_domain: str
+    status: str
+    ai_score: Optional[int]
+    final_score: Optional[int]
+    input_type: str
+    submitted_at: datetime
+
+
+class StudentHistoryResponse(BaseModel):
+    submissions: list[StudentHistoryItem]

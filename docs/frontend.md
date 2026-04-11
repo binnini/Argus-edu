@@ -92,8 +92,12 @@ StudentPage
 ├── StudentInfoForm          이름·학번 입력 (제출 전 1회)
 │     ├── Input (이름)
 │     └── Input (학번, optional)
-├── ProblemSelector          문제 선택 드롭다운
-│     └── Select
+├── SubmissionHistory        나의 풀이 현황 (로그인 직후, 제출 완료 후)
+│     ├── HistoryCard[]      문제명·도메인·상태·최종점수
+│     └── Button "새 문제 풀기"
+├── ProblemSelector          문제 선택 드롭다운 (페이지네이션 30개씩)
+│     ├── Select
+│     └── ChevronLeft/Right 페이지 버튼
 ├── AnswerInput              답변 입력 탭 (3탭)
 │     ├── Tab: 이미지 업로드
 │     │     ├── FileDropzone   드래그&드롭 또는 파일 선택
@@ -118,9 +122,17 @@ StudentPage
 **StudentPage 상태 머신**
 
 ```
-idle → info_input → problem_select → answer_input → submitting → polling → done
-                                                         ↑              |
-                                                         └── retry ←────┘ (error)
+info → history → problem → answer → submitting → polling → done
+         ↑                   ↑            ↑              |
+         └────────────────────────────────────── reset ──┘
+
+- info     : 이름·학번 입력 (sessionStorage에 없을 때만)
+- history  : 나의 풀이 현황 (로그인 직후·제출 완료 후 기본 화면)
+- problem  : 문제 선택 (페이지네이션 드롭다운, 30개씩)
+- answer   : 답안 입력 (텍스트 / 이미지 / 캔버스 탭)
+- submitting: 제출 중 스피너
+- polling  : 채점 결과 2초마다 폴링
+- done     : 채점 결과 표시 → reset 시 history로 복귀
 ```
 
 ---
@@ -167,14 +179,30 @@ TeacherPage
 
 ```
 src/api/
-├── submissions.ts    학생 제출·폴링
-├── teacher.ts        교사 큐·액션·통계
+├── submissions.ts    학생 제출·폴링·이력 조회
+├── teacher.ts        교사 큐·액션·통계·제출 현황
 └── problems.ts       문제 조회(학생) + CRUD(교사)
 ```
 
 - 모든 API 함수는 `async` / 에러 시 `throw`
 - 교사 API: `X-Teacher-Password` 헤더를 API 함수 내부에서 `localStorage`에서 읽어 첨부
 - 폴링: `useEffect` + `setInterval` (2초 간격), 컴포넌트 언마운트 시 `clearInterval`
+- 학생 이력 조회: `getStudentHistory(studentId)` → `GET /api/v1/submissions?student_id=...`
+
+### 이미지 서빙
+
+정적 이미지는 FastAPI StaticFiles로 서빙됨. `image_path` DB 값을 그대로 URL 경로로 사용.
+
+```
+GET /data/{relative_path}
+예: /data/demo/images/초등3/P3_1_01_21169_50030_7_O.jpeg
+```
+
+프론트엔드에서 이미지 URL 조합:
+```tsx
+<img src={`${API_HOST}/${item.image_path}`} />
+// API_HOST 기본값: http://localhost:8000
+```
 
 ---
 
@@ -227,7 +255,8 @@ frontend/src/
 │   ├── teacher.ts
 │   └── problems.ts
 ├── lib/
-│   └── utils.ts                (shadcn/ui cn() 유틸)
+│   ├── utils.ts                (shadcn/ui cn() 유틸)
+│   └── renderMath.tsx          (KaTeX 공용 렌더 유틸 — FeedbackPanel·ReviewCard 공유)
 └── styles/
     └── globals.css             (Tailwind directives + CSS 변수)
 ```
@@ -236,15 +265,23 @@ frontend/src/
 
 ## KaTeX 수식 렌더링 규칙
 
-- 문제 본문(`content`)과 피드백 단계(`correct_approach.content`)에 LaTeX가 포함될 수 있다.
+- 문제 본문(`content`)과 피드백 단계(`correct_approach.content`), 학생 답변에 LaTeX가 포함될 수 있다.
 - `$...$` (인라인) 및 `$$...$$` (블록) 구문을 `react-katex`의 `InlineMath` / `BlockMath`로 변환.
-- 파싱: 백엔드에서 오는 원본 문자열을 `$` 기준으로 분리하여 렌더링. 별도 Markdown 파서 불필요.
+- 파싱: `src/lib/renderMath.tsx`의 `renderMath()` 공용 유틸리티 사용. 별도 Markdown 파서 불필요.
 
 ```tsx
-// 예시
-<BlockMath math="f'(x) = 3x^2 - 6x" />
-<InlineMath math="x = 0 \text{ 또는 } x = 2" />
+// src/lib/renderMath.tsx — 공용 유틸리티
+import { InlineMath, BlockMath } from "react-katex"
+import "katex/dist/katex.min.css"
+
+export function renderMath(text: string): React.ReactNode { ... }
+
+// 사용 예시 (FeedbackPanel, ReviewCard 등에서 공통 사용)
+<div>{renderMath(item.student_answer)}</div>
+<div>{renderMath(step.content)}</div>
 ```
+
+- 이미지 제출(`input_type === "image"`)인 경우 `student_answer` 대신 이미지를 직접 렌더링.
 
 ---
 

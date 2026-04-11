@@ -77,6 +77,8 @@ async def get_queue(
                 student_answer=sub.student_answer,
                 student_name=sub.student_name,
                 student_id=sub.student_id,
+                input_type=sub.input_type or "text",
+                image_path=sub.image_path,
                 ai_score=gr.ai_score,
                 ai_feedback=gr.ai_feedback,
                 trust_score=gr.trust_score,

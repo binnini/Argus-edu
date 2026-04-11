@@ -52,14 +52,27 @@ function teacherHeaders(): HeadersInit {
   return { "X-Teacher-Password": pw, "Content-Type": "application/json" };
 }
 
-export async function getTeacherProblems(): Promise<TeacherProblemItem[]> {
-  const res = await fetch(`${API_BASE}/teacher/problems`, {
-    headers: teacherHeaders(),
-  });
+export interface TeacherProblemListResponse {
+  problems: TeacherProblemItem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export async function getTeacherProblems(params?: {
+  page?: number;
+  page_size?: number;
+  has_submissions?: boolean;
+}): Promise<TeacherProblemListResponse> {
+  const query = new URLSearchParams();
+  if (params?.page) query.set("page", String(params.page));
+  if (params?.page_size) query.set("page_size", String(params.page_size));
+  if (params?.has_submissions) query.set("has_submissions", "true");
+  const url = `${API_BASE}/teacher/problems${query.toString() ? `?${query.toString()}` : ""}`;
+  const res = await fetch(url, { headers: teacherHeaders() });
   if (res.status === 401) throw new Error("교사 인증 실패");
   if (!res.ok) throw new Error(`문제 목록 조회 실패: ${res.status}`);
-  const data = await res.json();
-  return data.problems;
+  return res.json();
 }
 
 export async function createProblem(data: ProblemCreate): Promise<TeacherProblemItem> {

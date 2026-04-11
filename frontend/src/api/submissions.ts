@@ -42,11 +42,38 @@ export interface SubmissionStatusResponse {
   message: string | null;
 }
 
-export async function getProblems(): Promise<Problem[]> {
-  const res = await fetch(`${API_BASE}/problems`);
+export interface ProblemListPagedResponse {
+  problems: Problem[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface StudentHistoryItem {
+  submission_id: number;
+  problem_title: string;
+  problem_domain: string;
+  status: string;
+  ai_score: number | null;
+  final_score: number | null;
+  input_type: string;
+  submitted_at: string;
+}
+
+export interface StudentHistoryResponse {
+  submissions: StudentHistoryItem[];
+}
+
+export async function getProblems(page = 1, pageSize = 30): Promise<ProblemListPagedResponse> {
+  const res = await fetch(`${API_BASE}/problems?page=${page}&page_size=${pageSize}`);
   if (!res.ok) throw new Error(`문제 목록 조회 실패: ${res.status}`);
-  const data = await res.json();
-  return data.problems;
+  return res.json();
+}
+
+export async function getStudentHistory(studentId: string): Promise<StudentHistoryResponse> {
+  const res = await fetch(`${API_BASE}/submissions?student_id=${encodeURIComponent(studentId)}`);
+  if (!res.ok) throw new Error(`이력 조회 실패: ${res.status}`);
+  return res.json();
 }
 
 export async function getProblem(problemId: number): Promise<Problem> {

@@ -10,7 +10,7 @@ DELETE /api/v1/teacher/problems/{id}  — 문제 삭제 (제출 없으면 hard d
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,6 +79,9 @@ async def create_problem(
 async def list_teacher_problems(
     db: AsyncSession = Depends(get_session),
     _: None = Depends(_verify_teacher),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    has_submissions: bool = Query(False),
 ):
     # submission count 서브쿼리
     subq = (
@@ -87,11 +90,26 @@ async def list_teacher_problems(
         .subquery()
     )
 
-    result = await db.execute(
+    base_query = (
         select(Problem, subq.c.cnt)
         .outerjoin(subq, Problem.id == subq.c.problem_id)
         .where(Problem.soft_deleted.is_(False))
+    )
+    if has_submissions:
+        base_query = base_query.where(subq.c.cnt > 0)
+
+    # 전체 개수
+    count_result = await db.execute(
+        select(func.count()).select_from(base_query.subquery())
+    )
+    total = count_result.scalar() or 0
+
+    # 페이지 조회
+    result = await db.execute(
+        base_query
         .order_by(Problem.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
     )
     rows = result.all()
 
@@ -111,7 +129,7 @@ async def list_teacher_problems(
                 created_at=problem.created_at,
             )
         )
-    return TeacherProblemListResponse(problems=problems)
+    return TeacherProblemListResponse(problems=problems, total=total, page=page, page_size=page_size)
 
 
 @router.put("/problems/{problem_id}", response_model=TeacherProblemItem)

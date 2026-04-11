@@ -30,6 +30,13 @@ class ProblemListResponse(BaseModel):
     problems: list[ProblemSummary]
 
 
+class ProblemListPagedResponse(BaseModel):
+    problems: list[ProblemSummary]
+    total: int
+    page: int
+    page_size: int
+
+
 # ── 교사용 스키마 ─────────────────────────────────────────────
 
 class RubricStep(BaseModel):
@@ -79,6 +86,9 @@ class TeacherProblemItem(BaseModel):
 
 class TeacherProblemListResponse(BaseModel):
     problems: list[TeacherProblemItem]
+    total: int
+    page: int
+    page_size: int
 
 
 class ProblemDeleteResponse(BaseModel):

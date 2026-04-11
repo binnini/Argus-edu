@@ -8,9 +8,11 @@ lifespan:
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sentence_transformers import SentenceTransformer
 
 from services.hallucination import load_hhem_detector
@@ -65,6 +67,11 @@ app.include_router(submissions.router)
 app.include_router(teacher.router)
 app.include_router(feedback.router)
 app.include_router(problems.router)
+
+# 학생 풀이 이미지 정적 서빙
+_data_dir = Path(__file__).parent.parent / "data"
+if _data_dir.exists():
+    app.mount("/data", StaticFiles(directory=str(_data_dir)), name="data")
 
 
 @app.get("/health")

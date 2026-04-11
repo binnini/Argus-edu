@@ -1,27 +1,40 @@
 import * as React from "react"
 import {
   getSubmissionStatus,
+  getStudentHistory,
   submitAnswerImage,
   submitAnswerText,
   type Problem,
   type SubmissionStatusResponse,
+  type StudentHistoryItem,
 } from "@/api/submissions"
 import StudentInfoForm from "@/components/student/StudentInfoForm"
 import ProblemSelector from "@/components/student/ProblemSelector"
 import AnswerInput from "@/components/student/AnswerInput"
 import GradingStatus from "@/components/student/GradingStatus"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
-type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "done"
+type Stage = "info" | "history" | "problem" | "answer" | "submitting" | "polling" | "done"
+
+function statusBadge(status: string) {
+  switch (status) {
+    case "approved": return <Badge variant="success">승인</Badge>
+    case "graded": return <Badge variant="warning">검토 대기</Badge>
+    case "rejected": return <Badge variant="destructive">거부</Badge>
+    default: return <Badge variant="secondary">채점 중</Badge>
+  }
+}
 
 export default function StudentPage() {
   const [stage, setStage] = React.useState<Stage>(() => {
     const saved = sessionStorage.getItem("argus_student_name")
-    return saved ? "problem" : "info"
+    return saved ? "history" : "info"
   })
+  const [history, setHistory] = React.useState<StudentHistoryItem[]>([])
   const [studentName, setStudentName] = React.useState(
     () => sessionStorage.getItem("argus_student_name") ?? ""
   )
@@ -85,7 +98,13 @@ export default function StudentPage() {
     setResult(null)
     setSubmissionId(null)
     setSubmitError("")
-    setStage("problem")
+    // 이력 새로고침 후 history로
+    if (studentId) {
+      getStudentHistory(studentId)
+        .then((data) => setHistory(data.submissions))
+        .catch(() => {})
+    }
+    setStage("history")
   }
 
   return (
@@ -105,9 +124,55 @@ export default function StudentPage() {
             onComplete={(name, id) => {
               setStudentName(name)
               setStudentId(id)
-              setStage("problem")
+              // 이력 로드 후 history 화면으로
+              if (id) {
+                getStudentHistory(id)
+                  .then((data) => setHistory(data.submissions))
+                  .catch(() => setHistory([]))
+              }
+              setStage("history")
             }}
           />
+        )}
+
+        {stage === "history" && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">나의 풀이 현황</CardTitle>
+                  <Button size="sm" onClick={() => setStage("problem")}>
+                    새 문제 풀기
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {history.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    아직 제출한 풀이가 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {history.map((item) => (
+                      <div key={item.submission_id}
+                        className="flex items-center justify-between rounded-xl border p-3 text-sm">
+                        <div>
+                          <p className="font-medium">{item.problem_title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{item.problem_domain}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {statusBadge(item.status)}
+                          {item.final_score !== null && (
+                            <span className="font-semibold">{item.final_score}점</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {stage === "problem" && (

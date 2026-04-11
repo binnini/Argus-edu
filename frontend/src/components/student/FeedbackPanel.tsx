@@ -1,23 +1,8 @@
-import * as React from "react"
-import { InlineMath, BlockMath } from "react-katex"
-import "katex/dist/katex.min.css"
+import { renderMath } from "@/lib/renderMath"
 import type { Feedback } from "@/api/submissions"
 
 interface FeedbackPanelProps {
   feedback: Feedback
-}
-
-function renderWithKatex(text: string): React.ReactNode {
-  const parts = text.split(/(\$\$[\s\S]+?\$\$|\$[^$]+?\$)/g)
-  return parts.map((part, i) => {
-    if (part.startsWith("$$") && part.endsWith("$$")) {
-      return <BlockMath key={i} math={part.slice(2, -2)} />
-    }
-    if (part.startsWith("$") && part.endsWith("$")) {
-      return <InlineMath key={i} math={part.slice(1, -1)} />
-    }
-    return <span key={i}>{part}</span>
-  })
 }
 
 export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
@@ -30,7 +15,7 @@ export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
             {feedback.student_mistakes.map((m) => (
               <li key={m.step} className="text-sm text-rose-800 dark:text-rose-200">
                 <span className="font-medium">단계 {m.step}:</span>{" "}
-                {renderWithKatex(m.description)}
+                {renderMath(m.description)}
               </li>
             ))}
           </ul>
@@ -48,7 +33,7 @@ export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
                 </span>
                 <div className="text-sm text-indigo-800 dark:text-indigo-200">
                   <strong>{s.title}:</strong>{" "}
-                  {renderWithKatex(s.content)}
+                  {renderMath(s.content)}
                 </div>
               </li>
             ))}
@@ -60,7 +45,7 @@ export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
         <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/30 p-4">
           <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-300 mb-1">핵심 개념</h4>
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            {renderWithKatex(feedback.key_concept)}
+            {renderMath(feedback.key_concept)}
           </p>
         </div>
       )}

@@ -47,8 +47,8 @@ export default function SubmissionOverview() {
   const PAGE_SIZE = 20
 
   useEffect(() => {
-    getTeacherProblems()
-      .then(setProblems)
+    getTeacherProblems({ has_submissions: true, page_size: 200 })
+      .then((data) => setProblems(data.problems))
       .catch(() => {/* 문제 목록 조회 실패 시 필터 없이 진행 */})
   }, [])
 

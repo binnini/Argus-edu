@@ -16,18 +16,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db import get_session
 from models import Problem, Submission, GradingResult, TeacherQueue
-from schemas.problems import ProblemListResponse, ProblemSummary, ProblemDetail
+from schemas.problems import ProblemListResponse, ProblemSummary, ProblemDetail, ProblemListPagedResponse
 from schemas.submissions import (
     SubmissionRequest,
     SubmissionCreateResponse,
     SubmissionStatusResponse,
+    StudentHistoryItem,
+    StudentHistoryResponse,
 )
 from services.trust_gate import calculate_trust, get_submission_response
 
@@ -41,11 +43,26 @@ MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
 
 # ── 문제 조회 ────────────────────────────────────────────────
 
-@router.get("/problems", response_model=ProblemListResponse)
-async def list_problems(db: AsyncSession = Depends(get_session)):
-    result = await db.execute(select(Problem).order_by(Problem.id))
+@router.get("/problems", response_model=ProblemListPagedResponse)
+async def list_problems(
+    db: AsyncSession = Depends(get_session),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(30, ge=1, le=100),
+):
+    total_result = await db.execute(
+        select(func.count()).select_from(Problem).where(Problem.soft_deleted.is_(False))
+    )
+    total = total_result.scalar() or 0
+
+    result = await db.execute(
+        select(Problem)
+        .where(Problem.soft_deleted.is_(False))
+        .order_by(Problem.id)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
     problems = result.scalars().all()
-    return ProblemListResponse(
+    return ProblemListPagedResponse(
         problems=[
             ProblemSummary(
                 id=p.id,
@@ -56,7 +73,10 @@ async def list_problems(db: AsyncSession = Depends(get_session)):
                 total_score=p.rubric["total_score"],
             )
             for p in problems
-        ]
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
     )
 
 
@@ -295,6 +315,48 @@ async def _run_grading_pipeline(
                     await db.commit()
             except Exception:
                 pass
+
+
+# ── 학생 제출 이력 ───────────────────────────────────────────
+
+@router.get("/submissions", response_model=StudentHistoryResponse)
+async def list_student_submissions(
+    student_id: str = Query(...),
+    db: AsyncSession = Depends(get_session),
+):
+    result = await db.execute(
+        select(Submission, Problem, GradingResult, TeacherQueue)
+        .join(Problem, Submission.problem_id == Problem.id)
+        .outerjoin(GradingResult, GradingResult.submission_id == Submission.id)
+        .outerjoin(TeacherQueue, TeacherQueue.submission_id == Submission.id)
+        .where(Submission.student_id == student_id)
+        .order_by(Submission.submitted_at.desc())
+        .limit(50)
+    )
+    rows = result.all()
+
+    items = []
+    for sub, prob, gr, tq in rows:
+        final_score = None
+        status_label = sub.status
+        if tq and tq.action in ("approve", "modify"):
+            final_score = tq.teacher_score if tq.action == "modify" else (gr.ai_score if gr else None)
+            status_label = "approved"
+        elif gr:
+            final_score = gr.ai_score
+
+        items.append(StudentHistoryItem(
+            submission_id=sub.id,
+            problem_title=prob.title,
+            problem_domain=prob.domain or "",
+            status=status_label,
+            ai_score=gr.ai_score if gr else None,
+            final_score=final_score,
+            input_type=sub.input_type or "text",
+            submitted_at=sub.submitted_at,
+        ))
+
+    return StudentHistoryResponse(submissions=items)
 
 
 # ── 결과 폴링 ────────────────────────────────────────────────

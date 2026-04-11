@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ChevronDown, ChevronUp, Clock } from "lucide-react"
+import { renderMath } from "@/lib/renderMath"
 
 interface ReviewCardProps {
   item: QueueItem
@@ -97,7 +98,16 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         {/* 학생 답변 */}
         <div className="rounded-xl bg-muted p-3">
           <p className="text-xs font-medium text-muted-foreground mb-1">학생 답변</p>
-          <p className="text-sm whitespace-pre-wrap">{item.student_answer}</p>
+          {item.input_type === "image" && item.image_path ? (
+            <img
+              src={`http://localhost:8000/${item.image_path}`}
+              alt="학생 손글씨 풀이"
+              className="max-w-full rounded-lg border mt-1"
+              style={{ maxHeight: "400px", objectFit: "contain" }}
+            />
+          ) : (
+            <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
+          )}
         </div>
 
         {/* AI 피드백 토글 */}
@@ -109,8 +119,8 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           AI 피드백 {expanded ? "접기" : "보기"}
         </button>
         {expanded && (
-          <div className="rounded-xl border p-3 text-sm text-muted-foreground whitespace-pre-wrap">
-            {feedbackText || String(item.ai_feedback)}
+          <div className="rounded-xl border p-3 text-sm text-muted-foreground leading-relaxed">
+            {renderMath(feedbackText || String(item.ai_feedback))}
           </div>
         )}
 

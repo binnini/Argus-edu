@@ -26,10 +26,10 @@
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 240 10% 9%;
     --card-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 240 3.7% 18%;
+    --input: 240 3.7% 18%;
     --primary: 238.7 83.5% 66.7%;
     --primary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -45,5 +45,22 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: "Pretendard Variable", "Pretendard", -apple-system, sans-serif;
+  }
+  /* Dialog / Card 내부 글자색 — inline style로 배경만 주입하므로 color는 CSS로 제어 */
+  [data-radix-dialog-content],
+  [data-radix-dialog-content] input,
+  [data-radix-dialog-content] textarea,
+  [data-radix-dialog-content] label,
+  [data-radix-dialog-content] p,
+  [data-radix-dialog-content] span,
+  [data-radix-dialog-content] h2,
+  [data-radix-dialog-content] h3 {
+    color: hsl(var(--foreground));
+  }
+  [data-radix-dialog-content] input,
+  [data-radix-dialog-content] textarea,
+  [data-radix-dialog-content] select {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }

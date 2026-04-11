@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { renderMath } from "@/lib/renderMath"
 
 interface SubmissionDetailDialogProps {
   item: SubmissionOverviewItem | null
@@ -41,7 +42,7 @@ export default function SubmissionDetailDialog({ item, open, onClose }: Submissi
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-base">{item.problem_title}</DialogTitle>
+          <DialogTitle className="text-base leading-snug">{renderMath(item.problem_title)}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 text-sm">

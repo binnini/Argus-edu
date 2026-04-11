@@ -3,6 +3,17 @@
 모든 엔드포인트 접두사: `/api/v1/`  
 교사 엔드포인트: 헤더 `X-Teacher-Password: {TEACHER_PASSWORD}` 필수
 
+## 정적 파일
+
+학생 손글씨 이미지는 FastAPI StaticFiles로 직접 서빙된다.
+
+```
+GET /data/{relative_path}
+예: GET /data/demo/images/초등3/P3_1_01_21169_50030_7_O.jpeg
+```
+
+`image_path` DB 필드 값을 그대로 URL 경로로 사용한다 (앞에 `/` 또는 서버 호스트 추가).
+
 ---
 
 ## 학생 — 답변 제출
@@ -105,7 +116,13 @@ image: <binary image file>   # 손글씨 사진, 스캔 이미지, 캔버스 PNG
 
 ### GET /api/v1/problems
 
-전체 문제 목록.
+문제 목록 페이지네이션 조회.
+
+**Query Parameters**
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `page` | 1 | 페이지 번호 |
+| `page_size` | 30 | 페이지 크기 (최대 100) |
 
 **Response 200**
 ```json
@@ -119,7 +136,10 @@ image: <binary image file>   # 손글씨 사진, 스캔 이미지, 캔버스 PNG
       "difficulty": 2,
       "total_score": 3
     }
-  ]
+  ],
+  "total": 30050,
+  "page": 1,
+  "page_size": 30
 }
 ```
 
@@ -127,6 +147,39 @@ image: <binary image file>   # 손글씨 사진, 스캔 이미지, 캔버스 PNG
 
 개별 문제 상세.  
 `answer`와 `reference_solution`은 응답에 포함하지 않음 (학생에게 노출 금지).
+
+---
+
+## 학생 — 제출 이력
+
+### GET /api/v1/submissions
+
+학생 본인의 제출 이력 조회. `student_id` 기준으로 최근 50건 반환.
+
+**Query Parameters**
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| `student_id` | ✓ | 학번 |
+
+**Response 200**
+```json
+{
+  "submissions": [
+    {
+      "submission_id": 15,
+      "problem_title": "21169_50030",
+      "problem_domain": "받아올림이 있는 세 자리 수의 덧셈",
+      "status": "approved",
+      "ai_score": 1,
+      "final_score": 1,
+      "input_type": "image",
+      "submitted_at": "2026-04-11T04:04:28Z"
+    }
+  ]
+}
+```
+
+`status` 값: `pending` | `graded` | `approved` | `rejected`
 
 ---
 
@@ -167,7 +220,14 @@ image: <binary image file>   # 손글씨 사진, 스캔 이미지, 캔버스 PNG
 
 ### GET /api/v1/teacher/problems
 
-교사용 문제 목록. 정답·참조 풀이·루브릭 포함.
+교사용 문제 목록. 정답·참조 풀이·루브릭 포함. 서버 페이지네이션 지원.
+
+**Query Parameters**
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `page` | 1 | 페이지 번호 |
+| `page_size` | 50 | 페이지 크기 (최대 200) |
+| `has_submissions` | false | `true` 시 제출 이력이 있는 문제만 반환 |
 
 **Response 200**
 ```json
@@ -185,7 +245,10 @@ image: <binary image file>   # 손글씨 사진, 스캔 이미지, 캔버스 PNG
       "submission_count": 12,
       "created_at": "2026-04-06T10:00:00Z"
     }
-  ]
+  ],
+  "total": 30050,
+  "page": 1,
+  "page_size": 50
 }
 ```
 

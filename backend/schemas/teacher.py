@@ -10,6 +10,8 @@ class TeacherQueueItem(BaseModel):
     student_answer: str
     student_name: str = ""
     student_id: Optional[str] = None
+    input_type: str = "text"
+    image_path: Optional[str] = None
     ai_score: int
     ai_feedback: str
     trust_score: float
