@@ -565,6 +565,7 @@ def run_mlx_benchmark(
     problems: list[dict],
     max_tokens: int = 2048,
     temp: float = 0.7,
+    debug: bool = False,
 ) -> list[BenchmarkResult]:
     try:
         from mlx_lm import load, generate
@@ -613,12 +614,15 @@ def run_mlx_benchmark(
                     max_tokens=max_tokens,
                     verbose=False,
                 )
+            if debug:
+                print(f"\n  [DEBUG raw ({problem['id']})]:\n{raw[:600]}\n{'─'*40}")
             parsed = parse_response(raw, is_deepseek=deepseek)
             ai_score = int(parsed["grading"]["total_score"])
             key_concept = parsed["feedback"].get("key_concept", "")[:60]
             mistake_count = len(parsed["feedback"].get("student_mistakes", []))
         except Exception as e:
-            error = str(e)[:120]
+            raw_preview = raw[:120].replace("\n", " ") if raw else "<empty>"
+            error = f"{str(e)[:80]} | raw: {raw_preview}"
 
         elapsed = round(time.perf_counter() - t0, 2)
         r = BenchmarkResult(
@@ -850,6 +854,10 @@ def main():
         help="CSV 저장 경로 (기본: benchmark_YYYYMMDD_HHMMSS.csv)",
     )
     parser.add_argument(
+        "--debug", action="store_true",
+        help="각 문제의 원본 LLM 응답 출력 (파싱 오류 디버깅용)",
+    )
+    parser.add_argument(
         "--list-models", action="store_true",
         help="지원 MLX 모델 목록 출력 후 종료",
     )
@@ -878,7 +886,7 @@ def main():
         if args.ollama:
             results = run_ollama_benchmark(model, problems, args.base_url, args.timeout)
         else:
-            results = run_mlx_benchmark(model, problems, args.max_tokens, args.temp)
+            results = run_mlx_benchmark(model, problems, args.max_tokens, args.temp, debug=args.debug)
         all_results.extend(results)
         print_summary(results, model)
 
