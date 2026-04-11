@@ -87,38 +87,35 @@
   - `submitAnswerText()` / `submitAnswerImage()` 분리
 - [x] `npm run build` 빌드 성공 확인
 
-### 7-6. GOT-OCR 2.0 파인튜닝 (WSL2 RTX 5070Ti)
+### 7-6. GOT-OCR 2.0 파인튜닝 (WSL2 RTX 5070Ti) ✅
 
-> 참고: ADR-017 (데이터셋 구성), ADR-018 (파인튜닝 전략)
+> 참고: ADR-017 (데이터셋), ADR-018 (파인튜닝 전략), docs/ocr_finetuning.md (전체 결과)
 
 **데이터 구성 (총 ~279k 이미지)**
 - [x] TS_3 zip 8개 + labels.json 160,015개
 - [x] 038 손글씨 zip 9개 (초4~6, 중1~3, 고1~3) 119,233개
 - [x] `prepare_dataset.py` — train ~251k / test ~28k split 완료
 
-**학습 환경**
-- [x] flash-attn 미지원 (RTX 5070Ti, CUDA 13 / Blackwell sm_120) → PyTorch SDPA 사용
-- [x] `batch=2, grad_accum=16` (effective 32), `MAX_LENGTH=640`
-
-**파인튜닝**
+**파인튜닝 v2 완료** (`batch=2, grad_accum=16, MAX_LENGTH=640, 3 epoch, 약 46시간`)
 - [x] v1 실패: 학습 포맷이 `chat()` 추론 포맷과 불일치 → degenerate 출력
 - [x] v2: `train.py` 재작성 — `chat()` 대화 포맷 정렬, `OcrTrainer` 커스텀 (ADR-018)
-- 🔄 **v2 학습 진행 중** (`got_ocr_finetuned_v2/`, 3 epoch, ~44시간)
-  - checkpoint-4000 (epoch 0.52) 검증: 5샘플 완전 일치 2건, 수식 구조 정확 3건
+- [x] 학습 완료: train_loss 0.458, eval_loss 0.476 → 0.416 → **0.401** (과적합 없음)
+
+**평가 결과**
+- [x] `evaluate_ocr.py` — n=1,000 샘플 평가 완료
+  - Base ocr CER: 1.062 → Fine-tuned: **0.318** (−70.1%)
+  - Base format CER: 2.133 → Fine-tuned: **0.320** (−85.0%)
+  - Exact Match: 0.9% → **23.5%** (ocr), 0.0% → **22.0%** (format)
+
+**Merge 및 서빙 준비**
+- [x] `merge_lora.py` — `got_ocr_merged/model.safetensors` (1,069 MB) 생성 완료
+- [x] Mac에서 `_GotOcrEngine` 수정 — `model.chat()` + `modeling_GOT.py` device-agnostic 패치
 
 **남은 작업**
-- [ ] Step 4: `evaluate_ocr.py` — base vs fine-tuned CER 비교 (목표 < 5%)
-- [ ] Step 5: WSL에서 `merge_lora.py` 실행 (파인튜닝 완료 후)
-  ```bash
-  LORA_DIR=ocr_training/output/got_ocr_finetuned_v2/checkpoint-XXXX \
-      python ocr_training/scripts/merge_lora.py
-  ```
-- [x] Mac에서 `merge_lora.py` 실행 (checkpoint-8000.zip 기반, 검증용)
-- [x] `_GotOcrEngine` 수정 — `model.chat()` 방식 + `modeling_GOT.py` device-agnostic 패치
-- [ ] WSL `.env` 전환
+- [x] `.env` 전환 (WSL 또는 Mac)
   ```env
   OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=/home/yebin/projects/Argus-edu/ocr_training/output/got_ocr_merged
+  GOT_OCR_MODEL_PATH=.../ocr_training/output/got_ocr_merged
   ```
 - [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
 
@@ -259,9 +256,18 @@
 **Phase 7 전체 완료 후 시작.**
 
 - [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
+- [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
   - `explanation` → `feedback` 필드명 변경
   - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
+  - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
   - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
+  - `student_name` 필드 포함 제출 시나리오
+  - 교사 제출 현황 API 검증 (필터 포함)
+  - 문제 CRUD API 검증 (등록·수정·삭제)
+  - 학생 이력 조회 API 검증 (`GET /api/v1/submissions?student_id=...`)
+  - 교사 큐 trust_level 필터 검증
+  - 큐 항목 input_type/image_path 필드 검증
+  - 문제 목록 페이지네이션 검증
   - `student_name` 필드 포함 제출 시나리오
   - 교사 제출 현황 API 검증 (필터 포함)
   - 문제 CRUD API 검증 (등록·수정·삭제)
@@ -285,8 +291,19 @@
 - [ ] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
 - [ ] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
 - [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
+- [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
 - [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
 
+### 9-2. 배포 파일 준비 ✅
+- [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
+- [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
+- [x] `deploy/com.argus.backend.plist` — 백엔드 launchd 서비스 (Mac 부팅 자동 시작)
+- [x] `deploy/com.cloudflare.cloudflared.plist` — Tunnel launchd 서비스
+- [x] `deploy/cloudflare-tunnel.yml` — Cloudflare Tunnel 라우팅 설정 템플릿
+- [x] `frontend/.env.production` — 프로덕션 빌드 `VITE_API_BASE=/api/v1`
+- [x] `backend/main.py` — `ALLOWED_ORIGINS` 환경변수로 CORS 설정
+- [x] `docs/deployment.md` — 전체 배포 가이드 작성
+- [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
 ### 9-2. 배포 파일 준비 ✅
 - [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
 - [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
@@ -302,8 +319,16 @@
 - [ ] `bash deploy/setup.sh` 실행
 - [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
 - [ ] Nginx 서빙 확인 (`curl http://localhost/`)
+### 9-3. Mac Mini 현장 실행
+- [ ] `bash deploy/setup.sh` 실행
+- [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
+- [ ] Nginx 서빙 확인 (`curl http://localhost/`)
 
 ### 9-4. Cloudflare Tunnel
+- [ ] `cloudflared tunnel create argus` 실행
+- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
+- [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`
+- [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
 - [ ] `cloudflared tunnel create argus` 실행
 - [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
 - [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`

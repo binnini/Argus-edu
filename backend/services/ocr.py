@@ -174,7 +174,15 @@ class _GotOcrEngine:
             from transformers import AutoConfig, AutoTokenizer
             from transformers.dynamic_module_utils import get_class_from_dynamic_module
 
-            dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+            if torch.cuda.is_available():
+                self._device = "cuda"
+                dtype = torch.bfloat16
+            elif torch.backends.mps.is_available():
+                self._device = "mps"
+                dtype = torch.float32  # MPS는 bfloat16 미지원
+            else:
+                self._device = "cpu"
+                dtype = torch.float32
 
             self._tokenizer = AutoTokenizer.from_pretrained(
                 model_path, trust_remote_code=True
@@ -189,8 +197,9 @@ class _GotOcrEngine:
                 trust_remote_code=True,
                 torch_dtype=dtype,
             )
+            self._model = self._model.to(self._device)
             self._model.eval()
-            logger.info(f"GOT-OCR 모델 로드 완료: {model_path}")
+            logger.info(f"GOT-OCR 모델 로드 완료: {model_path} (device={self._device}, dtype={dtype})")
         except ImportError as e:
             raise OCRError(
                 "transformers 또는 torch가 설치되어 있지 않습니다."

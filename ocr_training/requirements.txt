@@ -11,3 +11,4 @@ tiktoken
 torchvision
 verovio
 # flash-attn: CUDA 13 미지원 → PyTorch 내장 SDPA 사용
+pydantic-settings
