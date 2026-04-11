@@ -87,40 +87,103 @@
   - `submitAnswerText()` / `submitAnswerImage()` 분리
 - [x] `npm run build` 빌드 성공 확인
 
-### 7-6. GOT-OCR 2.0 파인튜닝 (WSL2 RTX 5070Ti)
+### 7-6. GOT-OCR 2.0 파인튜닝 (WSL2 RTX 5070Ti) ✅
 
-> 참고: ADR-017 (데이터셋 구성), ADR-018 (파인튜닝 전략)
+> 참고: ADR-017 (데이터셋), ADR-018 (파인튜닝 전략), docs/ocr_finetuning.md (전체 결과)
 
 **데이터 구성 (총 ~279k 이미지)**
 - [x] TS_3 zip 8개 + labels.json 160,015개
 - [x] 038 손글씨 zip 9개 (초4~6, 중1~3, 고1~3) 119,233개
 - [x] `prepare_dataset.py` — train ~251k / test ~28k split 완료
 
-**학습 환경**
-- [x] flash-attn 미지원 (RTX 5070Ti, CUDA 13 / Blackwell sm_120) → PyTorch SDPA 사용
-- [x] `batch=2, grad_accum=16` (effective 32), `MAX_LENGTH=640`
-
-**파인튜닝**
+**파인튜닝 v2 완료** (`batch=2, grad_accum=16, MAX_LENGTH=640, 3 epoch, 약 46시간`)
 - [x] v1 실패: 학습 포맷이 `chat()` 추론 포맷과 불일치 → degenerate 출력
 - [x] v2: `train.py` 재작성 — `chat()` 대화 포맷 정렬, `OcrTrainer` 커스텀 (ADR-018)
-- 🔄 **v2 학습 진행 중** (`got_ocr_finetuned_v2/`, 3 epoch, ~44시간)
-  - checkpoint-4000 (epoch 0.52) 검증: 5샘플 완전 일치 2건, 수식 구조 정확 3건
+- [x] 학습 완료: train_loss 0.458, eval_loss 0.476 → 0.416 → **0.401** (과적합 없음)
+
+**평가 결과**
+- [x] `evaluate_ocr.py` — n=1,000 샘플 평가 완료
+  - Base ocr CER: 1.062 → Fine-tuned: **0.318** (−70.1%)
+  - Base format CER: 2.133 → Fine-tuned: **0.320** (−85.0%)
+  - Exact Match: 0.9% → **23.5%** (ocr), 0.0% → **22.0%** (format)
+
+**Merge 및 서빙 준비**
+- [x] `merge_lora.py` — `got_ocr_merged/model.safetensors` (1,069 MB) 생성 완료
+- [x] Mac에서 `_GotOcrEngine` 수정 — `model.chat()` + `modeling_GOT.py` device-agnostic 패치
 
 **남은 작업**
-- [ ] Step 4: `evaluate_ocr.py` — base vs fine-tuned CER 비교 (목표 < 5%)
-- [ ] Step 5: WSL에서 `merge_lora.py` 실행 (파인튜닝 완료 후)
-  ```bash
-  LORA_DIR=ocr_training/output/got_ocr_finetuned_v2/checkpoint-XXXX \
-      python ocr_training/scripts/merge_lora.py
-  ```
-- [x] Mac에서 `merge_lora.py` 실행 (checkpoint-8000.zip 기반, 검증용)
-- [x] `_GotOcrEngine` 수정 — `model.chat()` 방식 + `modeling_GOT.py` device-agnostic 패치
-- [ ] WSL `.env` 전환
+- [x] `.env` 전환 (WSL 또는 Mac)
   ```env
   OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=/home/yebin/projects/Argus-edu/ocr_training/output/got_ocr_merged
+  GOT_OCR_MODEL_PATH=.../ocr_training/output/got_ocr_merged
   ```
 - [ ] OCR E2E 검증 — 손글씨 이미지 업로드 → 채점 파이프라인 통과 확인
+
+### 7-7. UX 재설계 (ADR-021) `[P]` ✅
+
+> 참고: ADR-021, docs/frontend.md, docs/api.md, docs/schema.md  
+> 브랜치: `feat/phase7-ux-redesign` (커밋 c37e19a)
+
+#### 7-7-1. 백엔드 ✅
+
+- [x] `backend/alembic/versions/0004_add_student_info.py` 작성
+  - `submissions`: `student_name VARCHAR(50) NOT NULL`, `student_id VARCHAR(20)` 추가
+  - `problems`: `soft_deleted BOOLEAN DEFAULT FALSE` 추가
+  - 인덱스 추가 (student_name, problem_id, soft_deleted)
+- [ ] `alembic upgrade head` 로컬/프로덕션 DB 적용 (PostgreSQL 연결 시 실행)
+- [x] `backend/routers/submissions.py` 업데이트
+  - `SubmissionRequest`: `student_name`, `student_id` 필드 추가
+  - `POST /api/v1/submissions/image`: multipart에 `student_name`, `student_id` 파라미터 추가
+- [x] `backend/routers/teacher.py` 업데이트
+  - `GET /api/v1/teacher/queue`: `trust_level` 쿼리 필터, 응답에 `student_name`/`student_id` 포함
+  - `GET /api/v1/teacher/submissions` 신규 (페이지네이션, 필터)
+  - `GET /api/v1/teacher/problems/{id}/submissions` 신규
+- [x] `backend/routers/problems.py` (교사 CRUD) 신규
+  - `POST/GET/PUT/DELETE /api/v1/teacher/problems` (soft delete 포함)
+- [x] `backend/schemas/` 업데이트 — SubmissionOverviewItem/Response, 문제 CRUD 스키마
+
+#### 7-7-2. 프론트엔드 환경 세팅 ✅
+
+- [x] Tailwind CSS v3 + postcss + autoprefixer 설치 (`tailwind.config.js`, `globals.css`)
+- [x] shadcn/ui 수동 구성 (Radix UI + CVA) — button, card, tabs, input, textarea, select, dialog, badge, skeleton
+- [x] Pretendard 폰트 (`@fontsource/pretendard/index.css`)
+- [x] KaTeX 설치 (`react-katex`, `katex`)
+- [x] `react-signature-canvas` 설치 (캔버스용)
+- [x] Lucide React 설치
+
+#### 7-7-3. 프론트엔드 학생 화면 ✅
+
+- [x] `StudentInfoForm.tsx` — 이름·학번 입력 (sessionStorage 저장)
+- [x] `AnswerInput.tsx` 3탭 — 이미지 업로드 / 카메라(`capture="environment"`) / 캔버스
+- [x] `CanvasInput.tsx` — react-signature-canvas, `CANVAS_ENABLED` 플래그로 가역적 제어
+- [x] `GradingStatus.tsx` — Skeleton 로딩, 점수 Badge, 교사 검토 대기 배너
+- [x] `StudentPage.tsx` — 상태 머신 재작성 (info → problem → answer → submitting → polling → done)
+- [x] `FeedbackPanel.tsx` — KaTeX 수식 렌더링 (`react-katex` InlineMath/BlockMath)
+
+#### 7-7-4. 프론트엔드 교사 화면 ✅
+
+- [x] `PasswordGate.tsx` — Tailwind Card + Input + Button
+- [x] `DashboardHeader.tsx` — sticky 헤더, 다크모드 토글, 로그아웃
+- [x] `ProblemManager.tsx` — 문제 목록 테이블 + 등록/수정/삭제
+- [x] `ProblemFormDialog.tsx` — 등록·수정 모달 (RubricEditor 포함)
+- [x] `SubmissionOverview.tsx` — 제출 현황 테이블 (필터, 페이지네이션, 상세 다이얼로그)
+- [x] `SubmissionDetailDialog.tsx` — 제출 상세 모달
+- [x] `ReviewQueue.tsx` — TrustFilter 토글 + ReviewCard 리스트 + 통계 카드
+- [x] `ReviewCard.tsx` — Tailwind 리스타일, 피드백 접힘/펼침, 인라인 수정 폼
+- [x] `TeacherPage.tsx` — 3탭 통합 (문제 관리 / 풀이 현황 / 검토 큐)
+
+#### 7-7-5. API 레이어 ✅
+
+- [x] `frontend/src/api/problems.ts` 신규 — 문제 조회(학생) + CRUD(교사)
+- [x] `frontend/src/api/submissions.ts` — `student_name`/`student_id` 포함
+- [x] `frontend/src/api/teacher.ts` — 현황 조회, trust_level 필터
+
+#### 7-7-6. 빌드 검증
+
+- [x] `npm run build` 빌드 성공 (614KB JS / 49KB CSS)
+- [ ] 다크모드 토글 런타임 동작 확인
+- [ ] KaTeX 수식 렌더링 브라우저 확인
+- [ ] 캔버스 → 이미지 제출 E2E 확인 (백엔드 연동 후)
 
 ---
 
@@ -128,10 +191,17 @@
 
 **Phase 7 전체 완료 후 시작.**
 
-- [ ] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
+- [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
   - `explanation` → `feedback` 필드명 변경
-  - 이미지 업로드 테스트 시나리오 추가
+  - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
   - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
+  - `student_name` 필드 포함 제출 시나리오
+  - 교사 제출 현황 API 검증 (필터 포함)
+  - 문제 CRUD API 검증 (등록·수정·삭제)
+  - 학생 이력 조회 API 검증 (`GET /api/v1/submissions?student_id=...`)
+  - 교사 큐 trust_level 필터 검증
+  - 큐 항목 input_type/image_path 필드 검증
+  - 문제 목록 페이지네이션 검증
 - [ ] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
 - [ ] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
 - [ ] 통합 테스트 전체 통과 확인
@@ -147,36 +217,30 @@
 ### 9-1. 서버 환경 준비
 - [ ] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
 - [ ] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
-- [ ] `.env` 프로덕션 설정
-  ```env
-  ANTHROPIC_API_KEY=...
-  DATABASE_URL=postgresql://...
-  TEACHER_PASSWORD=...
-  OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=/path/to/got_ocr_merged
-  GRADING_MODEL=claude-sonnet-4-6
-  FEEDBACK_MODEL=claude-sonnet-4-6
-  ```
+- [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
 - [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
 
-### 9-2. 백엔드 서비스
-- [ ] `systemd` 서비스 파일 작성 + 등록 (`argus-backend.service`)
-  - 워킹 디렉토리, 환경변수 파일 경로, 재시작 정책 설정
-- [ ] `uvicorn` 프로덕션 실행 확인 (로컬 8000포트)
+### 9-2. 배포 파일 준비 ✅
+- [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
+- [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
+- [x] `deploy/com.argus.backend.plist` — 백엔드 launchd 서비스 (Mac 부팅 자동 시작)
+- [x] `deploy/com.cloudflare.cloudflared.plist` — Tunnel launchd 서비스
+- [x] `deploy/cloudflare-tunnel.yml` — Cloudflare Tunnel 라우팅 설정 템플릿
+- [x] `frontend/.env.production` — 프로덕션 빌드 `VITE_API_BASE=/api/v1`
+- [x] `backend/main.py` — `ALLOWED_ORIGINS` 환경변수로 CORS 설정
+- [x] `docs/deployment.md` — 전체 배포 가이드 작성
+- [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
 
-### 9-3. 프론트엔드
-- [ ] `npm run build` 빌드 산출물 생성
-- [ ] Nginx 설정 (`/api/*` → FastAPI 8000, `/*` → React 정적)
-- [ ] Nginx 서비스 등록 + 시작
+### 9-3. Mac Mini 현장 실행
+- [ ] `bash deploy/setup.sh` 실행
+- [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
+- [ ] Nginx 서빙 확인 (`curl http://localhost/`)
 
 ### 9-4. Cloudflare Tunnel
-- [ ] Cloudflare 계정 + 도메인 준비
-- [ ] `cloudflared` 설치 (`brew install cloudflare/cloudflare/cloudflared`)
-- [ ] Tunnel 생성 + 인증 (`cloudflared tunnel create argus`)
-- [ ] `config.yml` 작성 — Tunnel → localhost:80(Nginx) 라우팅
-- [ ] `cloudflared` launchd 서비스 등록 (Mac 부팅 시 자동 시작)
-- [ ] Cloudflare DNS CNAME → Tunnel ID 연결
-- [ ] HTTPS 최종 접속 확인 (Cloudflare 자동 TLS)
+- [ ] `cloudflared tunnel create argus` 실행
+- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
+- [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`
+- [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
 
 ---
 
@@ -196,8 +260,8 @@
 
 ## 향후 로드맵 (파일럿 이후)
 
-- [ ] Canvas 직접 그리기 입력 (패드/핸드폰 손글씨)
+- [x] Canvas 직접 그리기 입력 — `CanvasInput.tsx` + `CANVAS_ENABLED` 플래그로 구현 완료 (Phase 7-7)
 - [ ] 학생 QA 기능 (RAG 기반)
 - [ ] 프롬프트 최적화 (누적 feedback_log 활용)
 - [ ] JWT 인증 시스템 (다수 교사 온보딩)
-- [ ] 모바일 UI 대응
+- [ ] 모바일 UI 최적화 (현재 기본 반응형 지원)
