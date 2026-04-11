@@ -1,0 +1,13 @@
+# ~/.cloudflared/config.yml 에 복사하거나 심볼릭 링크로 사용
+# cloudflared tunnel create argus 실행 후 생성된 tunnel ID로 교체 필요
+
+tunnel: <TUNNEL_ID>
+credentials-file: /Users/yebin/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Argus 메인 도메인 → Nginx 80포트
+  - hostname: argus.yourdomain.com
+    service: http://localhost:80
+
+  # 매칭되지 않는 모든 요청 → 404
+  - service: http_status:404

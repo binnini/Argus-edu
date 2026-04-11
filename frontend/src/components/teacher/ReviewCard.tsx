@@ -100,7 +100,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           <p className="text-xs font-medium text-muted-foreground mb-1">학생 답변</p>
           {item.input_type === "image" && item.image_path ? (
             <img
-              src={`http://localhost:8000/${item.image_path}`}
+              src={`${import.meta.env.VITE_API_BASE?.replace("/api/v1", "") ?? ""}/${item.image_path}`}
               alt="학생 손글씨 풀이"
               className="max-w-full rounded-lg border mt-1"
               style={{ maxHeight: "400px", objectFit: "contain" }}

@@ -220,36 +220,30 @@
 ### 9-1. 서버 환경 준비
 - [ ] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
 - [ ] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
-- [ ] `.env` 프로덕션 설정
-  ```env
-  ANTHROPIC_API_KEY=...
-  DATABASE_URL=postgresql://...
-  TEACHER_PASSWORD=...
-  OCR_MODEL=got_ocr
-  GOT_OCR_MODEL_PATH=/path/to/got_ocr_merged
-  GRADING_MODEL=claude-sonnet-4-6
-  FEEDBACK_MODEL=claude-sonnet-4-6
-  ```
+- [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
 - [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
 
-### 9-2. 백엔드 서비스
-- [ ] `systemd` 서비스 파일 작성 + 등록 (`argus-backend.service`)
-  - 워킹 디렉토리, 환경변수 파일 경로, 재시작 정책 설정
-- [ ] `uvicorn` 프로덕션 실행 확인 (로컬 8000포트)
+### 9-2. 배포 파일 준비 ✅
+- [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
+- [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
+- [x] `deploy/com.argus.backend.plist` — 백엔드 launchd 서비스 (Mac 부팅 자동 시작)
+- [x] `deploy/com.cloudflare.cloudflared.plist` — Tunnel launchd 서비스
+- [x] `deploy/cloudflare-tunnel.yml` — Cloudflare Tunnel 라우팅 설정 템플릿
+- [x] `frontend/.env.production` — 프로덕션 빌드 `VITE_API_BASE=/api/v1`
+- [x] `backend/main.py` — `ALLOWED_ORIGINS` 환경변수로 CORS 설정
+- [x] `docs/deployment.md` — 전체 배포 가이드 작성
+- [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
 
-### 9-3. 프론트엔드
-- [ ] `npm run build` 빌드 산출물 생성
-- [ ] Nginx 설정 (`/api/*` → FastAPI 8000, `/*` → React 정적)
-- [ ] Nginx 서비스 등록 + 시작
+### 9-3. Mac Mini 현장 실행
+- [ ] `bash deploy/setup.sh` 실행
+- [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
+- [ ] Nginx 서빙 확인 (`curl http://localhost/`)
 
 ### 9-4. Cloudflare Tunnel
-- [ ] Cloudflare 계정 + 도메인 준비
-- [ ] `cloudflared` 설치 (`brew install cloudflare/cloudflare/cloudflared`)
-- [ ] Tunnel 생성 + 인증 (`cloudflared tunnel create argus`)
-- [ ] `config.yml` 작성 — Tunnel → localhost:80(Nginx) 라우팅
-- [ ] `cloudflared` launchd 서비스 등록 (Mac 부팅 시 자동 시작)
-- [ ] Cloudflare DNS CNAME → Tunnel ID 연결
-- [ ] HTTPS 최종 접속 확인 (Cloudflare 자동 TLS)
+- [ ] `cloudflared tunnel create argus` 실행
+- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
+- [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`
+- [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
 
 ---
 
