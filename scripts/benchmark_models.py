@@ -53,8 +53,11 @@ MLX_MODELS: dict[str, str] = {
     "qwen2.5:14b":      "mlx-community/Qwen2.5-14B-Instruct-4bit",
 }
 
-# DeepSeek-R1 계열: <think>...</think> 태그 제거 필요
+# 추론 체인 태그 제거가 필요한 모델 계열
+# DeepSeek-R1: <think>...</think>
+# Gemma 4:     <|channel>thought ... <|channel>response (또는 끝까지)
 DEEPSEEK_R1_PREFIXES = ("deepseek-r1", "DeepSeek-R1")
+GEMMA4_PREFIXES = ("gemma4", "gemma-4")
 
 
 # ── 벤치마크 문제 (30개, 초등~고등 다양한 난이도) ────────────────────────
@@ -504,15 +507,23 @@ class BenchmarkResult:
 
 # ── JSON 파싱 ─────────────────────────────────────────────────────────────
 
-def strip_think_tags(text: str) -> str:
-    """DeepSeek-R1 계열의 <think>...</think> 추론 블록 제거."""
-    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-
-
-def parse_response(raw: str, is_deepseek: bool = False) -> dict:
-    text = raw.strip()
+def strip_reasoning(text: str, is_deepseek: bool = False, is_gemma4: bool = False) -> str:
+    """모델별 추론 블록 제거."""
     if is_deepseek:
-        text = strip_think_tags(text)
+        # <think>...</think> 제거
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    if is_gemma4:
+        # <|channel>thought ... <|channel>response 제거, response 이후만 남김
+        if "<|channel>response" in text:
+            text = text.split("<|channel>response", 1)[-1]
+        else:
+            # response 채널 없으면 thought 블록 전체 제거
+            text = re.sub(r"<\|channel>thought.*?(?=<\|channel>|\Z)", "", text, flags=re.DOTALL)
+    return text.strip()
+
+
+def parse_response(raw: str, is_deepseek: bool = False, is_gemma4: bool = False) -> dict:
+    text = strip_reasoning(raw.strip(), is_deepseek=is_deepseek, is_gemma4=is_gemma4)
     if text.startswith("```"):
         lines = text.split("\n")
         text = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
@@ -578,6 +589,8 @@ def run_mlx_benchmark(
 
     hf_id = resolve_model_id(model_name)
     deepseek = is_deepseek_r1(model_name) or is_deepseek_r1(hf_id)
+    gemma4 = any(model_name.startswith(p) or hf_id.startswith(p.replace("gemma4", "gemma-4"))
+                 for p in GEMMA4_PREFIXES)
 
     print(f"  모델 로딩: {hf_id}")
     load_start = time.perf_counter()
@@ -618,7 +631,7 @@ def run_mlx_benchmark(
                 )
             if debug:
                 print(f"\n  [DEBUG raw ({problem['id']})]:\n{raw[:600]}\n{'─'*40}")
-            parsed = parse_response(raw, is_deepseek=deepseek)
+            parsed = parse_response(raw, is_deepseek=deepseek, is_gemma4=gemma4)
             ai_score = int(parsed["grading"]["total_score"])
             key_concept = parsed["feedback"].get("key_concept", "")[:60]
             mistake_count = len(parsed["feedback"].get("student_mistakes", []))
