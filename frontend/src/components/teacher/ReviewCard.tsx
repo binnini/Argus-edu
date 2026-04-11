@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { ChevronDown, ChevronUp, Clock } from "lucide-react"
+import { Clock, AlertCircle, CheckCircle2, Lightbulb } from "lucide-react"
 import { renderMath } from "@/lib/renderMath"
 
 interface ReviewCardProps {
   item: QueueItem
   onActionComplete: () => void
 }
+
+const API_HOST = (import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")
 
 function formatDeadline(deadline: string): string {
   const diff = new Date(deadline).getTime() - Date.now()
@@ -22,8 +24,15 @@ function formatDeadline(deadline: string): string {
   return `${hours}시간 ${minutes}분`
 }
 
+function parseFeedback(raw: string | object) {
+  try {
+    return typeof raw === "string" ? JSON.parse(raw) : raw
+  } catch {
+    return null
+  }
+}
+
 export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) {
-  const [expanded, setExpanded] = useState(false)
   const [showModify, setShowModify] = useState(false)
   const [teacherScore, setTeacherScore] = useState("")
   const [teacherFeedback, setTeacherFeedback] = useState("")
@@ -53,32 +62,24 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
     }
   }
 
-  let feedbackText = ""
-  try {
-    const parsed = typeof item.ai_feedback === "string" ? JSON.parse(item.ai_feedback) : item.ai_feedback
-    if (parsed?.student_mistakes?.length > 0) {
-      feedbackText = parsed.student_mistakes.map((m: { description: string }) => m.description).join(" / ")
-    } else if (parsed?.key_concept) {
-      feedbackText = parsed.key_concept
-    }
-  } catch {
-    feedbackText = String(item.ai_feedback ?? "")
-  }
+  const feedback = parseFeedback(item.ai_feedback)
+  const isDeadlineSoon = new Date(item.sla_deadline).getTime() - Date.now() < 3_600_000 * 3
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
+    <Card className="w-full overflow-hidden">
+      {/* 헤더 */}
+      <CardHeader className="pb-3 border-b">
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="space-y-1">
-            <p className="font-semibold text-base">{item.problem_title}</p>
+          <div className="space-y-0.5 flex-1 min-w-0">
+            <p className="font-bold text-base leading-tight truncate">{item.problem_title}</p>
             <p className="text-sm text-muted-foreground">
               {item.student_name}
-              {item.student_id && <span className="ml-1 text-xs">({item.student_id})</span>}
+              {item.student_id && <span className="ml-1 text-xs opacity-70">({item.student_id})</span>}
             </p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 shrink-0">
             <Badge variant={item.trust_level === "high" ? "success" : "destructive"}>
-              {item.trust_level === "high" ? "신뢰도 High" : "신뢰도 Low"}{" "}
+              신뢰도 {item.trust_level === "high" ? "High" : "Low"}{" "}
               <span className="ml-1 opacity-70">{item.trust_score.toFixed(2)}</span>
             </Badge>
             <Badge variant={item.queue_type === "score_only" ? "warning" : "destructive"} className="text-xs">
@@ -86,48 +87,111 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             </Badge>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+        <div className={`flex items-center gap-1 text-xs mt-1 ${isDeadlineSoon ? "text-rose-500 font-medium" : "text-muted-foreground"}`}>
           <Clock className="h-3 w-3" />
           <span>SLA {formatDeadline(item.sla_deadline)} 남음</span>
           <span className="mx-1">·</span>
-          <span>AI 점수 {item.ai_score}점</span>
+          <span>AI 채점: {item.ai_score > 0 ? "정답" : "오답"}</span>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* 학생 답변 */}
-        <div className="rounded-xl bg-muted p-3">
-          <p className="text-xs font-medium text-muted-foreground mb-1">학생 답변</p>
-          {item.input_type === "image" && item.image_path ? (
-            <img
-              src={`${import.meta.env.VITE_API_BASE?.replace("/api/v1", "") ?? ""}/${item.image_path}`}
-              alt="학생 손글씨 풀이"
-              className="max-w-full rounded-lg border mt-1"
-              style={{ maxHeight: "400px", objectFit: "contain" }}
-            />
-          ) : (
-            <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
+      <CardContent className="space-y-4 pt-4">
+
+        {/* 문제 본문 */}
+        {item.problem_content && (
+          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 p-3">
+            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide">문제</p>
+            <div className="text-sm leading-relaxed text-foreground">
+              {renderMath(item.problem_content)}
+            </div>
+            {item.problem_answer && (
+              <div className="mt-2 pt-2 border-t border-indigo-200 dark:border-indigo-700">
+                <span className="text-xs text-indigo-500 mr-1.5">정답:</span>
+                <span className="text-sm font-medium">{renderMath(item.problem_answer)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 학생 답변 + OCR */}
+        <div className={item.ocr_raw_text ? "grid grid-cols-2 gap-3" : ""}>
+          <div className="rounded-xl bg-zinc-50 dark:bg-zinc-900 border p-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">학생 답변</p>
+            {item.input_type === "image" && item.image_path ? (
+              <img
+                src={`${API_HOST}/${item.image_path}`}
+                alt="학생 손글씨 풀이"
+                className="max-w-full rounded-lg border mt-1"
+                style={{ maxHeight: "300px", objectFit: "contain" }}
+              />
+            ) : (
+              <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
+            )}
+          </div>
+
+          {item.ocr_raw_text && (
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5 uppercase tracking-wide">OCR 원문</p>
+              <div className="text-sm leading-relaxed text-foreground">{renderMath(item.ocr_raw_text)}</div>
+            </div>
           )}
         </div>
 
-        {/* AI 피드백 토글 */}
-        <button
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          AI 피드백 {expanded ? "접기" : "보기"}
-        </button>
-        {expanded && (
-          <div className="rounded-xl border p-3 text-sm text-muted-foreground leading-relaxed">
-            {renderMath(feedbackText || String(item.ai_feedback))}
+        {/* AI 피드백 (항상 표시) */}
+        {feedback ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI 피드백</p>
+
+            {Array.isArray(feedback.student_mistakes) && feedback.student_mistakes.length > 0 && (
+              <div className="rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 p-3 space-y-1.5">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
+                  <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">학생 실수</p>
+                </div>
+                {feedback.student_mistakes.map((m: { step: number; description: string }, i: number) => (
+                  <div key={i} className="flex gap-2 text-sm">
+                    <span className="text-xs text-rose-400 mt-0.5 shrink-0">Step {m.step}</span>
+                    <span className="text-foreground leading-relaxed">{renderMath(m.description)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {Array.isArray(feedback.correct_approach) && feedback.correct_approach.length > 0 && (
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 space-y-2">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">올바른 풀이</p>
+                </div>
+                {feedback.correct_approach.map((s: { step: number; title: string; content: string }, i: number) => (
+                  <div key={i} className="text-sm">
+                    <span className="font-medium text-emerald-700 dark:text-emerald-300">Step {s.step}. {s.title}</span>
+                    <div className="text-foreground leading-relaxed mt-0.5">{renderMath(s.content)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {feedback.key_concept && (
+              <div className="rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Lightbulb className="h-3.5 w-3.5 text-sky-500" />
+                  <p className="text-xs font-semibold text-sky-600 dark:text-sky-400">핵심 개념</p>
+                </div>
+                <div className="text-sm text-foreground leading-relaxed">{renderMath(feedback.key_concept)}</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">
+            {renderMath(String(item.ai_feedback ?? ""))}
           </div>
         )}
 
         {/* 수정 폼 */}
         {showModify && (
           <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3">
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">수정 내용 입력</p>
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">수정 내용 입력</p>
             <div className="flex items-center gap-2">
               <label className="text-sm whitespace-nowrap">확정 점수</label>
               <Input
@@ -156,29 +220,29 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+            className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium"
             onClick={() => handleAction("approve")}
             disabled={submitting}
           >
-            승인
+            ✓ 승인
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+            className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-medium"
             onClick={() => handleAction("modify")}
             disabled={submitting || (showModify && (!teacherScore.trim() || !teacherFeedback.trim()))}
           >
-            {showModify ? "수정 제출" : "수정"}
+            {showModify ? "✎ 수정 제출" : "✎ 수정"}
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+            className="flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 font-medium"
             onClick={() => handleAction("reject")}
             disabled={submitting}
           >
-            거부
+            ✕ 거부
           </Button>
         </div>
       </CardContent>

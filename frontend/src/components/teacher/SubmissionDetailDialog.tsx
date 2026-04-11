@@ -56,6 +56,19 @@ export default function SubmissionDetailDialog({ item, open, onClose }: Submissi
             <Badge variant={variant} className="text-xs">{label}</Badge>
           </div>
 
+          {/* 제출 이미지 */}
+          {item.input_type === "image" && item.image_path && (
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">제출 이미지</p>
+              <img
+                src={`${(import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")}/${item.image_path}`}
+                alt="학생 제출 이미지"
+                className="max-w-full rounded-xl border"
+                style={{ maxHeight: "400px", objectFit: "contain" }}
+              />
+            </div>
+          )}
+
           {/* 점수 정보 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-muted p-3">

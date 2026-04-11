@@ -7,6 +7,9 @@ class TeacherQueueItem(BaseModel):
     queue_id: int
     submission_id: int
     problem_title: str
+    problem_content: str = ""
+    problem_answer: str = ""
+    ocr_raw_text: Optional[str] = None
     student_answer: str
     student_name: str = ""
     student_id: Optional[str] = None
@@ -62,6 +65,7 @@ class SubmissionOverviewItem(BaseModel):
     student_name: str
     student_id: Optional[str] = None
     input_type: str
+    image_path: Optional[str] = None
     status: str
     ai_score: Optional[int] = None
     final_score: Optional[int] = None

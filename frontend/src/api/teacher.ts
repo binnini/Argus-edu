@@ -4,6 +4,9 @@ export interface QueueItem {
   queue_id: number;
   submission_id: number;
   problem_title: string;
+  problem_content: string;
+  problem_answer: string;
+  ocr_raw_text: string | null;
   student_answer: string;
   student_name: string;
   student_id: string | null;
@@ -54,6 +57,7 @@ export interface SubmissionOverviewItem {
   student_name: string;
   student_id: string | null;
   input_type: string;
+  image_path: string | null;
   status: string;
   ai_score: number | null;
   final_score: number | null;

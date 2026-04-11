@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { getQueue } from "@/api/teacher"
 import type { QueueItem } from "@/api/teacher"
 import ReviewCard from "./ReviewCard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type TrustFilter = "all" | "high" | "low"
 
@@ -13,6 +16,9 @@ export default function ReviewQueue() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<TrustFilter>("all")
+  const [searchText, setSearchText] = useState("")
+  const [sortBy, setSortBy] = useState<"sla" | "student" | "problem">("sla")
+  const [problemFilter, setProblemFilter] = useState<string>("전체")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -29,6 +35,29 @@ export default function ReviewQueue() {
   }, [filter])
 
   useEffect(() => { load() }, [load])
+
+  const problemTitles = useMemo(
+    () => ["전체", ...Array.from(new Set(items.map(i => i.problem_title))).sort()],
+    [items]
+  )
+
+  const filteredItems = useMemo(() => {
+    let list = [...items]
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase()
+      list = list.filter(i =>
+        i.student_name.toLowerCase().includes(q) ||
+        i.problem_title.toLowerCase().includes(q)
+      )
+    }
+    if (problemFilter !== "전체") list = list.filter(i => i.problem_title === problemFilter)
+    switch (sortBy) {
+      case "sla": list.sort((a, b) => new Date(a.sla_deadline).getTime() - new Date(b.sla_deadline).getTime()); break
+      case "student": list.sort((a, b) => a.student_name.localeCompare(b.student_name, "ko")); break
+      case "problem": list.sort((a, b) => a.problem_title.localeCompare(b.problem_title, "ko")); break
+    }
+    return list
+  }, [items, searchText, problemFilter, sortBy])
 
   const lowCount = items.filter((i) => i.trust_level === "low").length
   const slaUrgent = items.filter((i) => {
@@ -80,6 +109,42 @@ export default function ReviewQueue() {
         </Button>
       </div>
 
+      {/* 검색 + 정렬 */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="학생명 또는 문제명 검색..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <Select value={problemFilter} onValueChange={setProblemFilter}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="문제 전체" />
+          </SelectTrigger>
+          <SelectContent>
+            {problemTitles.map(t => (
+              <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as "sla" | "student" | "problem")}>
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sla">SLA 임박순</SelectItem>
+            <SelectItem value="student">학생명순</SelectItem>
+            <SelectItem value="problem">문제명순</SelectItem>
+          </SelectContent>
+        </Select>
+        {(searchText || problemFilter !== "전체") && (
+          <span className="text-xs text-muted-foreground">{filteredItems.length}/{items.length}건</span>
+        )}
+      </div>
+
       {/* 목록 */}
       {loading ? (
         <div className="space-y-4">
@@ -94,13 +159,13 @@ export default function ReviewQueue() {
             다시 시도
           </Button>
         </div>
-      ) : items.length === 0 ? (
+      ) : filteredItems.length === 0 ? (
         <div className="rounded-2xl border bg-card p-12 text-center">
           <p className="text-muted-foreground">검토할 항목이 없습니다</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <ReviewCard key={item.queue_id} item={item} onActionComplete={load} />
           ))}
         </div>
