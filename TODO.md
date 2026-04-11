@@ -194,13 +194,17 @@
 
 **Phase 7 전체 완료 후 시작.**
 
-- [ ] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
+- [x] 기존 통합 테스트(`tests/test_integration.py`) 업데이트
   - `explanation` → `feedback` 필드명 변경
-  - 이미지 업로드 테스트 시나리오 추가
+  - 이미지 업로드 테스트 시나리오 추가 (student_name/student_id 포함)
   - 개인화 피드백 구조 검증 (student_mistakes, correct_approach, key_concept)
   - `student_name` 필드 포함 제출 시나리오
-  - 교사 제출 현황 API 검증
-  - 문제 CRUD API 검증
+  - 교사 제출 현황 API 검증 (필터 포함)
+  - 문제 CRUD API 검증 (등록·수정·삭제)
+  - 학생 이력 조회 API 검증 (`GET /api/v1/submissions?student_id=...`)
+  - 교사 큐 trust_level 필터 검증
+  - 큐 항목 input_type/image_path 필드 검증
+  - 문제 목록 페이지네이션 검증
 - [ ] AI-HUB 손글씨 이미지로 OCR → 채점 → 피드백 E2E 검증
 - [ ] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
 - [ ] 통합 테스트 전체 통과 확인

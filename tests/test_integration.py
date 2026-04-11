@@ -40,11 +40,21 @@ def wait_until_graded(submission_id: int, timeout: int = 900, interval: int = 5)
     )
 
 
-def submit_answer(problem_id: int, student_answer: str) -> int:
+def submit_answer(
+    problem_id: int,
+    student_answer: str,
+    student_name: str = "테스트학생",
+    student_id: str = "99999999",
+) -> int:
     """답변 제출 후 submission_id 반환."""
     resp = requests.post(
         f"{BASE_URL}/api/v1/submissions",
-        json={"problem_id": problem_id, "student_answer": student_answer},
+        json={
+            "problem_id": problem_id,
+            "student_answer": student_answer,
+            "student_name": student_name,
+            "student_id": student_id,
+        },
     )
     assert resp.status_code == 202, f"제출 실패: {resp.status_code} {resp.text}"
     data = resp.json()
@@ -107,11 +117,31 @@ def test_health():
 
 @pytest.mark.timeout(30)
 def test_problems_list():
-    """GET /api/v1/problems → 문제 30050개."""
+    """GET /api/v1/problems → 페이지네이션 응답, total 필드 존재."""
     resp = requests.get(f"{BASE_URL}/api/v1/problems")
     assert resp.status_code == 200
-    problems = resp.json()["problems"]
-    assert len(problems) == 30050, f"문제 수가 30050개가 아님: {len(problems)}개"
+    data = resp.json()
+    assert "problems" in data, "problems 필드 없음"
+    assert "total" in data, "total 필드 없음"
+    assert "page" in data, "page 필드 없음"
+    assert "page_size" in data, "page_size 필드 없음"
+    # 기본 page_size=30 → problems 최대 30개
+    assert len(data["problems"]) <= 30, f"기본 page_size 초과: {len(data['problems'])}개"
+    # 전체 문제 수
+    assert data["total"] > 0, "문제가 0개입니다"
+    assert data["page"] == 1
+    assert data["page_size"] == 30
+
+
+@pytest.mark.timeout(30)
+def test_problems_pagination():
+    """GET /api/v1/problems?page=2&page_size=10 → 2페이지 결과."""
+    resp = requests.get(f"{BASE_URL}/api/v1/problems?page=2&page_size=10")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["page"] == 2
+    assert data["page_size"] == 10
+    assert len(data["problems"]) <= 10
 
 
 @pytest.mark.timeout(30)
@@ -434,7 +464,7 @@ def test_image_upload_pipeline():
 
     resp = requests.post(
         f"{BASE_URL}/api/v1/submissions/image",
-        data={"problem_id": "1"},
+        data={"problem_id": "1", "student_name": "테스트학생", "student_id": "99999998"},
         files={"image": ("test_dummy.png", io.BytesIO(dummy_png), "image/png")},
     )
 
@@ -463,3 +493,173 @@ def test_image_upload_pipeline():
         pytest.fail(
             f"예상치 못한 응답 코드: {resp.status_code} {resp.text[:200]}"
         )
+
+
+# ── Phase 8 추가 테스트 (학생 이력 / 교사 현황 / 문제 CRUD) ──────
+
+
+@pytest.mark.timeout(1000)
+def test_student_history():
+    """
+    학생 제출 이력 조회:
+    제출 → graded 대기 → GET /api/v1/submissions?student_id=... → 이력 포함 확인.
+    """
+    student_id = "88888801"
+    sid = submit_answer(
+        problem_id=1,
+        student_answer="f'(x) = 3x² - 6x이고, f'(x)=0에서 x=0 또는 x=2이다. f(2)=-3이므로 최솟값은 -3.",
+        student_name="이력테스트",
+        student_id=student_id,
+    )
+
+    # graded 대기
+    wait_until_graded(sid)
+
+    # 이력 조회
+    resp = requests.get(f"{BASE_URL}/api/v1/submissions?student_id={student_id}")
+    assert resp.status_code == 200, f"이력 조회 실패: {resp.status_code} {resp.text}"
+    data = resp.json()
+    assert "submissions" in data, "submissions 필드 없음"
+    assert isinstance(data["submissions"], list), "submissions가 list가 아닙니다"
+    assert len(data["submissions"]) >= 1, "제출 이력이 0건입니다"
+
+    # 방금 제출한 항목 확인
+    ids = [s["submission_id"] for s in data["submissions"]]
+    assert sid in ids, f"submission_id={sid}가 이력에 없습니다"
+
+    # 각 항목 필드 검증
+    for item in data["submissions"]:
+        for field in ("submission_id", "problem_title", "problem_domain", "status", "input_type", "submitted_at"):
+            assert field in item, f"이력 항목에 '{field}' 필드 없음"
+
+
+@pytest.mark.timeout(30)
+def test_teacher_submissions_overview():
+    """
+    GET /api/v1/teacher/submissions → 제출 현황 목록, 페이지네이션 포함.
+    """
+    resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/submissions",
+        headers=TEACHER_HEADERS,
+    )
+    assert resp.status_code == 200, f"제출 현황 조회 실패: {resp.status_code} {resp.text}"
+    data = resp.json()
+    assert "submissions" in data, "submissions 필드 없음"
+    assert "total" in data, "total 필드 없음"
+    assert "page" in data, "page 필드 없음"
+    assert "page_size" in data, "page_size 필드 없음"
+    assert isinstance(data["submissions"], list)
+
+    # 각 항목 필드 검증
+    for item in data["submissions"]:
+        for field in ("submission_id", "problem_id", "problem_title", "student_name", "status", "submitted_at"):
+            assert field in item, f"제출 현황 항목에 '{field}' 필드 없음"
+
+
+@pytest.mark.timeout(30)
+def test_teacher_submissions_filter():
+    """
+    GET /api/v1/teacher/submissions?status=pending → status 필터 동작 확인.
+    """
+    resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/submissions?status=pending",
+        headers=TEACHER_HEADERS,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    for item in data["submissions"]:
+        assert item["status"] == "pending", f"필터 결과에 pending 아닌 항목: {item['status']}"
+
+
+@pytest.mark.timeout(30)
+def test_teacher_problem_crud():
+    """
+    문제 CRUD:
+    POST → GET(목록) → PUT(수정) → DELETE 흐름 검증.
+    """
+    # 1) 문제 등록
+    create_resp = requests.post(
+        f"{BASE_URL}/api/v1/teacher/problems",
+        json={
+            "title": "테스트_문제_CRUD_001",
+            "content": "테스트용 문제입니다. $x^2 + 1 = 0$ 의 해를 구하시오.",
+            "answer": "해 없음",
+            "reference_solution": "1단계: 판별식 확인",
+            "rubric": {
+                "total_score": 2,
+                "steps": [
+                    {"step": 1, "description": "판별식 계산", "score": 1},
+                    {"step": 2, "description": "결론", "score": 1},
+                ],
+            },
+            "domain": "수학",
+            "difficulty": 1,
+        },
+        headers=TEACHER_HEADERS,
+    )
+    assert create_resp.status_code == 201, f"문제 등록 실패: {create_resp.status_code} {create_resp.text}"
+    created = create_resp.json()
+    assert "id" in created, "등록 응답에 id 없음"
+    problem_id = created["id"]
+
+    # 2) 교사 문제 목록에서 확인
+    list_resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/problems",
+        headers=TEACHER_HEADERS,
+    )
+    assert list_resp.status_code == 200
+    titles = [p["title"] for p in list_resp.json().get("problems", [])]
+    assert "테스트_문제_CRUD_001" in titles, "등록된 문제가 목록에 없습니다"
+
+    # 3) 수정
+    update_resp = requests.put(
+        f"{BASE_URL}/api/v1/teacher/problems/{problem_id}",
+        json={"title": "테스트_문제_CRUD_001_수정", "difficulty": 2},
+        headers=TEACHER_HEADERS,
+    )
+    assert update_resp.status_code == 200, f"문제 수정 실패: {update_resp.status_code} {update_resp.text}"
+    updated = update_resp.json()
+    assert updated["title"] == "테스트_문제_CRUD_001_수정"
+    assert updated["difficulty"] == 2
+
+    # 4) 삭제
+    delete_resp = requests.delete(
+        f"{BASE_URL}/api/v1/teacher/problems/{problem_id}",
+        headers=TEACHER_HEADERS,
+    )
+    assert delete_resp.status_code == 200, f"문제 삭제 실패: {delete_resp.status_code} {delete_resp.text}"
+    delete_data = delete_resp.json()
+    assert delete_data["deleted"] is True, "deleted가 True가 아닙니다"
+
+
+@pytest.mark.timeout(30)
+def test_teacher_queue_trust_filter():
+    """
+    GET /api/v1/teacher/queue?trust_level=high → trust_level 필터 동작 확인.
+    """
+    resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/queue?trust_level=high",
+        headers=TEACHER_HEADERS,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    for item in data["queue"]:
+        assert item["trust_level"] == "high", (
+            f"필터 결과에 high 아닌 항목: {item['trust_level']}"
+        )
+
+
+@pytest.mark.timeout(30)
+def test_queue_item_has_image_fields():
+    """
+    GET /api/v1/teacher/queue → 각 항목에 input_type, image_path 필드 존재.
+    """
+    resp = requests.get(
+        f"{BASE_URL}/api/v1/teacher/queue",
+        headers=TEACHER_HEADERS,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    for item in data["queue"]:
+        assert "input_type" in item, f"queue 항목에 input_type 없음: {item.get('queue_id')}"
+        assert "image_path" in item, f"queue 항목에 image_path 없음: {item.get('queue_id')}"
