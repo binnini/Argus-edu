@@ -1,26 +1,28 @@
 #!/usr/bin/env python3
 """
-benchmark_models.py — 채점+피드백 LLM 모델 벤치마크
+benchmark_models.py — 채점+피드백 LLM 모델 벤치마크 (MLX 직접 실행)
 
 사용법:
-    # 단일 모델 테스트
-    python scripts/benchmark_models.py --models qwen2.5:7b-instruct
+    # 단일 모델
+    python scripts/benchmark_models.py --models gemma4:e4b
 
     # 여러 모델 비교
-    python scripts/benchmark_models.py --models qwen2.5:7b-instruct,phi4:latest,gemma3:4b
+    python scripts/benchmark_models.py --models gemma4:e4b,qwen2.5:7b,exaone3.5:7.8b
 
-    # Ollama 서버 주소 지정
-    python scripts/benchmark_models.py --models qwen2.5:7b-instruct --base-url http://localhost:11434
+    # HuggingFace 모델 ID 직접 지정
+    python scripts/benchmark_models.py --models mlx-community/Qwen2.5-7B-Instruct-4bit
+
+    # 문제 일부만 빠른 테스트
+    python scripts/benchmark_models.py --models qwen2.5:7b --limit 5
+
+    # Ollama HTTP API 사용 (MLX 대신)
+    python scripts/benchmark_models.py --models qwen2.5:7b --ollama
 
     # 결과 CSV 저장
-    python scripts/benchmark_models.py --models qwen2.5:7b-instruct --output results.csv
+    python scripts/benchmark_models.py --models gemma4:e4b,qwen2.5:7b --output results.csv
 
-    # 문제 일부만 빠른 테스트 (앞 5개)
-    python scripts/benchmark_models.py --models qwen2.5:7b-instruct --limit 5
-
-출력:
-    - 콘솔: 문제별 소요 시간, 채점 점수, 피드백 요약
-    - CSV: 전체 결과 저장
+    # 지원 모델 목록 확인
+    python scripts/benchmark_models.py --list-models
 """
 
 import argparse
@@ -31,20 +33,32 @@ import sys
 import time
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
-try:
-    from openai import OpenAI
-except ImportError:
-    print("openai 패키지가 필요합니다: pip install openai")
-    sys.exit(1)
+
+# ── MLX 모델 매핑 테이블 (tests/llm_benchmark_models.md 기준) ────────────
+# key: Ollama 태그 / value: HuggingFace mlx-community 모델 ID
+
+MLX_MODELS: dict[str, str] = {
+    "gemma4:e4b":       "mlx-community/gemma-4-e4b-4bit",
+    "gemma4:e2b":       "mlx-community/gemma-4-e2b-it-4bit",
+    "mathstral:7b":     "mlx-community/mathstral-7B-v0.1-4bit",
+    "qwen2.5:7b":       "mlx-community/Qwen2.5-7B-Instruct-4bit",
+    "deepseek-r1:7b":   "mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit",
+    "deepseek-r1:14b":  "mlx-community/DeepSeek-R1-Distill-Qwen-14B-4bit",
+    "exaone3.5:7.8b":   "mlx-community/EXAONE-3.5-7.8B-Instruct-4bit",
+    "phi4:14b":         "mlx-community/phi-4-4bit",
+    "qwen2.5:14b":      "mlx-community/Qwen2.5-14B-Instruct-4bit",
+}
+
+# DeepSeek-R1 계열: <think>...</think> 태그 제거 필요
+DEEPSEEK_R1_PREFIXES = ("deepseek-r1", "DeepSeek-R1")
 
 
-# ── 벤치마크 문제 (30개, 초등~고등 다양한 난이도) ─────────────────────
+# ── 벤치마크 문제 (30개, 초등~고등 다양한 난이도) ────────────────────────
 
 PROBLEMS = [
-    # ── 초등 (1~8) ──────────────────────────────────────────────────
+    # ── 초등 (E01~E08) ──────────────────────────────────────────────────
     {
         "id": "E01", "level": "초등3", "domain": "수와 연산",
         "content": "348 + 275를 계산하세요.",
@@ -54,7 +68,7 @@ PROBLEMS = [
             {"step": 1, "description": "받아올림 처리", "score": 1},
             {"step": 2, "description": "최종 계산", "score": 1},
         ]},
-        "student_answer": "348 + 275 = 613",  # 십의 자리 실수
+        "student_answer": "348 + 275 = 613",
         "expected_score": 1,
     },
     {
@@ -67,7 +81,7 @@ PROBLEMS = [
             {"step": 2, "description": "통분", "score": 1},
             {"step": 3, "description": "분수 덧셈", "score": 1},
         ]},
-        "student_answer": "1/3 + 1/4 = 2/7",  # 분모끼리 더하는 오류
+        "student_answer": "1/3 + 1/4 = 2/7",
         "expected_score": 0,
     },
     {
@@ -91,7 +105,7 @@ PROBLEMS = [
             {"step": 1, "description": "소수 곱셈 원리", "score": 1},
             {"step": 2, "description": "소수점 위치", "score": 1},
         ]},
-        "student_answer": "0.3 × 0.7 = 2.1",  # 소수점 실수
+        "student_answer": "0.3 × 0.7 = 2.1",
         "expected_score": 1,
     },
     {
@@ -126,7 +140,7 @@ PROBLEMS = [
         "rubric": {"total_score": 1, "steps": [
             {"step": 1, "description": "나눗셈 계산", "score": 1},
         ]},
-        "student_answer": "72 ÷ 8 = 8",  # 오답
+        "student_answer": "72 ÷ 8 = 8",
         "expected_score": 0,
     },
     {
@@ -137,11 +151,11 @@ PROBLEMS = [
         "rubric": {"total_score": 1, "steps": [
             {"step": 1, "description": "정수 덧셈", "score": 1},
         ]},
-        "student_answer": "(-3) + 5 = -8",  # 부호 오류
+        "student_answer": "(-3) + 5 = -8",
         "expected_score": 0,
     },
 
-    # ── 중학교 (9~18) ────────────────────────────────────────────────
+    # ── 중학교 (M01~M10) ────────────────────────────────────────────────
     {
         "id": "M01", "level": "중1", "domain": "방정식",
         "content": "일차방정식 2x + 3 = 11을 풀어라.",
@@ -202,7 +216,7 @@ PROBLEMS = [
             {"step": 2, "description": "인수분해 결과", "score": 1},
             {"step": 3, "description": "해 도출", "score": 1},
         ]},
-        "student_answer": "x² - 5x + 6 = (x-2)(x-3) = 0\nx = 2 또는 x = 4",  # x=3을 4로 오기
+        "student_answer": "x² - 5x + 6 = (x-2)(x-3) = 0\nx = 2 또는 x = 4",
         "expected_score": 2,
     },
     {
@@ -228,7 +242,7 @@ PROBLEMS = [
             {"step": 1, "description": "f(x)=0 설정", "score": 1},
             {"step": 2, "description": "x 풀이", "score": 1},
         ]},
-        "student_answer": "x² = 4이므로 x = 2만 있다",  # 음수 해 누락
+        "student_answer": "x² = 4이므로 x = 2만 있다",
         "expected_score": 1,
     },
     {
@@ -269,7 +283,7 @@ PROBLEMS = [
         "expected_score": 2,
     },
 
-    # ── 고등학교 (19~30) ─────────────────────────────────────────────
+    # ── 고등학교 (H01~H12) ───────────────────────────────────────────────
     {
         "id": "H01", "level": "고1", "domain": "지수·로그",
         "content": "log₂8의 값을 구하라.",
@@ -292,7 +306,7 @@ PROBLEMS = [
             {"step": 2, "description": "꼭짓점 x좌표", "score": 1},
             {"step": 3, "description": "꼭짓점 y좌표", "score": 1},
         ]},
-        "student_answer": "x² - 4x + 3 = (x-2)² - 1이므로 꼭짓점은 (2, 1)",  # y좌표 부호 실수
+        "student_answer": "x² - 4x + 3 = (x-2)² - 1이므로 꼭짓점은 (2, 1)",
         "expected_score": 2,
     },
     {
@@ -331,7 +345,7 @@ PROBLEMS = [
             {"step": 2, "description": "3 적분", "score": 1},
             {"step": 3, "description": "적분상수 C", "score": 1},
         ]},
-        "student_answer": "∫(2x+3)dx = x² + 3x",  # C 누락
+        "student_answer": "∫(2x+3)dx = x² + 3x",
         "expected_score": 2,
     },
     {
@@ -369,7 +383,7 @@ PROBLEMS = [
             {"step": 2, "description": "식 대입", "score": 1},
             {"step": 3, "description": "계산", "score": 1},
         ]},
-        "student_answer": "S₅ = 3(2⁵-1)/(2-1) = 3×32/(1) = 96",  # 2⁵ 계산 실수
+        "student_answer": "S₅ = 3(2⁵-1)/(2-1) = 3×32/(1) = 96",
         "expected_score": 2,
     },
     {
@@ -426,7 +440,7 @@ PROBLEMS = [
 ]
 
 
-# ── 프롬프트 ──────────────────────────────────────────────────────────
+# ── 프롬프트 ──────────────────────────────────────────────────────────────
 
 SYSTEM_PROMPT = """\
 당신은 한국 수학 채점 및 개인화 피드백 전문가입니다.
@@ -467,7 +481,7 @@ USER_TEMPLATE = """\
 student_mistakes가 없으면 [] 로 응답하세요."""
 
 
-# ── 결과 클래스 ───────────────────────────────────────────────────────
+# ── 결과 클래스 ───────────────────────────────────────────────────────────
 
 @dataclass
 class BenchmarkResult:
@@ -486,89 +500,225 @@ class BenchmarkResult:
     raw_response: str = field(default="", repr=False)
 
 
-# ── LLM 호출 ──────────────────────────────────────────────────────────
+# ── JSON 파싱 ─────────────────────────────────────────────────────────────
 
-def call_llm(client: OpenAI, model: str, problem: dict, timeout: int = 120) -> BenchmarkResult:
-    user_prompt = USER_TEMPLATE.format(
+def strip_think_tags(text: str) -> str:
+    """DeepSeek-R1 계열의 <think>...</think> 추론 블록 제거."""
+    return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+
+
+def parse_response(raw: str, is_deepseek: bool = False) -> dict:
+    text = raw.strip()
+    if is_deepseek:
+        text = strip_think_tags(text)
+    if text.startswith("```"):
+        lines = text.split("\n")
+        text = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        text = match.group(0)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        text = re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", text)
+        return json.loads(text)
+
+
+# ── MLX 추론 ──────────────────────────────────────────────────────────────
+
+def resolve_model_id(name: str) -> str:
+    """Ollama 태그 → HF 모델 ID 변환. 이미 HF ID면 그대로 반환."""
+    return MLX_MODELS.get(name, name)
+
+
+def is_deepseek_r1(name: str) -> bool:
+    return any(name.startswith(p) for p in DEEPSEEK_R1_PREFIXES)
+
+
+def build_prompt_mlx(tokenizer, problem: dict) -> str:
+    user_content = USER_TEMPLATE.format(
         problem_content=problem["content"],
         answer=problem["answer"],
         reference_solution=problem["reference_solution"],
         rubric_json=json.dumps(problem["rubric"], ensure_ascii=False),
         student_answer=problem["student_answer"],
     )
-
-    t0 = time.perf_counter()
-    error = ""
-    ai_score = None
-    key_concept = ""
-    mistake_count = 0
-    raw = ""
-
-    try:
-        resp = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=2048,
-            temperature=0.7,
-            timeout=timeout,
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_content},
+    ]
+    # apply_chat_template이 없는 토크나이저 대비 fallback
+    if hasattr(tokenizer, "apply_chat_template"):
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
         )
-        raw = resp.choices[0].message.content or ""
-        parsed = parse_response(raw)
-        ai_score = parsed["grading"]["total_score"]
-        key_concept = parsed["feedback"].get("key_concept", "")[:60]
-        mistake_count = len(parsed["feedback"].get("student_mistakes", []))
-    except Exception as e:
-        error = str(e)[:100]
-
-    elapsed = time.perf_counter() - t0
-    total = problem["rubric"]["total_score"]
-    expected = problem["expected_score"]
-
-    return BenchmarkResult(
-        problem_id=problem["id"],
-        level=problem["level"],
-        domain=problem["domain"],
-        model=model,
-        elapsed_sec=round(elapsed, 2),
-        ai_score=ai_score,
-        expected_score=expected,
-        total_score=total,
-        score_correct=(ai_score == expected) if ai_score is not None else False,
-        key_concept=key_concept,
-        mistake_count=mistake_count,
-        error=error,
-        raw_response=raw,
-    )
+    # fallback: 수동 조합
+    return f"{SYSTEM_PROMPT}\n\n{user_content}\n"
 
 
-def parse_response(raw: str) -> dict:
-    text = raw.strip()
-    if text.startswith("```"):
-        lines = text.split("\n")
-        text = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if match:
-        text = match.group(0)
+def run_mlx_benchmark(
+    model_name: str,
+    problems: list[dict],
+    max_tokens: int = 2048,
+    temp: float = 0.7,
+) -> list[BenchmarkResult]:
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
-        return json.loads(text)
+        from mlx_lm import load, generate
+        import mlx.core as mx
+    except ImportError:
+        print("mlx-lm이 필요합니다: pip install mlx-lm")
+        sys.exit(1)
+
+    hf_id = resolve_model_id(model_name)
+    deepseek = is_deepseek_r1(model_name) or is_deepseek_r1(hf_id)
+
+    print(f"  모델 로딩: {hf_id}")
+    load_start = time.perf_counter()
+    model, tokenizer = load(hf_id)
+    load_sec = time.perf_counter() - load_start
+    print(f"  로딩 완료: {load_sec:.1f}초\n")
+
+    results: list[BenchmarkResult] = []
+
+    for i, problem in enumerate(problems, 1):
+        prompt = build_prompt_mlx(tokenizer, problem)
+        t0 = time.perf_counter()
+        error = ""
+        ai_score = None
+        key_concept = ""
+        mistake_count = 0
+        raw = ""
+
+        try:
+            raw = generate(
+                model,
+                tokenizer,
+                prompt=prompt,
+                max_tokens=max_tokens,
+                temp=temp,
+                verbose=False,
+            )
+            parsed = parse_response(raw, is_deepseek=deepseek)
+            ai_score = int(parsed["grading"]["total_score"])
+            key_concept = parsed["feedback"].get("key_concept", "")[:60]
+            mistake_count = len(parsed["feedback"].get("student_mistakes", []))
+        except Exception as e:
+            error = str(e)[:120]
+
+        elapsed = round(time.perf_counter() - t0, 2)
+        r = BenchmarkResult(
+            problem_id=problem["id"],
+            level=problem["level"],
+            domain=problem["domain"],
+            model=model_name,
+            elapsed_sec=elapsed,
+            ai_score=ai_score,
+            expected_score=problem["expected_score"],
+            total_score=problem["rubric"]["total_score"],
+            score_correct=(ai_score == problem["expected_score"]) if ai_score is not None else False,
+            key_concept=key_concept,
+            mistake_count=mistake_count,
+            error=error,
+            raw_response=raw,
+        )
+        results.append(r)
+        print_result(r, i, len(problems))
+
+    # 메모리 해제
+    del model, tokenizer
+    try:
+        import mlx.core as mx
+        mx.metal.clear_cache()
+    except Exception:
+        pass
+
+    return results
 
 
-# ── 출력 ──────────────────────────────────────────────────────────────
+# ── Ollama 폴백 ───────────────────────────────────────────────────────────
+
+def run_ollama_benchmark(
+    model_name: str,
+    problems: list[dict],
+    base_url: str,
+    timeout: int,
+) -> list[BenchmarkResult]:
+    try:
+        from openai import OpenAI
+    except ImportError:
+        print("openai 패키지가 필요합니다: pip install openai")
+        sys.exit(1)
+
+    deepseek = is_deepseek_r1(model_name)
+    client = OpenAI(base_url=f"{base_url}/v1", api_key="ollama")
+    results: list[BenchmarkResult] = []
+
+    for i, problem in enumerate(problems, 1):
+        user_content = USER_TEMPLATE.format(
+            problem_content=problem["content"],
+            answer=problem["answer"],
+            reference_solution=problem["reference_solution"],
+            rubric_json=json.dumps(problem["rubric"], ensure_ascii=False),
+            student_answer=problem["student_answer"],
+        )
+        t0 = time.perf_counter()
+        error = ""
+        ai_score = None
+        key_concept = ""
+        mistake_count = 0
+        raw = ""
+
+        try:
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
+                ],
+                max_tokens=2048,
+                temperature=0.7,
+                timeout=timeout,
+            )
+            raw = resp.choices[0].message.content or ""
+            parsed = parse_response(raw, is_deepseek=deepseek)
+            ai_score = int(parsed["grading"]["total_score"])
+            key_concept = parsed["feedback"].get("key_concept", "")[:60]
+            mistake_count = len(parsed["feedback"].get("student_mistakes", []))
+        except Exception as e:
+            error = str(e)[:120]
+
+        elapsed = round(time.perf_counter() - t0, 2)
+        r = BenchmarkResult(
+            problem_id=problem["id"],
+            level=problem["level"],
+            domain=problem["domain"],
+            model=model_name,
+            elapsed_sec=elapsed,
+            ai_score=ai_score,
+            expected_score=problem["expected_score"],
+            total_score=problem["rubric"]["total_score"],
+            score_correct=(ai_score == problem["expected_score"]) if ai_score is not None else False,
+            key_concept=key_concept,
+            mistake_count=mistake_count,
+            error=error,
+            raw_response=raw,
+        )
+        results.append(r)
+        print_result(r, i, len(problems))
+
+    return results
+
+
+# ── 출력 ──────────────────────────────────────────────────────────────────
 
 def print_result(r: BenchmarkResult, idx: int, total: int):
-    status = "✅" if r.score_correct else ("❌" if not r.error else "💥")
+    status = "✅" if r.score_correct else ("💥" if r.error else "❌")
     score_str = f"{r.ai_score}/{r.total_score}" if r.ai_score is not None else "ERR"
     exp_str = f"{r.expected_score}/{r.total_score}"
     print(
-        f"  [{idx:2d}/{total}] {status} {r.problem_id} ({r.level}/{r.domain}) "
-        f"| {r.elapsed_sec:6.1f}s | AI:{score_str} 예상:{exp_str} "
-        f"| 오류{r.mistake_count}개 | {r.key_concept[:40]}"
+        f"  [{idx:2d}/{total}] {status} {r.problem_id} ({r.level}/{r.domain})"
+        f" | {r.elapsed_sec:6.1f}s | AI:{score_str} 예상:{exp_str}"
+        f" | 오류{r.mistake_count}개 | {r.key_concept[:38]}"
         + (f"\n       💥 {r.error}" if r.error else "")
     )
 
@@ -578,27 +728,59 @@ def print_summary(results: list[BenchmarkResult], model: str):
     errors = [r for r in results if r.error]
     correct = [r for r in valid if r.score_correct]
 
-    print(f"\n{'='*70}")
+    print(f"\n{'='*72}")
     print(f"모델: {model}")
-    print(f"{'='*70}")
-    print(f"  총 문제: {len(results)}개")
-    print(f"  오류 없음: {len(valid)}개  |  오류 발생: {len(errors)}개")
+    print(f"{'='*72}")
+    print(f"  총 문제: {len(results)}개  |  성공: {len(valid)}개  |  오류: {len(errors)}개")
     if valid:
         avg_time = sum(r.elapsed_sec for r in valid) / len(valid)
         total_time = sum(r.elapsed_sec for r in results)
-        print(f"  채점 정확도: {len(correct)}/{len(valid)} ({100*len(correct)/len(valid):.1f}%)")
+        acc = 100 * len(correct) / len(valid)
+        print(f"  채점 정확도: {len(correct)}/{len(valid)} ({acc:.1f}%)")
         print(f"  평균 소요시간: {avg_time:.1f}초  |  전체: {total_time:.0f}초")
 
-        # 레벨별 정확도
         by_level: dict[str, list] = {}
         for r in valid:
-            key = r.level[:2]  # 초등/중학/고등
+            key = r.level[:2]
             by_level.setdefault(key, []).append(r)
-        for level, rs in sorted(by_level.items()):
+        for lvl, rs in sorted(by_level.items()):
             ok = sum(1 for r in rs if r.score_correct)
-            times = [r.elapsed_sec for r in rs]
-            print(f"    {level}: {ok}/{len(rs)} 정답, 평균 {sum(times)/len(times):.1f}초")
-    print(f"{'='*70}\n")
+            avg = sum(r.elapsed_sec for r in rs) / len(rs)
+            print(f"    {lvl}: {ok}/{len(rs)} 정답, 평균 {avg:.1f}초")
+    print(f"{'='*72}\n")
+
+
+def print_comparison(all_results: list[BenchmarkResult]):
+    """모델 간 최종 비교표 출력."""
+    by_model: dict[str, list] = {}
+    for r in all_results:
+        by_model.setdefault(r.model, []).append(r)
+
+    if len(by_model) < 2:
+        return
+
+    print(f"\n{'━'*72}")
+    print("모델 비교 요약")
+    print(f"{'━'*72}")
+    header = f"  {'모델':<30} {'정확도':>8} {'평균(초)':>9} {'오류':>5}"
+    print(header)
+    print(f"  {'-'*62}")
+
+    rows = []
+    for model, results in by_model.items():
+        valid = [r for r in results if r.ai_score is not None]
+        if not valid:
+            rows.append((model, 0.0, 9999.0, len(results)))
+            continue
+        correct = sum(1 for r in valid if r.score_correct)
+        acc = 100 * correct / len(valid)
+        avg = sum(r.elapsed_sec for r in valid) / len(valid)
+        err = sum(1 for r in results if r.error)
+        rows.append((model, acc, avg, err))
+
+    for model, acc, avg, err in sorted(rows, key=lambda x: -x[1]):
+        print(f"  {model:<30} {acc:>7.1f}% {avg:>8.1f}s {err:>5}개")
+    print(f"{'━'*72}\n")
 
 
 def save_csv(results: list[BenchmarkResult], path: str):
@@ -615,47 +797,78 @@ def save_csv(results: list[BenchmarkResult], path: str):
     print(f"CSV 저장: {path}")
 
 
-# ── 메인 ──────────────────────────────────────────────────────────────
+# ── 메인 ──────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="LLM 채점+피드백 벤치마크")
-    parser.add_argument("--models", default="qwen2.5:7b-instruct",
-                        help="콤마 구분 모델 목록 (예: qwen2.5:7b-instruct,phi4:latest)")
-    parser.add_argument("--base-url", default="http://localhost:11434",
-                        help="Ollama 서버 주소 (기본: http://localhost:11434)")
-    parser.add_argument("--timeout", type=int, default=180,
-                        help="LLM 호출 타임아웃 초 (기본: 180)")
-    parser.add_argument("--limit", type=int, default=0,
-                        help="테스트할 문제 수 제한 (0=전체 30개)")
-    parser.add_argument("--output", default="",
-                        help="CSV 저장 경로 (기본: benchmark_YYYYMMDD_HHMMSS.csv)")
+    parser = argparse.ArgumentParser(description="Argus LLM 채점+피드백 벤치마크")
+    parser.add_argument(
+        "--models", default="qwen2.5:7b",
+        help="콤마 구분 모델 목록. Ollama 태그 또는 HF 모델 ID 사용 가능.\n"
+             "예: gemma4:e4b,qwen2.5:7b,exaone3.5:7.8b",
+    )
+    parser.add_argument(
+        "--ollama", action="store_true",
+        help="MLX 대신 Ollama HTTP API 사용",
+    )
+    parser.add_argument(
+        "--base-url", default="http://localhost:11434",
+        help="Ollama 서버 주소 (--ollama 사용 시, 기본: http://localhost:11434)",
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=180,
+        help="Ollama 호출 타임아웃 초 (기본: 180)",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=0,
+        help="테스트할 문제 수 제한 (0=전체 30개)",
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, default=2048,
+        help="최대 생성 토큰 수 (기본: 2048)",
+    )
+    parser.add_argument(
+        "--temp", type=float, default=0.7,
+        help="샘플링 온도 (기본: 0.7)",
+    )
+    parser.add_argument(
+        "--output", default="",
+        help="CSV 저장 경로 (기본: benchmark_YYYYMMDD_HHMMSS.csv)",
+    )
+    parser.add_argument(
+        "--list-models", action="store_true",
+        help="지원 MLX 모델 목록 출력 후 종료",
+    )
     args = parser.parse_args()
 
-    models = [m.strip() for m in args.models.split(",") if m.strip()]
-    problems = PROBLEMS[:args.limit] if args.limit else PROBLEMS
+    if args.list_models:
+        print("\n지원 모델 (MLX_MODELS 매핑 테이블):")
+        print(f"  {'Ollama 태그':<25} {'HuggingFace 모델 ID'}")
+        print(f"  {'-'*65}")
+        for tag, hf_id in MLX_MODELS.items():
+            print(f"  {tag:<25} {hf_id}")
+        print()
+        return
 
-    print(f"\nArgus 모델 벤치마크 — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print(f"서버: {args.base_url}  |  문제: {len(problems)}개  |  모델: {models}\n")
+    models = [m.strip() for m in args.models.split(",") if m.strip()]
+    problems = PROBLEMS[: args.limit] if args.limit else PROBLEMS
+    mode = "Ollama" if args.ollama else "MLX"
+
+    print(f"\nArgus 모델 벤치마크 ({mode}) — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"문제: {len(problems)}개  |  모델: {', '.join(models)}\n")
 
     all_results: list[BenchmarkResult] = []
 
     for model in models:
-        print(f"\n── 모델: {model} {'─'*50}")
-        client = OpenAI(base_url=f"{args.base_url}/v1", api_key="ollama")
-
-        # 워밍업 (첫 번째 문제는 모델 로드 시간 포함)
-        print("  (모델 로딩 확인 중...)")
-        results: list[BenchmarkResult] = []
-
-        for i, problem in enumerate(problems, 1):
-            r = call_llm(client, model, problem, timeout=args.timeout)
-            results.append(r)
-            print_result(r, i, len(problems))
-
+        print(f"── 모델: {model} {'─'*50}")
+        if args.ollama:
+            results = run_ollama_benchmark(model, problems, args.base_url, args.timeout)
+        else:
+            results = run_mlx_benchmark(model, problems, args.max_tokens, args.temp)
         all_results.extend(results)
         print_summary(results, model)
 
-    # CSV 저장
+    print_comparison(all_results)
+
     output_path = args.output or f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
     save_csv(all_results, output_path)
 
