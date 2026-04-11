@@ -111,9 +111,14 @@ async def create_submission(
     if not problem:
         raise HTTPException(status_code=404, detail="문제를 찾을 수 없습니다")
 
+    # 최종 답이 있으면 풀이 앞에 덧붙임
+    answer_text = body.student_answer
+    if body.final_answer and body.final_answer.strip():
+        answer_text = f"[최종 답] {body.final_answer.strip()}\n\n[풀이 과정]\n{body.student_answer}"
+
     submission = Submission(
         problem_id=body.problem_id,
-        student_answer=body.student_answer,
+        student_answer=answer_text,
         input_type="text",
         status="pending",
         student_name=body.student_name,
@@ -143,6 +148,7 @@ async def create_submission_image(
     image: UploadFile = File(...),
     student_name: str = Form(default=""),
     student_id: Optional[str] = Form(default=None),
+    student_final_answer: Optional[str] = Form(default=None),
     db: AsyncSession = Depends(get_session),
 ):
     """손글씨 이미지 업로드 → OCR → 채점 파이프라인."""
@@ -173,9 +179,12 @@ async def create_submission_image(
     image_path = UPLOAD_DIR / filename
     image_path.write_bytes(image_bytes)
 
+    # 최종 답이 있으면 student_answer에 prefix로 저장 (OCR 완료 후 풀이 과정 추가)
+    final_ans_prefix = f"[최종 답] {student_final_answer.strip()}\n\n" if student_final_answer and student_final_answer.strip() else ""
+
     submission = Submission(
         problem_id=problem_id,
-        student_answer="",  # OCR 완료 후 채워짐
+        student_answer=final_ans_prefix,  # OCR 완료 후 풀이 과정 추가됨
         input_type="image",
         image_path=str(image_path),
         status="pending",
@@ -240,8 +249,13 @@ async def _run_grading_pipeline(
                     await db.commit()
                     return
 
-                student_answer = ocr_text
-                submission.student_answer = ocr_text
+                # 최종 답 prefix가 있으면 유지하고 풀이 과정 추가
+                existing_prefix = submission.student_answer or ""
+                if existing_prefix:
+                    student_answer = existing_prefix + "[풀이 과정]\n" + ocr_text
+                else:
+                    student_answer = ocr_text
+                submission.student_answer = student_answer
                 submission.ocr_raw_text = ocr_text
                 await db.commit()
 
@@ -321,6 +335,35 @@ async def _run_grading_pipeline(
                 pass
 
 
+# ── 학생 본인 확인 ────────────────────────────────────────────
+
+@router.get("/students/verify")
+async def verify_student(
+    student_id: str = Query(...),
+    student_name: str = Query(...),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    학생 이름 + 학번 일치 여부 확인.
+    - group_members에 등록된 학생: 이름이 정확히 일치해야 함
+    - 미등록 학생: 통과 허용 (교사가 아직 그룹에 추가 안 한 경우)
+    """
+    result = await db.execute(
+        select(GroupMember).where(GroupMember.student_id == student_id)
+    )
+    members = result.scalars().all()
+
+    if not members:
+        # 미등록 학생 — 허용
+        return {"valid": True, "message": ""}
+
+    for m in members:
+        if m.student_name.strip().lower() == student_name.strip().lower():
+            return {"valid": True, "message": ""}
+
+    return {"valid": False, "message": "이름과 학번이 일치하지 않습니다."}
+
+
 # ── 학생 제출 이력 ───────────────────────────────────────────
 
 @router.get("/submissions", response_model=StudentHistoryResponse)
@@ -363,6 +406,79 @@ async def list_student_submissions(
         ))
 
     return StudentHistoryResponse(submissions=items)
+
+
+# ── 학생 숙제 현황 ────────────────────────────────────────────
+# NOTE: /submissions/homework 는 반드시 /submissions/{submission_id} 보다 먼저 등록해야 함.
+# FastAPI는 등록 순서대로 라우트를 매칭하므로, 뒤에 오면 "homework"가 정수 id로 파싱 시도되어 422 오류 발생.
+
+@router.get("/submissions/homework", response_model=StudentHomeworkResponse)
+async def get_student_homework(
+    student_id: str = Query(...),
+    db: AsyncSession = Depends(get_session),
+):
+    """해당 학생이 속한 그룹의 숙제 목록과 각 문제 제출 현황을 반환합니다."""
+    members_result = await db.execute(
+        select(GroupMember).where(GroupMember.student_id == student_id)
+    )
+    member_rows = members_result.scalars().all()
+    group_ids = [m.group_id for m in member_rows]
+
+    if not group_ids:
+        return StudentHomeworkResponse(homeworks=[])
+
+    hw_result = await db.execute(
+        select(Homework)
+        .options(
+            selectinload(Homework.problems).selectinload(HomeworkProblem.problem),
+            selectinload(Homework.group),
+        )
+        .where(Homework.group_id.in_(group_ids))
+        .order_by(Homework.created_at.desc())
+    )
+    homeworks = hw_result.scalars().all()
+
+    sub_result = await db.execute(
+        select(Submission).where(Submission.student_id == student_id)
+    )
+    submissions = sub_result.scalars().all()
+
+    submission_map: dict[int, str] = {}
+    for sub in submissions:
+        if sub.problem_id not in submission_map:
+            submission_map[sub.problem_id] = sub.status
+
+    items = []
+    for hw in homeworks:
+        problem_statuses = []
+        for hp in hw.problems:
+            pid = hp.problem_id
+            prob_title = hp.problem.title if hp.problem else ""
+            submitted = pid in submission_map
+            status = submission_map.get(pid)
+            problem_statuses.append(
+                HomeworkProblemStatus(
+                    problem_id=pid,
+                    problem_title=prob_title,
+                    submitted=submitted,
+                    status=status,
+                )
+            )
+
+        completed = sum(1 for ps in problem_statuses if ps.submitted)
+        items.append(
+            StudentHomeworkItem(
+                homework_id=hw.id,
+                title=hw.title,
+                group_name=hw.group.name if hw.group else None,
+                due_date=hw.due_date,
+                total_problems=len(problem_statuses),
+                completed_problems=completed,
+                problems=problem_statuses,
+            )
+        )
+
+    return StudentHomeworkResponse(homeworks=items)
 
 
 # ── 제출 수정 ────────────────────────────────────────────────
@@ -511,76 +627,3 @@ async def get_submission_status(
     )
 
 
-# ── 학생 숙제 현황 ────────────────────────────────────────────
-
-@router.get("/submissions/homework", response_model=StudentHomeworkResponse)
-async def get_student_homework(
-    student_id: str = Query(...),
-    db: AsyncSession = Depends(get_session),
-):
-    """해당 학생이 속한 그룹의 숙제 목록과 각 문제 제출 현황을 반환합니다."""
-    # 학생이 속한 그룹 ID 목록 조회
-    members_result = await db.execute(
-        select(GroupMember).where(GroupMember.student_id == student_id)
-    )
-    member_rows = members_result.scalars().all()
-    group_ids = [m.group_id for m in member_rows]
-
-    if not group_ids:
-        return StudentHomeworkResponse(homeworks=[])
-
-    # 해당 그룹들의 숙제 목록 (problems + group 포함)
-    hw_result = await db.execute(
-        select(Homework)
-        .options(
-            selectinload(Homework.problems).selectinload(HomeworkProblem.problem),
-            selectinload(Homework.group),
-        )
-        .where(Homework.group_id.in_(group_ids))
-        .order_by(Homework.created_at.desc())
-    )
-    homeworks = hw_result.scalars().all()
-
-    # 해당 학생의 제출 이력 (problem_id → list of Submission)
-    sub_result = await db.execute(
-        select(Submission).where(Submission.student_id == student_id)
-    )
-    submissions = sub_result.scalars().all()
-
-    # problem_id별 제출 여부 및 최신 status 인덱스
-    submission_map: dict[int, str] = {}
-    for sub in submissions:
-        if sub.problem_id not in submission_map:
-            submission_map[sub.problem_id] = sub.status
-
-    items = []
-    for hw in homeworks:
-        problem_statuses = []
-        for hp in hw.problems:
-            pid = hp.problem_id
-            prob_title = hp.problem.title if hp.problem else ""
-            submitted = pid in submission_map
-            status = submission_map.get(pid)
-            problem_statuses.append(
-                HomeworkProblemStatus(
-                    problem_id=pid,
-                    problem_title=prob_title,
-                    submitted=submitted,
-                    status=status,
-                )
-            )
-
-        completed = sum(1 for ps in problem_statuses if ps.submitted)
-        items.append(
-            StudentHomeworkItem(
-                homework_id=hw.id,
-                title=hw.title,
-                group_name=hw.group.name if hw.group else None,
-                due_date=hw.due_date,
-                total_problems=len(problem_statuses),
-                completed_problems=completed,
-                problems=problem_statuses,
-            )
-        )
-
-    return StudentHomeworkResponse(homeworks=items)

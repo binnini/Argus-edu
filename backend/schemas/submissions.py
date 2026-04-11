@@ -8,6 +8,7 @@ class SubmissionRequest(BaseModel):
     student_answer: str
     student_name: str = ""
     student_id: Optional[str] = None
+    final_answer: Optional[str] = None
 
 
 class SubmissionCreateResponse(BaseModel):

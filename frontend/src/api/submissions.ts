@@ -86,11 +86,22 @@ export async function getProblem(problemId: number): Promise<Problem> {
   return res.json();
 }
 
+export async function verifyStudent(
+  studentId: string,
+  studentName: string,
+): Promise<{ valid: boolean; message: string }> {
+  const params = new URLSearchParams({ student_id: studentId, student_name: studentName });
+  const res = await fetch(`${API_BASE}/students/verify?${params.toString()}`);
+  if (!res.ok) throw new Error(`인증 확인 실패: ${res.status}`);
+  return res.json();
+}
+
 export async function submitAnswerText(
   problemId: number,
   studentAnswer: string,
   studentName: string,
   studentId?: string,
+  finalAnswer?: string,
 ): Promise<SubmissionCreateResponse> {
   const res = await fetch(`${API_BASE}/submissions`, {
     method: "POST",
@@ -100,6 +111,7 @@ export async function submitAnswerText(
       student_answer: studentAnswer,
       student_name: studentName,
       student_id: studentId ?? null,
+      final_answer: finalAnswer ?? null,
     }),
   });
   if (!res.ok) {
@@ -114,6 +126,7 @@ export async function submitAnswerImage(
   imageFile: File,
   studentName: string,
   studentId?: string,
+  finalAnswer?: string,
 ): Promise<SubmissionCreateResponse> {
   const formData = new FormData();
   formData.append("problem_id", String(problemId));
@@ -121,6 +134,9 @@ export async function submitAnswerImage(
   formData.append("student_name", studentName);
   if (studentId) {
     formData.append("student_id", studentId);
+  }
+  if (finalAnswer && finalAnswer.trim()) {
+    formData.append("student_final_answer", finalAnswer.trim());
   }
 
   const res = await fetch(`${API_BASE}/submissions/image`, {

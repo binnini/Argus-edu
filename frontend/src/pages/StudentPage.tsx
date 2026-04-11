@@ -19,10 +19,11 @@ import GradingStatus from "@/components/student/GradingStatus"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { renderMath } from "@/lib/renderMath"
-import { BookOpen, ChevronLeft, ClipboardList, Pencil, Plus } from "lucide-react"
+import { BookOpen, ChevronLeft, ClipboardList, LogOut, Pencil, Plus } from "lucide-react"
 
 type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "done" | "detail" | "editing"
 
@@ -56,8 +57,9 @@ export default function StudentPage() {
     () => sessionStorage.getItem("argus_student_name") ?? ""
   )
   const [studentId, setStudentId] = React.useState(
-    () => sessionStorage.getItem("argus_student_id") ?? undefined
+    () => sessionStorage.getItem("argus_student_id") ?? ""
   )
+  const [finalAnswer, setFinalAnswer] = React.useState("")
   const [problem, setProblem] = React.useState<Problem | null>(null)
   const [textAnswer, setTextAnswer] = React.useState("")
   const [imageFile, setImageFile] = React.useState<File | null>(null)
@@ -105,6 +107,9 @@ export default function StudentPage() {
           setResult(status)
           setStage("done")
           clearInterval(interval)
+          // 폴링 완료 후 사이드바 이력 즉시 새로고침
+          const sid = sessionStorage.getItem("argus_student_id")
+          if (sid) loadSidebar(sid)
         }
       } catch {
         // ignore transient errors
@@ -120,14 +125,14 @@ export default function StudentPage() {
     try {
       let res
       if (inputMode === "text") {
-        res = await submitAnswerText(problem.id, textAnswer, studentName, studentId)
+        res = await submitAnswerText(problem.id, textAnswer, studentName, studentId || undefined, finalAnswer || undefined)
       } else {
         if (!imageFile) {
           setSubmitError("이미지를 선택해주세요")
           setStage("answer")
           return
         }
-        res = await submitAnswerImage(problem.id, imageFile, studentName, studentId)
+        res = await submitAnswerImage(problem.id, imageFile, studentName, studentId || undefined, finalAnswer || undefined)
       }
       setSubmissionId(res.submission_id)
       setStage("polling")
@@ -169,6 +174,7 @@ export default function StudentPage() {
   function reset() {
     setProblem(null)
     setTextAnswer("")
+    setFinalAnswer("")
     setImageFile(null)
     setResult(null)
     setSubmissionId(null)
@@ -177,6 +183,24 @@ export default function StudentPage() {
       loadSidebar(studentId)
     }
     setStage("problem")
+  }
+
+  function handleLogout() {
+    sessionStorage.removeItem("argus_student_name")
+    sessionStorage.removeItem("argus_student_id")
+    setStudentName("")
+    setStudentId("")
+    setHistory([])
+    setHomework([])
+    setProblem(null)
+    setTextAnswer("")
+    setFinalAnswer("")
+    setImageFile(null)
+    setResult(null)
+    setSubmissionId(null)
+    setSelectedHistory(null)
+    setDetailResult(null)
+    setStage("info")
   }
 
   // ===== 사이드바 컴포넌트 =====
@@ -412,6 +436,15 @@ export default function StudentPage() {
               <CardTitle>답안 입력</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* 최종 답 입력 */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">최종 답 <span className="text-xs text-muted-foreground">(간단히 기입)</span></label>
+                <Input
+                  placeholder="예) x = 3, 12cm², ③번"
+                  value={finalAnswer}
+                  onChange={(e) => setFinalAnswer(e.target.value)}
+                />
+              </div>
               <Tabs defaultValue="text" onValueChange={(v) => setInputMode(v as "text" | "image")}>
                 <TabsList className="w-full">
                   <TabsTrigger value="text" className="flex-1">텍스트 입력</TabsTrigger>
@@ -630,9 +663,7 @@ export default function StudentPage() {
             onComplete={(name, id) => {
               setStudentName(name)
               setStudentId(id)
-              if (id) {
-                loadSidebar(id)
-              }
+              loadSidebar(id)
               setStage("problem")
             }}
           />
@@ -647,9 +678,20 @@ export default function StudentPage() {
       <header className="border-b sticky top-0 bg-background/80 backdrop-blur z-10">
         <div className="px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold text-primary">Argus</h1>
-          {studentName && (
-            <span className="text-sm text-muted-foreground">{studentName}</span>
-          )}
+          <div className="flex items-center gap-3">
+            {studentName && (
+              <span className="text-sm text-muted-foreground">{studentName}</span>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              로그아웃
+            </Button>
+          </div>
         </div>
       </header>
 
