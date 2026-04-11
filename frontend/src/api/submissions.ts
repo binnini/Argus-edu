@@ -40,6 +40,8 @@ export interface SubmissionStatusResponse {
   feedback: Feedback | null;  // 교사 승인 후에만 노출
   teacher_approved: boolean;
   message: string | null;
+  problem_title: string | null;
+  problem_content: string | null;
 }
 
 export interface ProblemListPagedResponse {
@@ -58,6 +60,8 @@ export interface StudentHistoryItem {
   final_score: number | null;
   input_type: string;
   submitted_at: string;
+  image_path: string | null;
+  student_answer: string | null;
 }
 
 export interface StudentHistoryResponse {
@@ -135,5 +139,21 @@ export async function getSubmissionStatus(
 ): Promise<SubmissionStatusResponse> {
   const res = await fetch(`${API_BASE}/submissions/${submissionId}`);
   if (!res.ok) throw new Error(`채점 결과 조회 실패: ${res.status}`);
+  return res.json();
+}
+
+export async function updateSubmission(
+  submissionId: number,
+  studentAnswer: string,
+): Promise<SubmissionCreateResponse> {
+  const res = await fetch(`${API_BASE}/submissions/${submissionId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ student_answer: studentAnswer }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail ?? `수정 실패: ${res.status}`);
+  }
   return res.json();
 }

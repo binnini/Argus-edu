@@ -41,6 +41,8 @@ class SubmissionStatusResponse(BaseModel):
     feedback: Optional[FeedbackSchema]   # 교사 승인 후에만 노출
     teacher_approved: bool
     message: Optional[str]
+    problem_title: Optional[str] = None
+    problem_content: Optional[str] = None
 
 
 class StudentHistoryItem(BaseModel):
@@ -52,7 +54,14 @@ class StudentHistoryItem(BaseModel):
     final_score: Optional[int]
     input_type: str
     submitted_at: datetime
+    image_path: Optional[str] = None
+    student_answer: Optional[str] = None
 
 
 class StudentHistoryResponse(BaseModel):
     submissions: list[StudentHistoryItem]
+
+
+class SubmissionUpdateRequest(BaseModel):
+    student_answer: Optional[str] = None
+    # 이미지 수정은 multipart로 별도 처리

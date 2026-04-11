@@ -28,6 +28,7 @@ from schemas.submissions import (
     SubmissionRequest,
     SubmissionCreateResponse,
     SubmissionStatusResponse,
+    SubmissionUpdateRequest,
     StudentHistoryItem,
     StudentHistoryResponse,
 )
@@ -354,9 +355,72 @@ async def list_student_submissions(
             final_score=final_score,
             input_type=sub.input_type or "text",
             submitted_at=sub.submitted_at,
+            image_path=sub.image_path,
+            student_answer=sub.student_answer,
         ))
 
     return StudentHistoryResponse(submissions=items)
+
+
+# ── 제출 수정 ────────────────────────────────────────────────
+
+@router.put("/submissions/{submission_id}", response_model=SubmissionCreateResponse, status_code=200)
+async def update_submission(
+    submission_id: int,
+    body: SubmissionUpdateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    채점 대기 중(pending/graded, 교사 미처리) 제출 답안 수정.
+    수정 시 기존 채점 결과 삭제 + 재채점 시작.
+    """
+    result = await db.execute(
+        select(Submission)
+        .options(
+            selectinload(Submission.grading_result),
+            selectinload(Submission.teacher_queue),
+        )
+        .where(Submission.id == submission_id)
+    )
+    submission = result.scalar_one_or_none()
+    if not submission:
+        raise HTTPException(status_code=404, detail="제출을 찾을 수 없습니다")
+
+    # 수정 가능 조건: pending 또는 graded, 교사 미처리
+    tq = submission.teacher_queue
+    if tq and tq.action is not None:
+        raise HTTPException(status_code=409, detail="이미 교사가 검토한 제출은 수정할 수 없습니다")
+    if submission.status not in ("pending", "graded", "error"):
+        raise HTTPException(status_code=409, detail="승인 또는 거부된 제출은 수정할 수 없습니다")
+
+    # 답안 업데이트
+    if body.student_answer is not None:
+        submission.student_answer = body.student_answer
+
+    # 기존 채점 결과 + 큐 항목 삭제 (재채점 위해)
+    if submission.grading_result:
+        await db.delete(submission.grading_result)
+    if tq:
+        await db.delete(tq)
+
+    # 상태 초기화
+    submission.status = "pending"
+    await db.commit()
+    await db.refresh(submission)
+
+    # 재채점 시작
+    asyncio.create_task(
+        _run_grading_pipeline(submission.id, request.app.state)
+    )
+
+    logger.info(f"제출 수정 + 재채점 시작 submission_id={submission_id}")
+
+    return SubmissionCreateResponse(
+        submission_id=submission.id,
+        status="pending",
+        message="답안이 수정되었습니다. 재채점이 시작되었습니다.",
+    )
 
 
 # ── 결과 폴링 ────────────────────────────────────────────────
@@ -371,6 +435,7 @@ async def get_submission_status(
         .options(
             selectinload(Submission.grading_result),
             selectinload(Submission.teacher_queue),
+            selectinload(Submission.problem),
         )
         .where(Submission.id == submission_id)
     )
@@ -387,6 +452,8 @@ async def get_submission_status(
             feedback=None,
             teacher_approved=False,
             message="채점 중입니다. 잠시 후 다시 확인해주세요.",
+            problem_title=submission.problem.title if submission.problem else None,
+            problem_content=submission.problem.content if submission.problem else None,
         )
 
     gr = submission.grading_result
@@ -436,4 +503,6 @@ async def get_submission_status(
         feedback=resp_data["feedback"],
         teacher_approved=resp_data["teacher_approved"],
         message=message,
+        problem_title=submission.problem.title if submission.problem else None,
+        problem_content=submission.problem.content if submission.problem else None,
     )
