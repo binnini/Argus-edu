@@ -5,6 +5,8 @@ import DashboardHeader from "@/components/teacher/DashboardHeader"
 import ProblemManager from "@/components/teacher/ProblemManager"
 import SubmissionOverview from "@/components/teacher/SubmissionOverview"
 import ReviewQueue from "@/components/teacher/ReviewQueue"
+import GroupManager from "@/components/teacher/GroupManager"
+import HomeworkManager from "@/components/teacher/HomeworkManager"
 
 export default function TeacherPage() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -32,6 +34,8 @@ export default function TeacherPage() {
             <TabsTrigger value="problems">문제 관리</TabsTrigger>
             <TabsTrigger value="submissions">풀이 현황</TabsTrigger>
             <TabsTrigger value="queue">검토 큐</TabsTrigger>
+            <TabsTrigger value="groups">그룹 관리</TabsTrigger>
+            <TabsTrigger value="homeworks">숙제 관리</TabsTrigger>
           </TabsList>
           <TabsContent value="problems">
             <ProblemManager />
@@ -41,6 +45,12 @@ export default function TeacherPage() {
           </TabsContent>
           <TabsContent value="queue">
             <ReviewQueue />
+          </TabsContent>
+          <TabsContent value="groups">
+            <GroupManager />
+          </TabsContent>
+          <TabsContent value="homeworks">
+            <HomeworkManager />
           </TabsContent>
         </Tabs>
       </main>

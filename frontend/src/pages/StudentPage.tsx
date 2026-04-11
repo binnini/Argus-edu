@@ -2,12 +2,15 @@ import * as React from "react"
 import {
   getSubmissionStatus,
   getStudentHistory,
+  getStudentHomework,
+  getProblem,
   submitAnswerImage,
   submitAnswerText,
   updateSubmission,
   type Problem,
   type SubmissionStatusResponse,
   type StudentHistoryItem,
+  type StudentHomeworkItem,
 } from "@/api/submissions"
 import StudentInfoForm from "@/components/student/StudentInfoForm"
 import ProblemSelector from "@/components/student/ProblemSelector"
@@ -19,9 +22,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { renderMath } from "@/lib/renderMath"
-import { ChevronLeft, Pencil } from "lucide-react"
+import { BookOpen, ChevronLeft, ClipboardList, Pencil, Plus } from "lucide-react"
 
-type Stage = "info" | "history" | "problem" | "answer" | "submitting" | "polling" | "done" | "detail" | "editing"
+type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "done" | "detail" | "editing"
 
 function statusBadge(status: string) {
   switch (status) {
@@ -32,12 +35,23 @@ function statusBadge(status: string) {
   }
 }
 
+function formatDueDate(due: string | null): { text: string; overdue: boolean } | null {
+  if (!due) return null
+  const d = new Date(due)
+  const now = new Date()
+  const overdue = d < now
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return { text: `${mm}/${dd} 마감`, overdue }
+}
+
 export default function StudentPage() {
   const [stage, setStage] = React.useState<Stage>(() => {
     const saved = sessionStorage.getItem("argus_student_name")
-    return saved ? "history" : "info"
+    return saved ? "problem" : "info"
   })
   const [history, setHistory] = React.useState<StudentHistoryItem[]>([])
+  const [homework, setHomework] = React.useState<StudentHomeworkItem[]>([])
   const [studentName, setStudentName] = React.useState(
     () => sessionStorage.getItem("argus_student_name") ?? ""
   )
@@ -56,14 +70,28 @@ export default function StudentPage() {
   const [editAnswer, setEditAnswer] = React.useState("")
   const [editError, setEditError] = React.useState("")
   const [editSubmitting, setEditSubmitting] = React.useState(false)
+  // 초기 탭: 숙제가 있으면 "homework", 없으면 "all"
+  const [problemTab, setProblemTab] = React.useState<"homework" | "all">("homework")
+  const [homeworkLoading, setHomeworkLoading] = React.useState(false)
 
-  // 마운트 시 이력 로드 (새로고침 대응)
+  async function loadSidebar(id: string) {
+    try {
+      const [histRes, hwRes] = await Promise.allSettled([
+        getStudentHistory(id),
+        getStudentHomework(id),
+      ])
+      if (histRes.status === "fulfilled") setHistory(histRes.value.submissions)
+      if (hwRes.status === "fulfilled") setHomework(hwRes.value.homeworks)
+    } catch {
+      // ignore
+    }
+  }
+
+  // 마운트 시 사이드바 데이터 로드 (새로고침 대응)
   React.useEffect(() => {
     const id = sessionStorage.getItem("argus_student_id")
-    if (id && stage === "history") {
-      getStudentHistory(id)
-        .then((data) => setHistory(data.submissions))
-        .catch(() => {})
+    if (id && stage !== "info") {
+      loadSidebar(id)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -127,7 +155,6 @@ export default function StudentPage() {
     setEditSubmitting(true)
     try {
       await updateSubmission(selectedHistory.submission_id, editAnswer)
-      // 수정 성공 → 폴링 화면으로 전환
       setSubmissionId(selectedHistory.submission_id)
       setSelectedHistory(null)
       setDetailResult(null)
@@ -146,19 +173,479 @@ export default function StudentPage() {
     setResult(null)
     setSubmissionId(null)
     setSubmitError("")
-    // 이력 새로고침 후 history로
     if (studentId) {
-      getStudentHistory(studentId)
-        .then((data) => setHistory(data.submissions))
-        .catch(() => {})
+      loadSidebar(studentId)
     }
-    setStage("history")
+    setStage("problem")
   }
 
+  // ===== 사이드바 컴포넌트 =====
+  function Sidebar() {
+    return (
+      <aside className="hidden md:flex flex-col w-72 lg:w-80 shrink-0 border-r bg-muted/20 min-h-[calc(100vh-57px)] p-4 gap-5">
+        {/* 숙제 현황 */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <ClipboardList className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">숙제 현황</span>
+          </div>
+          {homework.length === 0 ? (
+            <p className="text-xs text-muted-foreground pl-1">할당된 숙제가 없습니다</p>
+          ) : (
+            <div className="space-y-2">
+              {homework.map((hw) => {
+                const dueFmt = formatDueDate(hw.due_date)
+                const progress = `${hw.completed_problems}/${hw.total_problems}`
+                const isDone = hw.completed_problems >= hw.total_problems
+                return (
+                  <button
+                    key={hw.homework_id}
+                    className="w-full text-left rounded-lg border bg-background px-3 py-2.5 text-sm hover:bg-muted/60 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setProblemTab("homework")
+                      setStage("problem")
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="font-medium truncate">{hw.title}</span>
+                      <span className={`text-xs shrink-0 font-mono ${isDone ? "text-green-600" : "text-muted-foreground"}`}>
+                        {progress}
+                      </span>
+                    </div>
+                    {dueFmt && (
+                      <span className={`text-xs mt-0.5 block ${dueFmt.overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                        {dueFmt.text}{dueFmt.overdue ? " (마감)" : ""}
+                      </span>
+                    )}
+                    {/* 진행 바 */}
+                    <div className="mt-1.5 h-1 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${isDone ? "bg-green-500" : "bg-primary"}`}
+                        style={{ width: hw.total_problems > 0 ? `${(hw.completed_problems / hw.total_problems) * 100}%` : "0%" }}
+                      />
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t" />
+
+        {/* 풀이 현황 */}
+        <div className="flex-1 min-h-0">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">풀이 현황</span>
+          </div>
+          {history.length === 0 ? (
+            <p className="text-xs text-muted-foreground pl-1">아직 제출한 풀이가 없습니다</p>
+          ) : (
+            <div className="space-y-1.5">
+              {history.slice(0, 5).map((item) => (
+                <button
+                  key={item.submission_id}
+                  className="w-full text-left rounded-lg border bg-background px-3 py-2 text-xs hover:bg-muted/60 transition-colors cursor-pointer"
+                  onClick={() => loadDetail(item)}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="truncate font-medium">{item.problem_title}</span>
+                    {statusBadge(item.status)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t pt-3">
+          <Button
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => {
+              setProblemTab("all")
+              setStage("problem")
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            새 문제 풀기
+          </Button>
+        </div>
+      </aside>
+    )
+  }
+
+  // ===== 숙제 탭 콘텐츠 =====
+  function HomeworkTab() {
+    if (homeworkLoading) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          불러오는 중...
+        </div>
+      )
+    }
+    if (homework.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-sm text-muted-foreground">할당된 숙제가 없습니다</p>
+          <p className="text-xs text-muted-foreground mt-1">선생님이 숙제를 할당할 때까지 기다려주세요</p>
+        </div>
+      )
+    }
+    return (
+      <div className="space-y-6">
+        {homework.map((hw) => {
+          const dueFmt = formatDueDate(hw.due_date)
+          return (
+            <div key={hw.homework_id}>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <h3 className="text-sm font-semibold">{hw.title}</h3>
+                  {hw.group_name && (
+                    <span className="text-xs text-muted-foreground">{hw.group_name}</span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {hw.completed_problems}/{hw.total_problems}
+                  </span>
+                  {dueFmt && (
+                    <p className={`text-xs ${dueFmt.overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                      {dueFmt.text}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {hw.problems.map((prob) => {
+                  const isSubmitted = prob.submitted
+                  return (
+                    <button
+                      key={prob.problem_id}
+                      disabled={isSubmitted}
+                      className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                        isSubmitted
+                          ? "opacity-50 cursor-not-allowed bg-muted/30"
+                          : "bg-background hover:bg-muted/50 cursor-pointer"
+                      }`}
+                      onClick={async () => {
+                        if (isSubmitted) return
+                        setHomeworkLoading(true)
+                        try {
+                          const p = await getProblem(prob.problem_id)
+                          setProblem(p)
+                          setStage("answer")
+                        } catch {
+                          // ignore
+                        } finally {
+                          setHomeworkLoading(false)
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate">{prob.problem_title}</span>
+                        {isSubmitted && (
+                          <Badge variant="secondary" className="text-xs shrink-0">제출 완료</Badge>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // ===== stage별 메인 콘텐츠 =====
+  function MainContent() {
+    if (stage === "problem") {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>문제 선택</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={problemTab} onValueChange={(v) => setProblemTab(v as "homework" | "all")}>
+              <TabsList className="w-full mb-4">
+                <TabsTrigger value="homework" className="flex-1">숙제</TabsTrigger>
+                <TabsTrigger value="all" className="flex-1">전체 문제</TabsTrigger>
+              </TabsList>
+              <TabsContent value="homework">
+                <HomeworkTab />
+              </TabsContent>
+              <TabsContent value="all">
+                <ProblemSelector
+                  onSelect={(p) => {
+                    setProblem(p)
+                    setStage("answer")
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (stage === "answer" && problem) {
+      return (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{problem.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm leading-relaxed">{renderMath(problem.content)}</div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {problem.domain} | 난이도 {problem.difficulty} | {problem.total_score}점
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>답안 입력</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Tabs defaultValue="text" onValueChange={(v) => setInputMode(v as "text" | "image")}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="text" className="flex-1">텍스트 입력</TabsTrigger>
+                  <TabsTrigger value="image" className="flex-1">이미지 입력</TabsTrigger>
+                </TabsList>
+                <TabsContent value="text">
+                  <Textarea
+                    placeholder="풀이 과정을 입력하세요..."
+                    rows={6}
+                    value={textAnswer}
+                    onChange={(e) => setTextAnswer(e.target.value)}
+                  />
+                </TabsContent>
+                <TabsContent value="image">
+                  <AnswerInput onFileReady={(f) => setImageFile(f)} />
+                </TabsContent>
+              </Tabs>
+
+              {submitError && <p className="text-sm text-destructive">{submitError}</p>}
+
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStage("problem")}>
+                  이전
+                </Button>
+                <Button onClick={handleSubmit} className="flex-1">
+                  제출
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
+    if (stage === "submitting") {
+      return (
+        <Card>
+          <CardContent className="p-8 text-center space-y-3">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-muted-foreground">제출 중입니다...</p>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (stage === "polling") {
+      return (
+        <Card>
+          <CardContent className="p-8 text-center space-y-3">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-muted-foreground">채점 중입니다. 잠시만 기다려주세요...</p>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (stage === "done" && result) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>채점 결과</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <GradingStatus result={result} />
+            <Button variant="outline" onClick={reset} className="w-full">
+              다른 문제 풀기
+            </Button>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    if (stage === "detail" && selectedHistory) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setStage("problem"); setSelectedHistory(null); setDetailResult(null) }}
+              className="gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" /> 목록으로
+            </Button>
+          </div>
+
+          {detailResult?.problem_content && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">{detailResult.problem_title ?? selectedHistory.problem_title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm leading-relaxed">{renderMath(detailResult.problem_content)}</div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">내 답변</CardTitle>
+                {(selectedHistory.status === "pending" || selectedHistory.status === "graded") && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditAnswer(selectedHistory.student_answer ?? "")
+                      setStage("editing")
+                    }}
+                    className="gap-1 text-xs"
+                  >
+                    <Pencil className="h-3 w-3" /> 수정하기
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {selectedHistory.input_type === "image" && selectedHistory.image_path ? (
+                <img
+                  src={`${(import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")}/${selectedHistory.image_path}`}
+                  alt="제출 이미지"
+                  className="max-w-full rounded-xl border"
+                  style={{ maxHeight: "400px", objectFit: "contain" }}
+                />
+              ) : (
+                <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {selectedHistory.student_answer ?? "—"}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">채점 결과</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {detailResult ? (
+                <GradingStatus result={detailResult} />
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  불러오는 중...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
+    if (stage === "editing" && selectedHistory) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setStage("detail"); setEditError("") }}
+              className="gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" /> 상세로 돌아가기
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">답안 수정</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {selectedHistory.problem_title}
+              </p>
+              <Textarea
+                placeholder="수정할 답안을 입력하세요..."
+                rows={8}
+                value={editAnswer}
+                onChange={(e) => setEditAnswer(e.target.value)}
+              />
+              {editError && <p className="text-sm text-destructive">{editError}</p>}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => { setStage("detail"); setEditError("") }}
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleEditSubmit}
+                  disabled={editSubmitting || !editAnswer.trim()}
+                  className="flex-1"
+                >
+                  {editSubmitting ? "제출 중..." : "수정 제출"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  // ===== 전체 화면 렌더링 =====
+  if (stage === "info") {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b sticky top-0 bg-background/80 backdrop-blur z-10">
+          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 className="text-lg font-bold text-primary">Argus</h1>
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto px-4 py-8">
+          <StudentInfoForm
+            onComplete={(name, id) => {
+              setStudentName(name)
+              setStudentId(id)
+              if (id) {
+                loadSidebar(id)
+              }
+              setStage("problem")
+            }}
+          />
+        </main>
+      </div>
+    )
+  }
+
+  // 2단 레이아웃 (로그인 후)
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b sticky top-0 bg-background/80 backdrop-blur z-10">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold text-primary">Argus</h1>
           {studentName && (
             <span className="text-sm text-muted-foreground">{studentName}</span>
@@ -166,299 +653,15 @@ export default function StudentPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {stage === "info" && (
-          <StudentInfoForm
-            onComplete={(name, id) => {
-              setStudentName(name)
-              setStudentId(id)
-              // 이력 로드 후 history 화면으로
-              if (id) {
-                getStudentHistory(id)
-                  .then((data) => setHistory(data.submissions))
-                  .catch(() => setHistory([]))
-              }
-              setStage("history")
-            }}
-          />
-        )}
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
 
-        {stage === "history" && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">나의 풀이 현황</CardTitle>
-                  <Button size="sm" onClick={() => setStage("problem")}>
-                    새 문제 풀기
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {history.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    아직 제출한 풀이가 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {history.map((item) => (
-                      <div
-                        key={item.submission_id}
-                        className="flex items-center justify-between rounded-xl border p-3 text-sm hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => loadDetail(item)}
-                      >
-                        <div>
-                          <p className="font-medium">{item.problem_title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{item.problem_domain}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {statusBadge(item.status)}
-                          {item.final_score !== null && item.final_score > 0 && (
-                            <Badge variant="success">정답</Badge>
-                          )}
-                          {item.final_score !== null && item.final_score === 0 && (
-                            <Badge variant="destructive">오답</Badge>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+            <MainContent />
           </div>
-        )}
-
-        {stage === "problem" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>문제 선택</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProblemSelector
-                onSelect={(p) => {
-                  setProblem(p)
-                  setStage("answer")
-                }}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {stage === "answer" && problem && (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>{problem.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm leading-relaxed">{renderMath(problem.content)}</div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {problem.domain} | 난이도 {problem.difficulty} | {problem.total_score}점
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>답안 입력</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Tabs defaultValue="text" onValueChange={(v) => setInputMode(v as "text" | "image")}>
-                  <TabsList className="w-full">
-                    <TabsTrigger value="text" className="flex-1">텍스트 입력</TabsTrigger>
-                    <TabsTrigger value="image" className="flex-1">이미지 입력</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="text">
-                    <Textarea
-                      placeholder="풀이 과정을 입력하세요..."
-                      rows={6}
-                      value={textAnswer}
-                      onChange={(e) => setTextAnswer(e.target.value)}
-                    />
-                  </TabsContent>
-                  <TabsContent value="image">
-                    <AnswerInput onFileReady={(f) => setImageFile(f)} />
-                  </TabsContent>
-                </Tabs>
-
-                {submitError && <p className="text-sm text-destructive">{submitError}</p>}
-
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStage("problem")}>
-                    이전
-                  </Button>
-                  <Button onClick={handleSubmit} className="flex-1">
-                    제출
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {stage === "submitting" && (
-          <Card>
-            <CardContent className="p-8 text-center space-y-3">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-muted-foreground">제출 중입니다...</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {stage === "polling" && (
-          <Card>
-            <CardContent className="p-8 text-center space-y-3">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-muted-foreground">채점 중입니다. 잠시만 기다려주세요...</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {stage === "done" && result && (
-          <Card>
-            <CardHeader>
-              <CardTitle>채점 결과</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <GradingStatus result={result} />
-              <Button variant="outline" onClick={reset} className="w-full">
-                다른 문제 풀기
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {stage === "detail" && selectedHistory && (
-          <div className="space-y-4">
-            {/* 뒤로가기 헤더 */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setStage("history"); setSelectedHistory(null); setDetailResult(null) }}
-                className="gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" /> 풀이 현황
-              </Button>
-            </div>
-
-            {/* 문제 */}
-            {detailResult?.problem_content && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">{detailResult.problem_title ?? selectedHistory.problem_title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm leading-relaxed">{renderMath(detailResult.problem_content)}</div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* 내 답변 */}
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">내 답변</CardTitle>
-                  {/* 수정 가능 조건: pending 또는 graded, 교사 미승인 */}
-                  {(selectedHistory.status === "pending" || selectedHistory.status === "graded") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditAnswer(selectedHistory.student_answer ?? "")
-                        setStage("editing")
-                      }}
-                      className="gap-1 text-xs"
-                    >
-                      <Pencil className="h-3 w-3" /> 수정하기
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {selectedHistory.input_type === "image" && selectedHistory.image_path ? (
-                  <img
-                    src={`${(import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")}/${selectedHistory.image_path}`}
-                    alt="제출 이미지"
-                    className="max-w-full rounded-xl border"
-                    style={{ maxHeight: "400px", objectFit: "contain" }}
-                  />
-                ) : (
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {selectedHistory.student_answer ?? "—"}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 채점 결과 */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">채점 결과</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {detailResult ? (
-                  <GradingStatus result={detailResult} />
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    불러오는 중...
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {stage === "editing" && selectedHistory && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setStage("detail"); setEditError("") }}
-                className="gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" /> 상세로 돌아가기
-              </Button>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">답안 수정</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {selectedHistory.problem_title}
-                </p>
-                <Textarea
-                  placeholder="수정할 답안을 입력하세요..."
-                  rows={8}
-                  value={editAnswer}
-                  onChange={(e) => setEditAnswer(e.target.value)}
-                />
-                {editError && <p className="text-sm text-destructive">{editError}</p>}
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => { setStage("detail"); setEditError("") }}
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    onClick={handleEditSubmit}
-                    disabled={editSubmitting || !editAnswer.trim()}
-                    className="flex-1"
-                  >
-                    {editSubmitting ? "제출 중..." : "수정 제출"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

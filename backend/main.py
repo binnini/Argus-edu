@@ -20,6 +20,7 @@ from services.grading import GradingService
 from services.feedback import FeedbackService
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
+from routers import groups
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,6 +32,15 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("ML 모델 로딩 시작...")
+
+    # DB 테이블 자동 생성 (개발용)
+    from db import engine
+    from models.base import Base
+    import models.group  # noqa: F401 — 테이블 등록
+    import models.homework  # noqa: F401 — 테이블 등록
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("DB 테이블 동기화 완료")
 
     sbert = SentenceTransformer("all-MiniLM-L6-v2")
     app.state.sbert = sbert
@@ -74,6 +84,7 @@ app.include_router(submissions.router)
 app.include_router(teacher.router)
 app.include_router(feedback.router)
 app.include_router(problems.router)
+app.include_router(groups.router)
 
 # 학생 풀이 이미지 정적 서빙
 _data_dir = Path(__file__).parent.parent / "data"

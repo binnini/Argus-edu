@@ -23,6 +23,8 @@ from sqlalchemy.orm import selectinload
 
 from db import get_session
 from models import Problem, Submission, GradingResult, TeacherQueue
+from models.group import GroupMember
+from models.homework import Homework, HomeworkProblem
 from schemas.problems import ProblemListResponse, ProblemSummary, ProblemDetail, ProblemListPagedResponse
 from schemas.submissions import (
     SubmissionRequest,
@@ -32,6 +34,7 @@ from schemas.submissions import (
     StudentHistoryItem,
     StudentHistoryResponse,
 )
+from schemas.homeworks import StudentHomeworkResponse, StudentHomeworkItem, HomeworkProblemStatus
 from services.trust_gate import calculate_trust, get_submission_response
 
 logger = logging.getLogger(__name__)
@@ -506,3 +509,78 @@ async def get_submission_status(
         problem_title=submission.problem.title if submission.problem else None,
         problem_content=submission.problem.content if submission.problem else None,
     )
+
+
+# ── 학생 숙제 현황 ────────────────────────────────────────────
+
+@router.get("/submissions/homework", response_model=StudentHomeworkResponse)
+async def get_student_homework(
+    student_id: str = Query(...),
+    db: AsyncSession = Depends(get_session),
+):
+    """해당 학생이 속한 그룹의 숙제 목록과 각 문제 제출 현황을 반환합니다."""
+    # 학생이 속한 그룹 ID 목록 조회
+    members_result = await db.execute(
+        select(GroupMember).where(GroupMember.student_id == student_id)
+    )
+    member_rows = members_result.scalars().all()
+    group_ids = [m.group_id for m in member_rows]
+
+    if not group_ids:
+        return StudentHomeworkResponse(homeworks=[])
+
+    # 해당 그룹들의 숙제 목록 (problems + group 포함)
+    hw_result = await db.execute(
+        select(Homework)
+        .options(
+            selectinload(Homework.problems).selectinload(HomeworkProblem.problem),
+            selectinload(Homework.group),
+        )
+        .where(Homework.group_id.in_(group_ids))
+        .order_by(Homework.created_at.desc())
+    )
+    homeworks = hw_result.scalars().all()
+
+    # 해당 학생의 제출 이력 (problem_id → list of Submission)
+    sub_result = await db.execute(
+        select(Submission).where(Submission.student_id == student_id)
+    )
+    submissions = sub_result.scalars().all()
+
+    # problem_id별 제출 여부 및 최신 status 인덱스
+    submission_map: dict[int, str] = {}
+    for sub in submissions:
+        if sub.problem_id not in submission_map:
+            submission_map[sub.problem_id] = sub.status
+
+    items = []
+    for hw in homeworks:
+        problem_statuses = []
+        for hp in hw.problems:
+            pid = hp.problem_id
+            prob_title = hp.problem.title if hp.problem else ""
+            submitted = pid in submission_map
+            status = submission_map.get(pid)
+            problem_statuses.append(
+                HomeworkProblemStatus(
+                    problem_id=pid,
+                    problem_title=prob_title,
+                    submitted=submitted,
+                    status=status,
+                )
+            )
+
+        completed = sum(1 for ps in problem_statuses if ps.submitted)
+        items.append(
+            StudentHomeworkItem(
+                homework_id=hw.id,
+                title=hw.title,
+                group_name=hw.group.name if hw.group else None,
+                due_date=hw.due_date,
+                total_problems=len(problem_statuses),
+                completed_problems=completed,
+                problems=problem_statuses,
+            )
+        )
+
+    return StudentHomeworkResponse(homeworks=items)

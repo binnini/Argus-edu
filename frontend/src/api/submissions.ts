@@ -157,3 +157,30 @@ export async function updateSubmission(
   }
   return res.json();
 }
+
+export interface HomeworkProblemStatus {
+  problem_id: number;
+  problem_title: string;
+  submitted: boolean;
+  status: string | null;
+}
+
+export interface StudentHomeworkItem {
+  homework_id: number;
+  title: string;
+  group_name: string | null;
+  due_date: string | null;
+  total_problems: number;
+  completed_problems: number;
+  problems: HomeworkProblemStatus[];
+}
+
+export interface StudentHomeworkResponse {
+  homeworks: StudentHomeworkItem[];
+}
+
+export async function getStudentHomework(studentId: string): Promise<StudentHomeworkResponse> {
+  const res = await fetch(`${API_BASE}/submissions/homework?student_id=${encodeURIComponent(studentId)}`);
+  if (!res.ok) throw new Error(`숙제 조회 실패: ${res.status}`);
+  return res.json();
+}

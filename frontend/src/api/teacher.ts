@@ -186,3 +186,101 @@ export async function getProblemSubmissions(
   if (!res.ok) throw new Error(`제출 목록 조회 실패: ${res.status}`);
   return res.json();
 }
+
+// ===== 그룹 관리 =====
+
+export interface GroupMemberItem { student_id: string; student_name: string }
+export interface GroupResponse { id: number; name: string; created_at: string; members: GroupMemberItem[] }
+export interface GroupListResponse { groups: GroupResponse[] }
+
+export async function getGroups(): Promise<GroupListResponse> {
+  const res = await fetch(`${API_BASE}/teacher/groups`, { headers: teacherHeaders(false) });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`그룹 목록 조회 실패: ${res.status}`);
+  return res.json();
+}
+
+export async function createGroup(name: string): Promise<GroupResponse> {
+  const res = await fetch(`${API_BASE}/teacher/groups`, {
+    method: "POST",
+    headers: teacherHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`그룹 생성 실패: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteGroup(groupId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/teacher/groups/${groupId}`, {
+    method: "DELETE",
+    headers: teacherHeaders(false),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`그룹 삭제 실패: ${res.status}`);
+}
+
+export async function addGroupMembers(groupId: number, members: GroupMemberItem[]): Promise<void> {
+  const res = await fetch(`${API_BASE}/teacher/groups/${groupId}/members`, {
+    method: "POST",
+    headers: teacherHeaders(),
+    body: JSON.stringify({ members }),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`멤버 추가 실패: ${res.status}`);
+}
+
+export async function removeGroupMember(groupId: number, studentId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/teacher/groups/${groupId}/members/${encodeURIComponent(studentId)}`, {
+    method: "DELETE",
+    headers: teacherHeaders(false),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`멤버 제거 실패: ${res.status}`);
+}
+
+// ===== 숙제 관리 =====
+
+export interface HomeworkProblemItem { problem_id: number; problem_title: string }
+export interface HomeworkResponse {
+  id: number;
+  title: string;
+  group_id: number | null;
+  group_name: string | null;
+  due_date: string | null;
+  created_at: string;
+  problems: HomeworkProblemItem[];
+}
+export interface HomeworkListResponse { homeworks: HomeworkResponse[] }
+
+export async function getHomeworks(): Promise<HomeworkListResponse> {
+  const res = await fetch(`${API_BASE}/teacher/homeworks`, { headers: teacherHeaders(false) });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`숙제 목록 조회 실패: ${res.status}`);
+  return res.json();
+}
+
+export async function createHomework(payload: {
+  title: string;
+  group_id?: number | null;
+  due_date?: string | null;
+  problem_ids: number[];
+}): Promise<HomeworkResponse> {
+  const res = await fetch(`${API_BASE}/teacher/homeworks`, {
+    method: "POST",
+    headers: teacherHeaders(),
+    body: JSON.stringify(payload),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`숙제 생성 실패: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteHomework(homeworkId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/teacher/homeworks/${homeworkId}`, {
+    method: "DELETE",
+    headers: teacherHeaders(false),
+  });
+  if (res.status === 401) throw new Error("비밀번호가 올바르지 않습니다");
+  if (!res.ok) throw new Error(`숙제 삭제 실패: ${res.status}`);
+}
