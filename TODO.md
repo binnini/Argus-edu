@@ -125,7 +125,7 @@
 ### 7-7. UX 재설계 (ADR-021) `[P]` ✅
 
 > 참고: ADR-021, docs/frontend.md, docs/api.md, docs/schema.md  
-> 브랜치: `feat/phase7-ux-redesign` (커밋 c37e19a)
+> 브랜치: `feat/phase7-ux-redesign`
 
 #### 7-7-1. 백엔드 ✅
 
@@ -187,6 +187,70 @@
 - [ ] 다크모드 토글 런타임 동작 확인
 - [ ] KaTeX 수식 렌더링 브라우저 확인
 - [ ] 캔버스 → 이미지 제출 E2E 확인 (백엔드 연동 후)
+
+---
+
+### 7-8. UX 2차 개선 (ADR-022/023/024) ✅
+
+> 브랜치: `feat/phase7-ux-redesign`
+
+#### 7-8-1. 점수 → 정답/오답 표시 (ADR-022-1) ✅
+
+- [x] `GradingStatus.tsx` — `score > 0` → "정답" Badge, `score === 0` → "오답" Badge
+- [x] `SubmissionOverview.tsx` — 헤더 "최종점수" → "결과", 정답/오답 Badge
+- [x] `StudentPage.tsx` — 이력 목록 정답/오답 Badge
+
+#### 7-8-2. ReviewCard 전면 개편 (ADR-022-2) ✅
+
+- [x] AI 피드백 항상 표시 (토글 제거)
+- [x] 문제 본문·정답 인라인 표시 (indigo 카드)
+- [x] 이미지 제출 인라인 표시 + OCR 원문 2컬럼 나란히
+- [x] SLA 3시간 미만 시 rose 색상 경고
+- [x] 백엔드 `teacher_queue` 조회 시 `problem_content`, `problem_answer`, `ocr_raw_text` 포함
+- [x] `backend/schemas/teacher.py` + `backend/routers/teacher.py` 필드 추가
+
+#### 7-8-3. 검색 필터 (ADR-022-3) ✅
+
+- [x] `ReviewQueue.tsx` — 학생명/문제 텍스트 검색, 문제별 필터, 정렬
+- [x] `ProblemManager.tsx` — 텍스트 검색, 학교급 필터, 영역 필터, 난이도 필터, 정렬
+- [x] `SubmissionDetailDialog.tsx` — 이미지 인라인 표시 추가
+
+#### 7-8-4. 캔버스 지우개 + SVG 커서 (ADR-022-4) ✅
+
+- [x] `CanvasInput.tsx` — `DrawMode = "pen" | "eraser"` 전환
+- [x] 지우개: 흰색 펜 (effectiveWidth = penWidth × 3) 구현
+- [x] SVG 동적 커서 (모드·굵기 반영)
+- [x] 펜 굵기 4단계 선택 (2, 4, 6, 8)
+
+#### 7-8-5. 학생 풀이 상세 + 답안 재제출 (ADR-023) ✅
+
+- [x] `GET /api/v1/submissions/{id}` — `problem_title`, `problem_content` 추가 반환
+- [x] `GET /api/v1/submissions?student_id=` — `image_path`, `student_answer` 추가 반환
+- [x] `PUT /api/v1/submissions/{id}` — 답안 수정 재제출 (pending/graded 한정)
+- [x] `StudentPage.tsx` — stage "detail" (상세 보기) + stage "editing" (수정) 추가
+- [x] `frontend/src/api/submissions.ts` — `updateSubmission()` 추가
+
+#### 7-8-6. 숙제/그룹 시스템 (ADR-024) ✅
+
+- [x] `backend/models/group.py` — `StudentGroup`, `GroupMember` 모델
+- [x] `backend/models/homework.py` — `Homework`, `HomeworkProblem` 모델
+- [x] `backend/schemas/groups.py` + `backend/schemas/homeworks.py`
+- [x] `backend/routers/groups.py` — 교사 그룹/숙제 CRUD API 8개
+- [x] `GET /api/v1/submissions/homework?student_id=` — 학생 숙제 현황 API
+- [x] `backend/main.py` — groups 라우터 등록 + `Base.metadata.create_all` 자동 마이그레이션
+- [x] `GroupManager.tsx` — 그룹 생성/삭제, 멤버 추가/제거 UI
+- [x] `HomeworkManager.tsx` — 숙제 생성(문제 체크박스 선택)/삭제 UI
+- [x] `TeacherPage.tsx` — "그룹 관리", "숙제 관리" 탭 추가
+- [x] `frontend/src/api/teacher.ts` — 그룹/숙제 API 함수 추가
+- [x] `frontend/src/api/submissions.ts` — `getStudentHomework()` 추가
+
+#### 7-8-7. 학생 UI 2단 레이아웃 (ADR-024) ✅
+
+- [x] `StudentPage.tsx` 2단 레이아웃 전환 (flex 사이드바 + 메인)
+- [x] 왼쪽 사이드바: 숙제 현황 (진행 바 + 마감일) + 풀이 현황 최근 5개
+- [x] 문제 선택 "숙제" 탭 (할당 문제, 제출완료 표시) + "전체 문제" 탭
+- [x] 모바일 대응: 사이드바 `hidden md:flex`
+- [x] `npm run build` 빌드 성공
 
 ---
 
@@ -264,7 +328,9 @@
 ## 향후 로드맵 (파일럿 이후)
 
 - [x] Canvas 직접 그리기 입력 — `CanvasInput.tsx` + `CANVAS_ENABLED` 플래그로 구현 완료 (Phase 7-7)
+- [x] 숙제/그룹 시스템 — 교사 그룹 관리, 숙제 할당, 학생 숙제 현황 (Phase 7-8)
+- [ ] 알림 기능 — SLA 임박 시 교사 이메일/슬랙 알림
 - [ ] 학생 QA 기능 (RAG 기반)
 - [ ] 프롬프트 최적화 (누적 feedback_log 활용)
 - [ ] JWT 인증 시스템 (다수 교사 온보딩)
-- [ ] 모바일 UI 최적화 (현재 기본 반응형 지원)
+- [ ] 모바일 UI 최적화 (현재 기본 반응형 지원, 사이드바 md 이하 숨김)
