@@ -40,8 +40,10 @@ from typing import Optional
 # key: Ollama 태그 / value: HuggingFace mlx-community 모델 ID
 
 MLX_MODELS: dict[str, str] = {
-    "gemma4:e4b":       "mlx-community/gemma-4-e4b-4bit",
-    "gemma4:e2b":       "mlx-community/gemma-4-e2b-it-4bit",
+    # ⚠️  gemma4 4-bit: PLE 레이어 양자화 버그로 쓰레기 출력 발생 (mlx-community/unsloth 모두 해당)
+    #     8-bit 버전 사용 권장
+    "gemma4:e4b":       "unsloth/gemma-4-E4B-it-MLX-8bit",
+    "gemma4:e2b":       "unsloth/gemma-4-E2B-it-UD-MLX-4bit",  # unsloth UD 버전은 PLE 제외 양자화
     "mathstral:7b":     "mlx-community/mathstral-7B-v0.1-4bit",
     "qwen2.5:7b":       "mlx-community/Qwen2.5-7B-Instruct-4bit",
     "deepseek-r1:7b":   "mlx-community/DeepSeek-R1-Distill-Qwen-7B-4bit",
