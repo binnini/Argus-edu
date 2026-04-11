@@ -66,6 +66,7 @@ class SubmissionOverviewItem(BaseModel):
     student_id: Optional[str] = None
     input_type: str
     image_path: Optional[str] = None
+    student_answer: Optional[str] = None
     status: str
     ai_score: Optional[int] = None
     final_score: Optional[int] = None

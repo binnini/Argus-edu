@@ -654,11 +654,11 @@ export default function StudentPage() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        {Sidebar()}
 
         <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-            <MainContent />
+            {MainContent()}
           </div>
         </main>
       </div>

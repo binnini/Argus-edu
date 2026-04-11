@@ -58,6 +58,7 @@ export interface SubmissionOverviewItem {
   student_id: string | null;
   input_type: string;
   image_path: string | null;
+  student_answer: string | null;
   status: string;
   ai_score: number | null;
   final_score: number | null;

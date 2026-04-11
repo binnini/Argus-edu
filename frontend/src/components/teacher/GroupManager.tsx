@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   getGroups,
   createGroup,
   deleteGroup,
   addGroupMembers,
   removeGroupMember,
+  getSubmissions,
   type GroupResponse,
   type GroupMemberItem,
 } from "@/api/teacher"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { Search } from "lucide-react"
+
+interface KnownStudent { student_id: string; student_name: string }
 
 export default function GroupManager() {
   const [groups, setGroups] = useState<GroupResponse[]>([])
@@ -23,6 +27,11 @@ export default function GroupManager() {
 
   // 선택된 그룹
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
+
+  // 학생 검색 (제출 이력 기반)
+  const [knownStudents, setKnownStudents] = useState<KnownStudent[]>([])
+  const [studentSearch, setStudentSearch] = useState("")
+  const [searchOpen, setSearchOpen] = useState(false)
 
   // 새 멤버 추가
   const [newMemberStudentId, setNewMemberStudentId] = useState("")
@@ -44,7 +53,27 @@ export default function GroupManager() {
 
   useEffect(() => {
     fetchGroups()
+    // 제출 이력에서 고유 학생 목록 로드
+    getSubmissions({ page_size: 200 }).then((data) => {
+      const seen = new Set<string>()
+      const unique: KnownStudent[] = []
+      for (const s of data.submissions) {
+        if (s.student_id && !seen.has(s.student_id)) {
+          seen.add(s.student_id)
+          unique.push({ student_id: s.student_id, student_name: s.student_name })
+        }
+      }
+      setKnownStudents(unique)
+    }).catch(() => {})
   }, [])
+
+  const filteredStudents = useMemo(() => {
+    if (!studentSearch.trim()) return knownStudents
+    const q = studentSearch.toLowerCase()
+    return knownStudents.filter(
+      (s) => s.student_id.toLowerCase().includes(q) || s.student_name.toLowerCase().includes(q)
+    )
+  }, [knownStudents, studentSearch])
 
   async function handleCreateGroup() {
     if (!newGroupName.trim()) return
@@ -162,26 +191,64 @@ export default function GroupManager() {
               </h3>
 
               {/* 멤버 추가 폼 */}
-              <div className="flex gap-2 flex-wrap">
-                <Input
-                  placeholder="학생 ID"
-                  value={newMemberStudentId}
-                  onChange={(e) => setNewMemberStudentId(e.target.value)}
-                  className="w-32"
-                />
-                <Input
-                  placeholder="학생 이름"
-                  value={newMemberStudentName}
-                  onChange={(e) => setNewMemberStudentName(e.target.value)}
-                  className="w-32"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleAddMember}
-                  disabled={addingMember || !newMemberStudentId.trim() || !newMemberStudentName.trim()}
-                >
-                  {addingMember ? "추가 중..." : "멤버 추가"}
-                </Button>
+              <div className="space-y-2">
+                {/* 이름/학번 검색으로 학생 선택 */}
+                {knownStudents.length > 0 && (
+                  <div className="relative">
+                    <div className="flex items-center gap-1.5 border rounded-lg px-2.5 py-1.5 text-sm bg-background">
+                      <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <input
+                        className="flex-1 outline-none bg-transparent placeholder:text-muted-foreground text-sm"
+                        placeholder="이름 또는 학번으로 학생 검색..."
+                        value={studentSearch}
+                        onChange={(e) => { setStudentSearch(e.target.value); setSearchOpen(true) }}
+                        onFocus={() => setSearchOpen(true)}
+                        onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+                      />
+                    </div>
+                    {searchOpen && studentSearch.trim() && filteredStudents.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                        {filteredStudents.map((s) => (
+                          <button
+                            key={s.student_id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between gap-2"
+                            onMouseDown={() => {
+                              setNewMemberStudentId(s.student_id)
+                              setNewMemberStudentName(s.student_name)
+                              setStudentSearch("")
+                              setSearchOpen(false)
+                            }}
+                          >
+                            <span className="font-medium">{s.student_name}</span>
+                            <span className="text-xs text-muted-foreground">{s.student_id}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex gap-2 flex-wrap">
+                  <Input
+                    placeholder="학번"
+                    value={newMemberStudentId}
+                    onChange={(e) => setNewMemberStudentId(e.target.value)}
+                    className="w-32"
+                  />
+                  <Input
+                    placeholder="이름"
+                    value={newMemberStudentName}
+                    onChange={(e) => setNewMemberStudentName(e.target.value)}
+                    className="w-32"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleAddMember}
+                    disabled={addingMember || !newMemberStudentId.trim() || !newMemberStudentName.trim()}
+                  >
+                    {addingMember ? "추가 중..." : "멤버 추가"}
+                  </Button>
+                </div>
               </div>
 
               {/* 멤버 목록 */}
