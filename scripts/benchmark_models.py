@@ -594,14 +594,25 @@ def run_mlx_benchmark(
         raw = ""
 
         try:
-            raw = generate(
-                model,
-                tokenizer,
-                prompt=prompt,
-                max_tokens=max_tokens,
-                temperature=temp,
-                verbose=False,
-            )
+            # mlx-lm 버전에 따라 temperature 파라미터 방식이 다름
+            # 신버전: sampler 객체로 전달 / 구버전: temp= 직접 전달
+            try:
+                from mlx_lm.sample_utils import make_sampler
+                sampler = make_sampler(temp=temp)
+                raw = generate(
+                    model, tokenizer,
+                    prompt=prompt,
+                    max_tokens=max_tokens,
+                    sampler=sampler,
+                    verbose=False,
+                )
+            except (ImportError, TypeError):
+                raw = generate(
+                    model, tokenizer,
+                    prompt=prompt,
+                    max_tokens=max_tokens,
+                    verbose=False,
+                )
             parsed = parse_response(raw, is_deepseek=deepseek)
             ai_score = int(parsed["grading"]["total_score"])
             key_concept = parsed["feedback"].get("key_concept", "")[:60]
