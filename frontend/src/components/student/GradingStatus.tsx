@@ -32,10 +32,11 @@ export default function GradingStatus({ result }: GradingStatusProps) {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          {result.score !== null && (
-            <Badge variant="success" className="text-base px-3 py-1">
-              {result.score}점
-            </Badge>
+          {result.score !== null && result.score > 0 && (
+            <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
+          )}
+          {result.score !== null && result.score === 0 && (
+            <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
           )}
           <Badge variant="default">교사 승인 완료</Badge>
         </div>
@@ -49,7 +50,12 @@ export default function GradingStatus({ result }: GradingStatusProps) {
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <Badge variant="success" className="text-base px-3 py-1">{result.score}점</Badge>
+            {result.score > 0 && (
+              <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
+            )}
+            {result.score === 0 && (
+              <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
+            )}
           </div>
           <div className="rounded-2xl bg-muted p-3">
             <p className="text-sm text-muted-foreground">교사 검토 대기 중입니다. 피드백은 검토 후 확인할 수 있습니다.</p>
@@ -67,8 +73,11 @@ export default function GradingStatus({ result }: GradingStatusProps) {
   if (result.status === "approved") {
     return (
       <div className="space-y-2">
-        {result.score !== null && (
-          <Badge variant="success" className="text-base px-3 py-1">{result.score}점</Badge>
+        {result.score !== null && result.score > 0 && (
+          <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
+        )}
+        {result.score !== null && result.score === 0 && (
+          <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
         )}
         {result.feedback ? (
           <FeedbackPanel feedback={result.feedback} />

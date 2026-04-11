@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { renderMath } from "@/lib/renderMath"
 
 type Stage = "info" | "history" | "problem" | "answer" | "submitting" | "polling" | "done"
 
@@ -48,6 +49,16 @@ export default function StudentPage() {
   const [submissionId, setSubmissionId] = React.useState<number | null>(null)
   const [result, setResult] = React.useState<SubmissionStatusResponse | null>(null)
   const [submitError, setSubmitError] = React.useState("")
+
+  // 마운트 시 이력 로드 (새로고침 대응)
+  React.useEffect(() => {
+    const id = sessionStorage.getItem("argus_student_id")
+    if (id && stage === "history") {
+      getStudentHistory(id)
+        .then((data) => setHistory(data.submissions))
+        .catch(() => {})
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // polling
   React.useEffect(() => {
@@ -162,8 +173,11 @@ export default function StudentPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           {statusBadge(item.status)}
-                          {item.final_score !== null && (
-                            <span className="font-semibold">{item.final_score}점</span>
+                          {item.final_score !== null && item.final_score > 0 && (
+                            <Badge variant="success">정답</Badge>
+                          )}
+                          {item.final_score !== null && item.final_score === 0 && (
+                            <Badge variant="destructive">오답</Badge>
                           )}
                         </div>
                       </div>
@@ -198,7 +212,7 @@ export default function StudentPage() {
                 <CardTitle>{problem.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{problem.content}</p>
+                <div className="text-sm leading-relaxed">{renderMath(problem.content)}</div>
                 <p className="text-xs text-muted-foreground mt-2">
                   {problem.domain} | 난이도 {problem.difficulty} | {problem.total_score}점
                 </p>

@@ -149,7 +149,7 @@ export default function SubmissionOverview() {
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">문제</th>
                 <th className="text-center px-3 py-3 font-medium text-muted-foreground">입력</th>
                 <th className="text-center px-3 py-3 font-medium text-muted-foreground">상태</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground">최종점수</th>
+                <th className="text-center px-3 py-3 font-medium text-muted-foreground">결과</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">제출시각</th>
               </tr>
             </thead>
@@ -170,7 +170,11 @@ export default function SubmissionOverview() {
                   <td className="px-3 py-3 text-center text-base">{inputTypeIcon(item.input_type)}</td>
                   <td className="px-3 py-3 text-center">{statusBadge(item.status)}</td>
                   <td className="px-3 py-3 text-center font-medium">
-                    {item.final_score !== null ? `${item.final_score}점` : "—"}
+                    {item.final_score === null ? "—" : item.final_score > 0 ? (
+                      <Badge variant="success">정답</Badge>
+                    ) : (
+                      <Badge variant="destructive">오답</Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {new Date(item.submitted_at).toLocaleString("ko-KR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
