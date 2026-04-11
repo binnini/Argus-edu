@@ -458,6 +458,148 @@ GET    /api/v1/teacher/problems/{id}/submissions  # 문제별 제출 현황
 
 ---
 
+### ADR-022 UX 2차 개선 — 점수 제거·리뷰카드 개편·검색 필터·캔버스 지우개
+**날짜**: 2026-04-11  
+**가역성**: 🟢 가역
+
+**결정**: 파일럿 준비 과정에서 발생한 UX 문제들을 일괄 해소한다.
+
+#### 22-1. 점수 → 정답/오답 표시 전환
+
+**결정**: 학생·교사 모든 화면에서 숫자 점수(1점, 2점)를 "정답/오답" Badge로 대체한다.
+
+**근거**: 채점 기준이 맞았는지 여부가 학생에게 더 직관적이다. 세부 점수는 교사 수정 시만 필요하다.
+
+**영향 파일**: `GradingStatus.tsx`, `SubmissionOverview.tsx`, `StudentPage.tsx`
+
+---
+
+#### 22-2. ReviewCard 전면 개편
+
+**결정**: 교사 검토 카드를 아래와 같이 개선한다.
+- 토글 없이 AI 피드백 항상 표시 (펼침/접힘 제거)
+- 문제 본문·정답 인라인 표시 (별도 조회 불필요)
+- 이미지 제출의 경우 학생 답변 이미지 인라인 표시
+- OCR 원문이 있으면 답변 이미지와 나란히(2컬럼) 표시
+- SLA 3시간 미만 시 경고 강조
+
+**근거**: 교사가 검토 카드 1개를 처리하는 데 평균 3분 목표 달성을 위해, 외부 이동 없이 카드 내에서 모든 정보 확인이 가능해야 한다.
+
+**DB 변경**: `teacher_queue` 조회 시 `problem.content`, `problem.answer`, `ocr_raw_text` 포함 반환.
+
+---
+
+#### 22-3. 검토 큐 / 문제 관리 검색 필터 추가
+
+**결정**: ReviewQueue와 ProblemManager에 텍스트 검색 + 정렬 + 카테고리 필터를 추가한다.
+
+| 컴포넌트 | 추가 필터 |
+|---|---|
+| ReviewQueue | 학생명/문제 검색, 문제별 필터, 정렬(SLA/학생/문제) |
+| ProblemManager | 텍스트 검색, 학교급(초중고) 필터, 영역 필터, 난이도 필터, 정렬 |
+
+**구현**: 모두 클라이언트 측 `useMemo` 필터링 (추가 API 없음).
+
+---
+
+#### 22-4. 캔버스 지우개 + SVG 커서
+
+**결정**: `CanvasInput.tsx`에 `DrawMode = "pen" | "eraser"` 전환 기능을 추가한다.
+
+- 지우개: 흰색 펜(penColor white, effectiveWidth = penWidth × 3)으로 구현
+- SVG 동적 커서: 모드·굵기에 따라 원형 커서 크기/색이 실시간 반영
+- 펜 굵기 선택: 2, 4, 6, 8 (4단계)
+
+**근거**: 캔버스 전체 지우기만으로는 세부 수정이 불가능하다. react-signature-canvas의 흰색 펜 우회 방식으로 추가 의존성 없이 구현 가능.
+
+---
+
+### ADR-023 학생 풀이 상세 조회 및 답안 재제출
+**날짜**: 2026-04-11  
+**가역성**: 🟡 준가역
+
+**결정**: 학생이 제출 이력에서 개별 풀이를 클릭해 상세 내용을 확인하고, 미승인 상태에서 답안을 수정 재제출할 수 있도록 한다.
+
+**API 변경**:
+- `GET /api/v1/submissions/{id}` — `problem_title`, `problem_content` 필드 추가 반환
+- `GET /api/v1/submissions?student_id=` — `image_path`, `student_answer` 필드 추가 반환
+- `PUT /api/v1/submissions/{id}` — 답안 수정 (pending/graded 상태 한정, 교사 처리 후 불가)
+
+**재제출 처리 규칙**:
+1. `teacher_queue` 레코드 삭제
+2. `grading_result` 레코드 삭제
+3. `status = "pending"` 리셋
+4. 채점 파이프라인 재실행 (`_run_grading_pipeline`)
+
+**근거**: 학생이 오타 등 단순 실수를 수정할 수 있어야 하나, 교사가 이미 검토한 건은 재제출 불가(데이터 무결성).
+
+**프론트엔드 스테이지**: `history → detail → editing → polling → done`
+
+---
+
+### ADR-024 숙제/그룹 시스템 + 학생 대시보드 2단 레이아웃
+**날짜**: 2026-04-11  
+**가역성**: 🟡 준가역
+
+**결정**: 교사가 학생 그룹을 관리하고 그룹별로 숙제를 할당하는 기능을 추가한다. 학생 화면은 사이드바 + 메인의 2단 레이아웃으로 전환한다.
+
+#### 24-1. 그룹/숙제 데이터 모델
+
+**새 테이블**:
+
+| 테이블 | 역할 |
+|---|---|
+| `student_groups` | 학생 그룹 (이름, 생성일) |
+| `group_members` | 그룹 멤버 (group_id, student_id, student_name) |
+| `homeworks` | 숙제 (제목, group_id, due_date) |
+| `homework_problems` | 숙제-문제 연결 (homework_id, problem_id) |
+
+**DB 자동 마이그레이션**: `main.py` lifespan에서 `Base.metadata.create_all`로 개발 환경 자동 생성.
+
+**인증 없는 그룹 연결 방식**: `GroupMember.student_id = Submission.student_id` 문자열 매칭. JWT 도입 전 MVP 허용 범위.
+
+#### 24-2. 교사 API 추가
+
+```
+GET    /api/v1/teacher/groups                           # 그룹 목록
+POST   /api/v1/teacher/groups                           # 그룹 생성
+DELETE /api/v1/teacher/groups/{id}                      # 그룹 삭제
+POST   /api/v1/teacher/groups/{id}/members              # 멤버 추가
+DELETE /api/v1/teacher/groups/{id}/members/{student_id} # 멤버 제거
+GET    /api/v1/teacher/homeworks                        # 숙제 목록
+POST   /api/v1/teacher/homeworks                        # 숙제 생성 (문제 일괄 할당)
+DELETE /api/v1/teacher/homeworks/{id}                   # 숙제 삭제
+```
+
+#### 24-3. 학생 숙제 현황 API
+
+```
+GET /api/v1/submissions/homework?student_id=xxx
+```
+
+반환: 학생이 속한 그룹의 숙제 목록 + 각 문제별 제출 완료 여부(`submitted: bool`).
+
+완료 판정: 해당 student_id + problem_id 조합의 Submission이 1건 이상 존재 (status 무관).
+
+#### 24-4. 학생 UI 2단 레이아웃
+
+**결정**: 로그인 후 화면을 왼쪽 사이드바(w-72) + 오른쪽 메인의 flex 레이아웃으로 전환한다.
+
+**사이드바 항목**:
+- **숙제 현황**: 숙제별 진행 바 (완료 문제 수/전체), 마감일 (초과 시 빨간색), 클릭 시 숙제 탭으로 이동
+- **풀이 현황**: 최근 5개 이력, 클릭 시 상세 보기
+- **"새 문제 풀기" 버튼**: 전체 문제 탭으로 이동
+
+**문제 선택 탭 구조**:
+- "숙제" 탭: 할당된 숙제의 문제 목록, 이미 제출한 문제는 비활성화 + "제출 완료" 표시
+- "전체 문제" 탭: 기존 `ProblemSelector` 컴포넌트 유지
+
+**모바일 대응**: 사이드바 `hidden md:flex` (모바일에서 숨김, 전체 화면 메인).
+
+**기존 "history" 스테이지 제거**: 별도 이력 페이지 없이 사이드바에 통합.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -476,3 +618,6 @@ GET    /api/v1/teacher/problems/{id}/submissions  # 문제별 제출 현황
 | ADR-019 | 2026-04-10 | Mac Mini M4 직접 서빙 + Cloudflare Tunnel 배포 결정 |
 | ADR-020 | 2026-04-10 | GOT-OCR 서빙 전략 (Mac Mini MPS + model.chat()) |
 | ADR-021 | 2026-04-10 | UX 전면 재설계 (학생 신원, 교사 탭, 문제 관리, 캔버스, 모던 디자인) |
+| ADR-022 | 2026-04-11 | UX 2차 개선 (점수→정답/오답, 리뷰카드 개편, 검색 필터, 캔버스 지우개) |
+| ADR-023 | 2026-04-11 | 학생 풀이 상세 조회 + 답안 재제출 기능 (PUT /submissions/{id}) |
+| ADR-024 | 2026-04-11 | 숙제/그룹 시스템 + 학생 대시보드 2단 레이아웃 |
