@@ -592,9 +592,21 @@ def run_mlx_benchmark(
     gemma4 = any(model_name.startswith(p) or hf_id.startswith(p.replace("gemma4", "gemma-4"))
                  for p in GEMMA4_PREFIXES)
 
+    # EXAONE 등 커스텀 코드가 필요한 모델 목록
+    TRUST_REMOTE_CODE = ("exaone",)
+    trust_remote = any(p in hf_id.lower() for p in TRUST_REMOTE_CODE)
+
+    # Gemma 4는 thinking 블록이 길어 max_tokens를 늘려야 JSON에 도달
+    if gemma4:
+        max_tokens = max(max_tokens, 6144)
+        print(f"  ※ Gemma 4: thinking 블록 대비 max_tokens={max_tokens}으로 조정")
+
     print(f"  모델 로딩: {hf_id}")
     load_start = time.perf_counter()
-    model, tokenizer = load(hf_id)
+    model, tokenizer = load(
+        hf_id,
+        tokenizer_config={"trust_remote_code": trust_remote} if trust_remote else {},
+    )
     load_sec = time.perf_counter() - load_start
     print(f"  로딩 완료: {load_sec:.1f}초\n")
 
