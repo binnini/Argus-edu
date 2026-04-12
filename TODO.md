@@ -336,6 +336,28 @@
 - [x] ADR-025 작성 (`docs/decisions.md`)
 - [x] 교체 후 통합 테스트 재실행 통과 확인 (20 passed, 1 skipped)
 
+### 8-8. OCR 환경 분리 (ADR-027) ✅
+
+- [x] `transformers` 버전 충돌 원인 분석
+  - `mlx-lm 0.31.2` → `transformers >= 5.0.0` 필요
+  - `GOT-OCR 2.0` → `transformers == 4.44.2` 필요 (5.x에서 MPS 추론 실패)
+- [x] `argus-gotocr` conda 환경 생성 (transformers 4.44.2 + torch 2.4.0 + verovio 등)
+- [x] `backend/scripts/ocr_worker.py` 작성 — 지속 서브프로세스, stdin/stdout JSON 프로토콜
+- [x] `backend/services/ocr.py` `_GotOcrEngine` 교체 — `asyncio.create_subprocess_exec()` 기반
+- [x] `backend/requirements.txt` 업데이트 — argus-gotocr 환경 의존성 주석 추가
+- [x] E2E 검증: 이미지 제출 → OCR(argus-gotocr) → 채점(MLX, argus-ocr) → `status=graded` ✅
+- [x] ADR-027 작성
+
+### 8-7. 할루시네이션 벤치마크 확장 ✅
+
+- [x] `scripts/benchmark_hallucination.py` 테스트 케이스 확장
+  - 6문제 12건 → **20문제 40건** (초등 6, 중학 7, 고등 7)
+  - 할루시네이션 패턴 4종 추가: A(wrong_cause) / B(wrong_math) / C(wrong_concept) / D(off_topic)
+  - 20건 배치 2회 분할 호출 (`MAX_TOKENS×2`, 배치별 독립 실행)
+  - 패턴별 탐지율 출력 추가
+- [x] 재실행 결과: **정확도 100% (42/42)**, 패턴별 탐지율 전 항목 100%, 평균 confidence 0.91
+- [x] ADR-026 벤치마크 결과 반영
+
 ---
 
 ## Phase 9: 배포 (Mac Mini M4 + Cloudflare Tunnel)

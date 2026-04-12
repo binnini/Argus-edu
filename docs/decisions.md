@@ -679,6 +679,13 @@ GET /api/v1/submissions/homework?student_id=xxx
 
 **검증 모델**: 현재 `GRADING_MODEL` (gemma4:e4b MLX) 사용. 검증 정확도 파일럿 후 Claude API 전환 검토.
 
+**벤치마크 결과** (`scripts/benchmark_hallucination.py`, 2026-04-12):
+- 테스트 케이스: **20문제 × 2 = 40건** (초등 6, 중학 7, 고등 7)
+- 할루시네이션 패턴 4종: A(wrong_cause) / B(wrong_math) / C(wrong_concept) / D(off_topic)
+- 결과: **정확도 100% (42/42)**, 패턴별 탐지율 모두 100%, 평균 confidence 0.91
+- 처리 시간: 5.2s/건 (20건 배치 기준 ~107s)
+- 판정: ADR-026 변경 조건(80% 미만) 미충족 → **gemma4:e4b 그대로 유지**
+
 **DB 변경** (마이그레이션 `0005_hallucination_batch.py`):
 - `grading_results` 테이블: `hhem_score`, `inconsistency_rate` 제거
 - `grading_results` 테이블: `hallucination_status`, `hallucination_score`, `hallucination_issues`, `hallucination_checked_at` 추가
@@ -686,6 +693,53 @@ GET /api/v1/submissions/homework?student_id=xxx
 **트레이드오프**:
 - 채점 결과는 즉시 응답, 할루시네이션 검증은 최대 5분 지연 → 교사 큐 진입 시점엔 대부분 검증 완료
 - 같은 모델(gemma4:e4b)이 생성+검증을 모두 담당하는 bias 위험 → 파일럿 정확도 측정 후 판단
+
+---
+
+### ADR-027 GOT-OCR conda 환경 분리 (transformers 버전 충돌 해결)
+**날짜**: 2026-04-12  
+**가역성**: 🟢 가역 (환경 통합 시 OCR 서비스 코드만 교체)
+
+**결정**: GOT-OCR 2.0 추론을 별도 conda 환경(`argus-gotocr`)의 지속 서브프로세스로 분리한다.
+
+**배경**:
+- `mlx-lm 0.31.2` (gemma4:e4b MLX 채점)은 `transformers >= 5.0.0` 요구
+- `GOT-OCR 2.0` (`modeling_GOT.py` 기반 Qwen2 파생 모델)은 `transformers ~= 4.44.2`에서만 정상 동작
+  - transformers 5.x에서 `DynamicCache.seen_tokens` 제거, Qwen2 어텐션 shape 변경으로 MPS 추론 실패
+- 두 요구사항이 겹치지 않아 단일 환경에서 동시 만족 불가
+
+**해결 방법**:
+
+```
+argus-ocr 환경 (transformers 5.x)
+  └── FastAPI + MLX gemma4 채점 서비스
+        └── _GotOcrEngine.recognize()
+              └── asyncio.create_subprocess_exec()
+                    ↓ stdin/stdout JSON 라인 프로토콜
+argus-gotocr 환경 (transformers 4.44.2)
+  └── backend/scripts/ocr_worker.py (지속 프로세스)
+        └── GOT-OCR 2.0 MPS 추론
+```
+
+**통신 프로토콜** (stdin/stdout JSON 라인):
+- 요청: `{"id": "...", "image_b64": "...", "content_type": "image/jpeg"}`
+- 응답: `{"id": "...", "text": "..."}` | `{"id": "...", "error": "..."}`
+- 준비 신호: 워커 시작 시 `{"ready": true}` 출력 → FastAPI가 대기 후 수신
+
+**성능 특성**:
+- 콜드스타트: 첫 이미지 제출 시 ~30s (GOT-OCR 모델 로딩)
+- 이후 요청: 워커 상주로 추가 latency ~0.1s (IPC 오버헤드)
+- 워커 비정상 종료 시 다음 요청에서 자동 재시작
+
+**argus-gotocr 환경 의존성**:
+```
+transformers==4.44.2, torch==2.4.0, torchvision, timm==0.5.4
+einops, tiktoken, accelerate, verovio
+```
+
+**트레이드오프**:
+- 환경 관리 복잡도 증가 (conda 환경 2개) — 배포 시 `setup.sh`에 환경 생성 단계 추가 필요
+- IPC 오버헤드 미미 (~0.1s) vs. transformers 버전 고정으로 얻는 안정성
 
 ---
 
@@ -712,3 +766,4 @@ GET /api/v1/submissions/homework?student_id=xxx
 | ADR-024 | 2026-04-11 | 숙제/그룹 시스템 + 학생 대시보드 2단 레이아웃 |
 | ADR-025 | 2026-04-12 | 로컬 채점 LLM 모델 선정 (gemma4:e4b, 30-문제 벤치마크 기반) |
 | ADR-026 | 2026-04-12 | 할루시네이션 검증 전략 변경 (HHEM+다중샘플링 → LLM 배치 비동기) |
+| ADR-027 | 2026-04-12 | GOT-OCR conda 환경 분리 (transformers 버전 충돌 — argus-gotocr 서브프로세스) |

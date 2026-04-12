@@ -9,7 +9,9 @@ OCR_MODEL 환경변수로 엔진 선택:
 OCR 실패 시 에러 반환 (무시하지 않음 — 잘못된 OCR 결과가 채점에 영향을 주면 안 됨).
 """
 
+import json
 import logging
+import subprocess
 from pathlib import Path
 
 from config import settings
@@ -151,12 +153,20 @@ class _MathpixEngine:
 
 
 class _GotOcrEngine:
-    """GOT-OCR 2.0 파인튜닝 모델 엔진.
+    """GOT-OCR 2.0 파인튜닝 모델 엔진 — 서브프로세스 방식.
 
-    merge_lora.py로 병합된 모델 디렉토리를 사용.
-    GOT_OCR_MODEL_PATH 환경변수로 모델 디렉토리 지정.
-    model.chat()으로 추론 (학습 포맷이 chat() 형식과 동일).
+    transformers 5.x (MLX)와 4.44.2 (GOT-OCR)의 버전 충돌을 해결하기 위해
+    argus-gotocr conda 환경의 ocr_worker.py를 지속 서브프로세스로 실행한다.
+
+    통신: stdin/stdout JSON 라인 프로토콜
+      요청: {"id": "...", "image_b64": "...", "content_type": "..."}
+      응답: {"id": "...", "text": "..."} | {"id": "...", "error": "..."}
     """
+
+    # argus-gotocr 환경 Python 경로
+    _WORKER_PYTHON = (
+        "/opt/homebrew/Caskroom/miniconda/base/envs/argus-gotocr/bin/python"
+    )
 
     def __init__(self) -> None:
         model_path = settings.got_ocr_model_path
@@ -167,66 +177,100 @@ class _GotOcrEngine:
             )
         if not Path(model_path).exists():
             raise OCRError(f"GOT-OCR 모델 경로가 존재하지 않습니다: {model_path}")
+        if not Path(self._WORKER_PYTHON).exists():
+            raise OCRError(
+                f"argus-gotocr conda 환경이 없습니다: {self._WORKER_PYTHON}\n"
+                "conda create -n argus-gotocr python=3.11 && "
+                "pip install 'transformers==4.44.2' torch torchvision timm einops tiktoken accelerate"
+            )
+
+        self._model_path = model_path
+        self._proc: "subprocess.Popen | None" = None
+        self._lock = None  # asyncio.Lock은 이벤트 루프 생성 후 초기화
+        self._worker_script = (
+            Path(__file__).parent.parent / "scripts" / "ocr_worker.py"
+        )
+        logger.info(f"GOT-OCR 서브프로세스 엔진 초기화 (model={model_path})")
+
+    def _ensure_lock(self):
+        import asyncio
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+
+    async def _start_worker(self) -> None:
+        """워커 서브프로세스를 시작하고 'ready' 신호를 기다린다."""
+        import asyncio
+        import subprocess
+
+        logger.info("GOT-OCR 워커 프로세스 시작 중...")
+        self._proc = await asyncio.create_subprocess_exec(
+            self._WORKER_PYTHON,
+            str(self._worker_script),
+            "--model-path", self._model_path,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=None,  # stderr는 부모 프로세스로 전달 (서버 로그에 표시)
+        )
+
+        # 준비 완료 신호 대기 ({"ready": true})
+        try:
+            ready_line = await asyncio.wait_for(
+                self._proc.stdout.readline(), timeout=120.0
+            )
+        except asyncio.TimeoutError:
+            self._proc.kill()
+            raise OCRError("GOT-OCR 워커 시작 타임아웃 (120s)")
 
         try:
-            import torch
-            from transformers import AutoConfig, AutoTokenizer
-            from transformers.dynamic_module_utils import get_class_from_dynamic_module
+            msg = json.loads(ready_line.decode())
+            if not msg.get("ready"):
+                raise OCRError(f"GOT-OCR 워커 비정상 시작: {msg}")
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            raise OCRError(f"GOT-OCR 워커 ready 응답 파싱 실패: {e}")
 
-            if torch.cuda.is_available():
-                self._device = "cuda"
-                dtype = torch.bfloat16
-            elif torch.backends.mps.is_available():
-                self._device = "mps"
-                dtype = torch.float32  # MPS는 bfloat16 미지원
-            else:
-                self._device = "cpu"
-                dtype = torch.float32
-
-            self._tokenizer = AutoTokenizer.from_pretrained(
-                model_path, trust_remote_code=True
-            )
-            config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
-            model_class = get_class_from_dynamic_module(
-                config.auto_map["AutoModel"], model_path
-            )
-            self._model = model_class.from_pretrained(
-                model_path,
-                config=config,
-                trust_remote_code=True,
-                torch_dtype=dtype,
-            )
-            self._model = self._model.to(self._device)
-            self._model.eval()
-            logger.info(f"GOT-OCR 모델 로드 완료: {model_path} (device={self._device}, dtype={dtype})")
-        except ImportError as e:
-            raise OCRError(
-                "transformers 또는 torch가 설치되어 있지 않습니다."
-            ) from e
-        except Exception as e:
-            raise OCRError(f"GOT-OCR 모델 로드 실패: {e}") from e
+        logger.info("GOT-OCR 워커 준비 완료")
 
     async def recognize(self, image_bytes: bytes, content_type: str) -> str:
         import asyncio
-        import io
-        import tempfile
+        import base64
+        import uuid
+        import json as _json
 
-        # model.chat()은 파일 경로를 요구하므로 임시 파일 사용
-        suffix = ".png" if "png" in content_type else ".jpg"
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
-            f.write(image_bytes)
-            tmp_path = f.name
+        self._ensure_lock()
+        async with self._lock:
+            # 워커가 없거나 종료됐으면 재시작
+            if self._proc is None or self._proc.returncode is not None:
+                await self._start_worker()
 
-        loop = asyncio.get_event_loop()
-        try:
-            result = await loop.run_in_executor(None, self._run_inference, tmp_path)
-        except Exception as e:
-            raise OCRError(f"GOT-OCR 추론 실패: {e}") from e
-        finally:
-            Path(tmp_path).unlink(missing_ok=True)
+            req_id = uuid.uuid4().hex
+            req = _json.dumps({
+                "id": req_id,
+                "image_b64": base64.b64encode(image_bytes).decode(),
+                "content_type": content_type,
+            }, ensure_ascii=False) + "\n"
 
-        return result
+            try:
+                self._proc.stdin.write(req.encode())
+                await self._proc.stdin.drain()
+            except BrokenPipeError as e:
+                self._proc = None
+                raise OCRError(f"GOT-OCR 워커 파이프 끊김: {e}") from e
 
-    def _run_inference(self, image_path: str) -> str:
-        """model.chat()으로 이미지 파일 → 텍스트 추론."""
-        return self._model.chat(self._tokenizer, image_path, ocr_type="ocr")
+            try:
+                resp_line = await asyncio.wait_for(
+                    self._proc.stdout.readline(), timeout=120.0
+                )
+            except asyncio.TimeoutError:
+                self._proc.kill()
+                self._proc = None
+                raise OCRError("GOT-OCR 추론 타임아웃 (120s)")
+
+            try:
+                resp = _json.loads(resp_line.decode())
+            except (_json.JSONDecodeError, UnicodeDecodeError) as e:
+                raise OCRError(f"GOT-OCR 응답 파싱 실패: {e}") from e
+
+            if "error" in resp:
+                raise OCRError(f"GOT-OCR 추론 실패: {resp['error']}")
+
+            return resp.get("text", "")
