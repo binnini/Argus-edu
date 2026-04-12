@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- deploy/com.argus.backend.plist — 백엔드 launchd 서비스 템플릿
+     setup.sh가 __ARGUS_DIR__ 플레이스홀더를 실제 경로로 치환합니다.
+     직접 편집하지 말고 setup.sh를 통해 배포하세요. -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -8,7 +11,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/yebin/workSpace/Argus/.venv/bin/uvicorn</string>
+    <string>__ARGUS_DIR__/.venv/bin/uvicorn</string>
     <string>main:app</string>
     <string>--host</string>
     <string>127.0.0.1</string>
@@ -19,12 +22,12 @@
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/yebin/workSpace/Argus/backend</string>
+  <string>__ARGUS_DIR__/backend</string>
 
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/Users/yebin/workSpace/Argus/.venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <string>__ARGUS_DIR__/.venv/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
   </dict>
 
   <key>KeepAlive</key>
@@ -34,11 +37,12 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/yebin/workSpace/Argus/logs/backend.log</string>
+  <string>__ARGUS_DIR__/logs/backend.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/yebin/workSpace/Argus/logs/backend-error.log</string>
+  <string>__ARGUS_DIR__/logs/backend-error.log</string>
 
+  <!-- 크래시 루프 방지: 5초 이내 재시작 억제 -->
   <key>ThrottleInterval</key>
   <integer>5</integer>
 </dict>

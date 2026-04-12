@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- deploy/com.cloudflare.cloudflared.plist — Cloudflare Tunnel launchd 서비스 템플릿
+     setup.sh가 __ARGUS_DIR__ 플레이스홀더를 실제 경로로 치환합니다.
+     직접 편집하지 말고 setup.sh를 통해 배포하세요. -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -11,7 +14,7 @@
     <string>/opt/homebrew/bin/cloudflared</string>
     <string>tunnel</string>
     <string>--config</string>
-    <string>/Users/yebin/workSpace/Argus/deploy/cloudflare-tunnel.yml</string>
+    <string>__ARGUS_DIR__/deploy/cloudflare-tunnel.yml</string>
     <string>run</string>
   </array>
 
@@ -22,11 +25,12 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/yebin/workSpace/Argus/logs/cloudflared.log</string>
+  <string>__ARGUS_DIR__/logs/cloudflared.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/yebin/workSpace/Argus/logs/cloudflared-error.log</string>
+  <string>__ARGUS_DIR__/logs/cloudflared-error.log</string>
 
+  <!-- 터널 재연결 시 지수 백오프 보장 -->
   <key>ThrottleInterval</key>
   <integer>10</integer>
 </dict>
