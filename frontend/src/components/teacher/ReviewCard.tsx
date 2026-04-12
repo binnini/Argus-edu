@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, AlertCircle, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react"
+import { Clock, AlertCircle, CheckCircle2, ChevronDown, ExternalLink, ImageIcon, Lightbulb } from "lucide-react"
 import { renderMath } from "@/lib/renderMath"
 
 interface ReviewCardProps {
@@ -21,6 +21,11 @@ function formatDeadline(deadline: string): string {
   const hours = Math.floor(diff / 3_600_000)
   const minutes = Math.floor((diff % 3_600_000) / 60_000)
   return `${hours}시간 ${minutes}분`
+}
+
+function scoreTone(score: number): string {
+  if (score <= 0) return "text-red-700 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-950/30 dark:border-red-800"
+  return "text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-950/30 dark:border-green-800"
 }
 
 function parseFeedback(raw: string | object) {
@@ -64,6 +69,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
 
   const feedback = parseFeedback(item.ai_feedback)
   const isDeadlineSoon = new Date(item.sla_deadline).getTime() - Date.now() < 3_600_000 * 3
+  const imageUrl = item.image_path ? `${apiOrigin()}/${item.image_path}` : null
 
   return (
     <Card className="w-full overflow-hidden">
@@ -87,11 +93,23 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             </Badge>
           </div>
         </div>
-        <div className={`flex items-center gap-1 text-xs mt-1 ${isDeadlineSoon ? "text-rose-500 font-medium" : "text-muted-foreground"}`}>
-          <Clock className="h-3 w-3" />
-          <span>SLA {formatDeadline(item.sla_deadline)} 남음</span>
-          <span className="mx-1">·</span>
-          <span>AI 채점: {item.ai_score}점</span>
+        <div className="mt-3 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-4">
+          <div className={`rounded-md border px-2.5 py-2 font-semibold ${scoreTone(item.ai_score)}`}>
+            AI {item.ai_score}점
+          </div>
+          <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
+            <span className="text-muted-foreground">신뢰도 </span>
+            <span className={item.trust_level === "high" ? "font-semibold text-green-700" : "font-semibold text-red-700"}>
+              {item.trust_level === "high" ? "High" : "Low"}
+            </span>
+          </div>
+          <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
+            {item.queue_type === "score_only" ? "점수 검토" : "전체 검토"}
+          </div>
+          <div className={`flex items-center gap-1 rounded-md border px-2.5 py-2 ${isDeadlineSoon ? "border-rose-200 bg-rose-50 font-semibold text-rose-600 dark:border-rose-800 dark:bg-rose-950/30" : "border-gray-200 bg-white text-muted-foreground dark:border-zinc-800 dark:bg-card"}`}>
+            <Clock className="h-3 w-3" />
+            SLA {formatDeadline(item.sla_deadline)}
+          </div>
         </div>
       </CardHeader>
 
@@ -133,13 +151,28 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         <div className="rounded-lg bg-gray-50 p-4 dark:bg-zinc-900">
           <div className={item.input_type === "image" ? "grid gap-4 md:grid-cols-2" : ""}>
             <div className="rounded-lg border border-gray-200 bg-white p-3 dark:bg-card">
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wide">학생 답변</p>
-              {item.input_type === "image" && item.image_path ? (
-                <img
-                  src={`${apiOrigin()}/${item.image_path}`}
-                  alt="학생 손글씨 풀이"
-                  className="max-w-full max-h-[300px] rounded-lg border mt-1 object-contain"
-                />
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">
+                  {item.input_type === "image" && <ImageIcon className="h-3.5 w-3.5 text-gray-400" />}
+                  학생 답변
+                </p>
+                {imageUrl && (
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" asChild>
+                    <a href={imageUrl} target="_blank" rel="noreferrer">
+                      원본 보기
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+              {item.input_type === "image" && imageUrl ? (
+                <div className="flex min-h-[260px] items-center justify-center rounded-lg border bg-gray-50 p-2">
+                  <img
+                    src={imageUrl}
+                    alt="학생 손글씨 풀이"
+                    className="max-h-[300px] max-w-full object-contain"
+                  />
+                </div>
               ) : (
                 <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
               )}
@@ -147,10 +180,16 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
 
             {item.input_type === "image" && (
               <div className="rounded-lg border border-gray-200 bg-white p-3 dark:bg-card">
-                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wide">OCR 결과 (채점 사용)</p>
-                <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-700 dark:text-gray-200">OCR 결과</p>
+                  <Badge variant="secondary" className="text-xs">채점 사용</Badge>
+                </div>
+                <div className={`min-h-[260px] rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap ${item.ocr_raw_text ? "border-gray-200 bg-gray-50 text-foreground" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300"}`}>
                   {item.ocr_raw_text ? renderMath(item.ocr_raw_text) : (
-                    <span className="text-muted-foreground italic">OCR 결과 없음</span>
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <span>OCR 결과가 없습니다. 원본 이미지를 기준으로 검토해 주세요.</span>
+                    </div>
                   )}
                 </div>
               </div>
