@@ -116,9 +116,9 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out) -> No
             submission_id=submission_id,
             ai_score=out.total_score,
             ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
-            sbert_similarity=out.sbert_similarity,
-            trust_score=trust.trust_score,
-            trust_level=trust.trust_level,
+            sbert_similarity=0.0,   # SBERT 제거 — 컬럼 유지용 기본값
+            trust_score=0.0,        # hallucination_batch 완료 후 갱신
+            trust_level="low",      # hallucination_batch 완료 후 갱신
             hallucination_status="pending",
         )
         db.add(grading_record)

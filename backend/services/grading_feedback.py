@@ -16,7 +16,6 @@ from typing import Any
 
 from config import settings
 from prompts.grading_feedback import COMBINED_SYSTEM_PROMPT, COMBINED_USER_TEMPLATE
-from services.embeddings import EmbeddingModel
 from services.grading import check_final_answer
 from services.llm_client import LLMClient
 
@@ -67,7 +66,6 @@ class CombinedOutput:
     total_score: int
     steps: list[dict[str, Any]]
     overall_comment: str
-    sbert_similarity: float
     # 피드백
     student_mistakes: list[dict]
     correct_approach: list[dict]
@@ -81,11 +79,8 @@ class CombinedOutput:
 class CombinedGradingFeedbackService:
     """채점 + 피드백을 단일 LLM 호출로 처리."""
 
-    def __init__(self, sbert_model: EmbeddingModel, llm_client: LLMClient | None = None) -> None:
-        # llm_client를 외부에서 주입받으면 그것을 사용 (MLX는 lifespan에서 모델 로드 후 주입)
-        # 주입이 없으면 기존처럼 자체 생성 (anthropic/ollama provider용)
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
         self._llm = llm_client if llm_client is not None else LLMClient()
-        self._sbert = sbert_model
 
     async def run(
         self,
@@ -129,7 +124,6 @@ class CombinedGradingFeedbackService:
             raise CombinedError(f"LLM API 오류: {e}") from e
 
         parsed = parse_combined_response(response.text)
-        sbert_sim = self._compute_sbert_similarity(student_answer, reference_solution)
 
         grading = parsed["grading"]
         feedback = parsed["feedback"]
@@ -147,7 +141,6 @@ class CombinedGradingFeedbackService:
             total_score=grading["total_score"],
             steps=grading["steps"],
             overall_comment=grading.get("overall_comment", ""),
-            sbert_similarity=sbert_sim,
             student_mistakes=feedback.get("student_mistakes", []),
             correct_approach=feedback.get("correct_approach", []),
             key_concept=feedback.get("key_concept", ""),
@@ -155,18 +148,6 @@ class CombinedGradingFeedbackService:
             provider=response.provider,
             raw_response=response.text,
         )
-
-    def _compute_sbert_similarity(self, student_answer: str, reference_solution: str) -> float:
-        try:
-            import numpy as np
-            embs = self._sbert.encode(
-                [student_answer, reference_solution],
-                convert_to_numpy=True,
-                normalize_embeddings=True,
-            )
-            return float(max(0.0, min(1.0, np.dot(embs[0], embs[1]))))
-        except Exception:
-            return 0.0
 
     def format_steps_for_trust(self, steps: list[dict]) -> list[dict]:
         """trust_gate 호환 형식으로 steps 변환."""

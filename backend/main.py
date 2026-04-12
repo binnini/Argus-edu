@@ -16,7 +16,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from config import settings
-from services.embeddings import LocalEmbeddingModel
 from services.grading_feedback import CombinedGradingFeedbackService
 from services.hallucination_batch import HallucinationBatchService
 from services.llm_client import LLMClient
@@ -44,10 +43,6 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("DB 테이블 동기화 완료")
 
-    sbert = LocalEmbeddingModel(settings.embedding_model_name)
-    app.state.sbert = sbert
-    logger.info("SBERT 로딩 완료")
-
     # LLM 클라이언트 초기화
     # MLX provider: 무거운 모델을 lifespan에서 1회만 로드
     if settings.llm_provider == "mlx":
@@ -62,7 +57,7 @@ async def lifespan(app: FastAPI):
         llm_client = LLMClient()
 
     app.state.llm_client = llm_client
-    app.state.combined_service = CombinedGradingFeedbackService(sbert, llm_client=llm_client)
+    app.state.combined_service = CombinedGradingFeedbackService(llm_client=llm_client)
     app.state.ocr_service = OCRService()
 
     # 배치 할루시네이션 검증 스케줄러 (ADR-026)
@@ -131,10 +126,4 @@ app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 
 @app.get("/health")
 async def health():
-    return {
-        "status": "ok",
-        "models": {
-            "sbert": hasattr(app.state, "sbert"),
-            "hhem": True,  # 제거됨 — 하위 호환성 유지
-        },
-    }
+    return {"status": "ok"}

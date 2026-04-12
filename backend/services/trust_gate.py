@@ -37,46 +37,35 @@ def calculate_trust(
     total_score: int,
 ) -> TrustResult:
     """
-    채점 점수 비율로 신뢰도 결정.
+    채점 직후 큐 라우팅 결정.
 
-    score_visible: 항상 True — 정답/오답 즉시 학생에게 표시.
-    auto_approve:  (만점) or (신뢰도 ≥ 임계값) → 피드백 즉시 공개, 교사 큐 사전 승인.
-    그 외(오답·저신뢰도): 피드백은 교사 검토 후 공개.
+    trust_score / trust_level 은 0.0 / "low" 로 초기화.
+    실제 신뢰도는 hallucination_batch.py 가 배치 완료 후 grading_results 를 갱신한다.
+
+    auto_approve: 학생 최종 답이 만점(ai_score == total_score) 인 경우만 즉시 승인.
+    신뢰도 기반 자동 승인 전략은 할루시네이션 파이프라인 안정화 후 별도 결정.
     """
-    if total_score <= 0:
-        trust_score = 0.0
-    else:
-        trust_score = round(ai_score / total_score, 4)
-
-    trust_score = max(0.0, min(1.0, trust_score))
-    is_high = trust_score >= settings.trust_threshold
     is_perfect = (total_score > 0) and (ai_score == total_score)
+    auto_approve = is_perfect
 
-    trust_level = "high" if is_high else "low"
-    queue_type = "score_only" if is_high else "full_review"
-
-    # 정답/오답 즉시 공개
-    score_visible = True
-
-    # 만점이거나 신뢰도 High면 자동 승인 → 피드백 즉시 공개
-    auto_approve = is_perfect or is_high
-    feedback_visible = auto_approve
+    # 정답이면 score_only(교사 큐에 노출 안 함), 오답이면 full_review
+    queue_type = "score_only" if auto_approve else "full_review"
+    sla_hours = settings.sla_normal_hours
 
     now = datetime.now(tz=timezone.utc)
-    sla_hours = settings.sla_high_risk_hours if is_high else settings.sla_normal_hours
     sla_deadline = now + timedelta(hours=sla_hours)
 
     logger.info(
-        f"신뢰도 계산: score={ai_score}/{total_score} "
-        f"→ trust={trust_score:.3f} ({trust_level}), auto_approve={auto_approve}"
+        f"큐 라우팅: ai_score={ai_score}/{total_score}, "
+        f"auto_approve={auto_approve}, queue={queue_type}"
     )
 
     return TrustResult(
-        trust_score=trust_score,
-        trust_level=trust_level,
+        trust_score=0.0,        # hallucination_batch 완료 후 갱신
+        trust_level="low",      # hallucination_batch 완료 후 갱신
         queue_type=queue_type,
-        score_visible=score_visible,
-        feedback_visible=feedback_visible,
+        score_visible=True,
+        feedback_visible=auto_approve,
         auto_approve=auto_approve,
         sla_deadline=sla_deadline,
     )

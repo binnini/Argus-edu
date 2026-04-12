@@ -24,12 +24,12 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import settings
 from db import SessionLocal
 from models.grading_result import GradingResult
 from models.submission import Submission
 from models.problem import Problem
 from services.llm_client import LLMClient
-from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -207,9 +207,13 @@ class HallucinationBatchService:
                 confidence: float = float(v.get("confidence", 0.5))
                 issues: list = v.get("issues", [])
 
-                # hallucination_score: is_valid + confidence 조합
-                # is_valid=True → confidence 그대로, is_valid=False → 1 - confidence
-                gr.hallucination_score = round(confidence if is_valid else 1.0 - confidence, 4)
+                # hallucination_score = trust_score:
+                #   is_valid=True  → confidence (피드백 신뢰 가능)
+                #   is_valid=False → 1 - confidence (피드백 신뢰 불가)
+                trust_score = round(confidence if is_valid else 1.0 - confidence, 4)
+                gr.hallucination_score = trust_score
+                gr.trust_score = trust_score
+                gr.trust_level = "high" if trust_score >= settings.trust_threshold else "low"
                 gr.hallucination_issues = json.dumps(issues, ensure_ascii=False) if issues else None
                 gr.hallucination_status = "done"
                 gr.hallucination_checked_at = now
