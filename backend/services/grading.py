@@ -14,9 +14,8 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from sentence_transformers import SentenceTransformer
-
 from config import settings
+from services.embeddings import EmbeddingModel
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -72,7 +71,7 @@ class GradingOutput:
 
 
 class GradingService:
-    def __init__(self, sbert_model: SentenceTransformer) -> None:
+    def __init__(self, sbert_model: EmbeddingModel) -> None:
         self._llm = LLMClient()
         self._sbert = sbert_model
 
@@ -156,7 +155,6 @@ class GradingService:
 
     def _compute_sbert_similarity(self, student_answer: str, reference_solution: str) -> float:
         """SBERT 코사인 유사도 계산 (0~1)."""
-        from sklearn.metrics.pairwise import cosine_similarity
         import numpy as np
 
         embeddings = self._sbert.encode(
@@ -164,7 +162,7 @@ class GradingService:
             convert_to_numpy=True,
             normalize_embeddings=True,
         )
-        sim = float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
+        sim = float(np.dot(embeddings[0], embeddings[1]))
         return max(0.0, min(1.0, sim))
 
 

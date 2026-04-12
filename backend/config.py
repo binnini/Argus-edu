@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # AI 모델 — 절대 하드코딩 금지, 환경변수에서 로드
     # ollama 사용 시: GRADING_MODEL=gemma4:26b 등으로 변경
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     grading_model: str = "claude-sonnet-4-6"
     feedback_model: str = "claude-sonnet-4-6"
     ocr_model: str = "pix2tex"  # pix2tex | mathpix | got_ocr

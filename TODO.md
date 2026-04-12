@@ -421,14 +421,23 @@
 **Phase 8 완료 후 시작.**
 
 ### 9-1. 서버 환경 준비
-- [ ] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
-- [ ] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
-- [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
-- [ ] `.env` 프로덕션 설정 (docs/deployment.md 참조)
-- [ ] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
+- [x] Mac Mini M4에 의존성 확인 (Python 3.11, Node, PostgreSQL, Nginx)
+- [x] PostgreSQL DB 생성 + 마이그레이션 적용 (`alembic upgrade head`)
+- [x] `.env` 프로덕션 설정 (로컬 배포 기준 완료, Cloudflare 도메인 확정 시 ALLOWED_ORIGINS 갱신)
+- [x] `scripts/seed.py` 실행 — AI-HUB 변환 데이터 DB 삽입
 
 ### 9-2. 배포 파일 준비 ✅
 - [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
+  - `.env` 로드 + 필수 환경변수 검증
+  - PostgreSQL 16 readiness/version 확인 + role/database idempotent 생성
+  - Alembic/seed 실행 시 `DATABASE_URL` 명시 주입
+  - `RUN_SEED=1`일 때만 seed 실행 (운영 데이터 보호)
+  - `GOT_OCR_WORKER_PYTHON` 자동 추가/검증
+  - 개발 기본 `TEACHER_PASSWORD` 배포 차단
+- [x] 메인 MLX 환경 의존성 충돌 해소
+  - `sentence-transformers` 제거
+  - `transformers>=5.0.0` 호환 `LocalEmbeddingModel`로 SBERT `.encode()` 대체
+  - GOT-OCR는 기존대로 `argus-gotocr` 서브프로세스(`transformers==4.44.2`) 유지
 - [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
 - [x] `deploy/com.argus.backend.plist` — 백엔드 launchd 서비스 (Mac 부팅 자동 시작)
 - [x] `deploy/com.cloudflare.cloudflared.plist` — Tunnel launchd 서비스
@@ -437,30 +446,49 @@
 - [x] `backend/main.py` — `ALLOWED_ORIGINS` 환경변수로 CORS 설정
 - [x] `docs/deployment.md` — 전체 배포 가이드 작성
 - [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
-### 9-2. 배포 파일 준비 ✅
-- [x] `deploy/setup.sh` — 자동 배포 스크립트 작성
-- [x] `deploy/nginx.conf` — `/api/*` → FastAPI, `/data/*` → 정적, `/*` → React SPA
-- [x] `deploy/com.argus.backend.plist` — 백엔드 launchd 서비스 (Mac 부팅 자동 시작)
-- [x] `deploy/com.cloudflare.cloudflared.plist` — Tunnel launchd 서비스
-- [x] `deploy/cloudflare-tunnel.yml` — Cloudflare Tunnel 라우팅 설정 템플릿
-- [x] `frontend/.env.production` — 프로덕션 빌드 `VITE_API_BASE=/api/v1`
-- [x] `backend/main.py` — `ALLOWED_ORIGINS` 환경변수로 CORS 설정
-- [x] `docs/deployment.md` — 전체 배포 가이드 작성
-- [x] 이미지 URL 환경변수화 (ReviewCard `VITE_API_BASE` 기반)
 
-### 9-3. Mac Mini 현장 실행
-- [ ] `bash deploy/setup.sh` 실행
-- [ ] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
-- [ ] Nginx 서빙 확인 (`curl http://localhost/`)
+### 9-3. Mac Mini 현장 실행 ✅
+- [x] `bash deploy/setup.sh` 실행
+- [x] `uvicorn` 프로덕션 동작 확인 (`curl http://localhost:8000/health`)
+- [x] Nginx 서빙 확인 (`curl http://localhost/`)
+- [x] backend launchd 장애 수정
+  - `apscheduler`, `python-dotenv` 누락 의존성 추가
+  - `logs/backend-error.log` 기준 기동 실패 원인 확인
 
-### 9-4. Cloudflare Tunnel
+### 9-4. Cloudflare Quick Tunnel (공모전 심사용, 무료)
+> 1주일 심사용 배포는 도메인 구매 없이 `*.trycloudflare.com` 임시 URL 사용.
+> `*.pages.dev`는 정적 프론트엔드 전용, `*.workers.dev`는 Workers 서버리스용이므로
+> FastAPI + PostgreSQL + MLX + GOT-OCR 로컬 서빙 구조에는 Quick Tunnel이 가장 단순함.
+
+- [ ] Quick Tunnel 실행
+  ```bash
+  cloudflared tunnel --url http://localhost:80
+  ```
+- [ ] 출력된 `https://*.trycloudflare.com` URL을 `.env`의 `ALLOWED_ORIGINS`에 추가
+  ```env
+  ALLOWED_ORIGINS=http://localhost,http://localhost:80,https://<generated>.trycloudflare.com
+  ```
+- [ ] backend launchd 재시작
+  ```bash
+  launchctl unload ~/Library/LaunchAgents/com.argus.backend.plist
+  launchctl load ~/Library/LaunchAgents/com.argus.backend.plist
+  ```
+- [ ] 외부 URL 접속 확인
+  - 학생 화면 접속
+  - 교사 화면 접속 (`TEACHER_PASSWORD=argus`)
+  - 답안 제출 + 교사 승인 흐름 확인
+  - 이미지 업로드 + GOT-OCR 흐름 확인
+- [ ] 심사 기간 동안 Mac Mini 잠자기 방지
+  ```bash
+  caffeinate -dimsu
+  ```
+
+### 9-5. 선택 사항: 고정 도메인 Cloudflare Tunnel
+> 공모전 이후 계속 운영할 때만 진행. 도메인 구매/소유가 필요함.
+
 - [ ] `cloudflared tunnel create argus` 실행
-- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
-- [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`
-- [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
-- [ ] `cloudflared tunnel create argus` 실행
-- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 도메인 교체
-- [ ] `cloudflared tunnel route dns argus argus.yourdomain.com`
+- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 실제 소유 도메인 교체
+- [ ] `cloudflared tunnel route dns argus <owned-domain>` 실행
 - [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
 
 ---

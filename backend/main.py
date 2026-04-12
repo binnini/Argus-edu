@@ -14,9 +14,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sentence_transformers import SentenceTransformer
 
 from config import settings
+from services.embeddings import LocalEmbeddingModel
 from services.grading_feedback import CombinedGradingFeedbackService
 from services.hallucination_batch import HallucinationBatchService
 from services.llm_client import LLMClient
@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     logger.info("DB 테이블 동기화 완료")
 
-    sbert = SentenceTransformer("all-MiniLM-L6-v2")
+    sbert = LocalEmbeddingModel(settings.embedding_model_name)
     app.state.sbert = sbert
     logger.info("SBERT 로딩 완료")
 

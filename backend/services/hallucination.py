@@ -34,7 +34,7 @@ class HallucinationDetector:
 
     def __init__(self, sbert_model=None) -> None:
         """
-        sbert_model: SentenceTransformer — HF API 실패 시 fallback용.
+        sbert_model: .encode()를 제공하는 임베딩 모델 — HF API 실패 시 fallback용.
         """
         self._sbert = sbert_model
         self._use_api = bool(HF_TOKEN)

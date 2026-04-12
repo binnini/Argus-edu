@@ -8,6 +8,9 @@ set -euo pipefail
 ARGUS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LOGS_DIR="$ARGUS_DIR/logs"
 CONDA_BASE="$(conda info --base 2>/dev/null || echo "$HOME/miniconda3")"
+PG_BIN="/opt/homebrew/opt/postgresql@16/bin"
+DB_NAME="${ARGUS_DB_NAME:-argus}"
+DB_USER="${ARGUS_DB_USER:-argus}"
 
 echo "=== Argus 배포 설정 시작 ==="
 echo "프로젝트 경로: $ARGUS_DIR"
@@ -17,6 +20,33 @@ if [ ! -f "$ARGUS_DIR/.env" ]; then
     echo "오류: $ARGUS_DIR/.env 파일이 없습니다."
     echo "  .env.example을 복사하고 값을 채운 뒤 다시 실행하세요:"
     echo "  cp $ARGUS_DIR/.env.example $ARGUS_DIR/.env"
+    exit 1
+fi
+
+# .env 로드: alembic/seed.py는 os.getenv("DATABASE_URL")만 읽으므로 shell env로 export 필요
+set -a
+# shellcheck disable=SC1091
+source "$ARGUS_DIR/.env"
+set +a
+
+required_vars=(
+    DATABASE_URL
+    TEACHER_PASSWORD
+    LLM_PROVIDER
+    GRADING_MODEL
+    OCR_MODEL
+    GOT_OCR_MODEL_PATH
+)
+
+for var in "${required_vars[@]}"; do
+    if [ -z "${!var:-}" ]; then
+        echo "오류: .env에 $var 값이 없습니다."
+        exit 1
+    fi
+done
+
+if [ "$TEACHER_PASSWORD" = "argus-dev" ] || [ "$TEACHER_PASSWORD" = "changeme" ]; then
+    echo "오류: TEACHER_PASSWORD가 개발 기본값입니다. 운영 비밀번호로 변경하세요."
     exit 1
 fi
 
@@ -30,6 +60,7 @@ if [ ! -d ".venv" ]; then
     python3.11 -m venv .venv
 fi
 .venv/bin/pip install -q --upgrade pip
+.venv/bin/pip uninstall -q -y sentence-transformers >/dev/null 2>&1 || true
 .venv/bin/pip install -q -r backend/requirements.txt
 echo "[2/9] Python 의존성 설치 완료 (메인 환경)"
 
@@ -53,18 +84,68 @@ else
     echo "[2b/9] argus-gotocr 환경 생성 완료"
 fi
 
-# 3. DB 마이그레이션
+GOT_OCR_PYTHON="$CONDA_BASE/envs/argus-gotocr/bin/python"
+if [ ! -x "$GOT_OCR_PYTHON" ]; then
+    echo "오류: GOT-OCR worker Python을 찾을 수 없습니다: $GOT_OCR_PYTHON"
+    exit 1
+fi
+
+if ! grep -q "^GOT_OCR_WORKER_PYTHON=" "$ARGUS_DIR/.env"; then
+    echo "GOT_OCR_WORKER_PYTHON=$GOT_OCR_PYTHON" >> "$ARGUS_DIR/.env"
+    export GOT_OCR_WORKER_PYTHON="$GOT_OCR_PYTHON"
+    echo "[2c/9] .env에 GOT_OCR_WORKER_PYTHON 자동 추가"
+else
+    if [ -z "${GOT_OCR_WORKER_PYTHON:-}" ] || [ ! -x "$GOT_OCR_WORKER_PYTHON" ]; then
+        echo "오류: .env의 GOT_OCR_WORKER_PYTHON이 실행 가능하지 않습니다: ${GOT_OCR_WORKER_PYTHON:-<unset>}"
+        echo "권장값: $GOT_OCR_PYTHON"
+        exit 1
+    fi
+fi
+
+# 3. PostgreSQL DB 준비 + 마이그레이션
+if [ ! -x "$PG_BIN/pg_isready" ]; then
+    echo "오류: PostgreSQL 16 binary를 찾을 수 없습니다: $PG_BIN"
+    echo "설치: brew install postgresql@16"
+    exit 1
+fi
+
+if ! "$PG_BIN/pg_isready" -h localhost -p 5432 >/dev/null 2>&1; then
+    echo "오류: PostgreSQL 16이 localhost:5432에서 실행 중이 아닙니다."
+    echo "실행: brew services start postgresql@16"
+    exit 1
+fi
+
+SERVER_VERSION="$("$PG_BIN/psql" -h localhost -p 5432 -d postgres -tAc "SHOW server_version;" 2>/dev/null || true)"
+if [[ "$SERVER_VERSION" != 16.* ]]; then
+    echo "오류: localhost:5432의 PostgreSQL 버전이 16.x가 아닙니다: ${SERVER_VERSION:-unknown}"
+    echo "postgresql@15 등 기존 서비스가 5432를 점유했는지 확인하세요."
+    exit 1
+fi
+
+if ! "$PG_BIN/psql" -h localhost -p 5432 -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
+    "$PG_BIN/psql" -h localhost -p 5432 -d postgres -c "CREATE ROLE $DB_USER LOGIN CREATEDB;"
+    echo "[3/9] DB role 생성 완료: $DB_USER"
+fi
+
+if ! "$PG_BIN/psql" -h localhost -p 5432 -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1; then
+    "$PG_BIN/createdb" -h localhost -p 5432 -O "$DB_USER" "$DB_NAME"
+    echo "[3/9] DB 생성 완료: $DB_NAME"
+fi
+
 cd "$ARGUS_DIR/backend"
-../.venv/bin/alembic upgrade head
+DATABASE_URL="$DATABASE_URL" ../.venv/bin/alembic upgrade head
 echo "[3/9] DB 마이그레이션 완료"
 
 # 4. AI-HUB 데이터 삽입 (seed.py)
-if [ -f "$ARGUS_DIR/scripts/seed.py" ]; then
+# 운영 데이터 보호를 위해 기본값은 skip. 초기 배포 때만 RUN_SEED=1 bash deploy/setup.sh
+if [ "${RUN_SEED:-0}" = "1" ] && [ -f "$ARGUS_DIR/scripts/seed.py" ]; then
     cd "$ARGUS_DIR"
-    .venv/bin/python scripts/seed.py
+    DATABASE_URL="$DATABASE_URL" .venv/bin/python scripts/seed.py
     echo "[4/9] 데이터 삽입 완료"
-else
+elif [ "${RUN_SEED:-0}" = "1" ]; then
     echo "[4/9] seed.py 없음 — 건너뜀"
+else
+    echo "[4/9] RUN_SEED=1 이 아니므로 데이터 삽입 건너뜀"
 fi
 
 # 5. 프론트엔드 빌드
@@ -109,9 +190,9 @@ echo "       $ARGUS_DIR/deploy/com.cloudflare.cloudflared.plist > $CFPLIST_DST"
 echo "     launchctl load $CFPLIST_DST"
 
 echo "[9/9] GOT-OCR 워커 정보:"
-echo "  argus-gotocr Python: $CONDA_BASE/envs/argus-gotocr/bin/python"
+echo "  argus-gotocr Python: $GOT_OCR_PYTHON"
 echo "  ocr_worker.py:       $ARGUS_DIR/backend/scripts/ocr_worker.py"
-echo "  .env에 설정 필요:    GOT_OCR_WORKER_PYTHON=$CONDA_BASE/envs/argus-gotocr/bin/python"
+echo "  .env 설정값:         GOT_OCR_WORKER_PYTHON=${GOT_OCR_WORKER_PYTHON:-$GOT_OCR_PYTHON}"
 echo "  (워커는 첫 이미지 제출 시 자동 시작됩니다)"
 
 echo ""

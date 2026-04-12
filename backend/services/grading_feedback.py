@@ -14,10 +14,9 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from sentence_transformers import SentenceTransformer
-
 from config import settings
 from prompts.grading_feedback import COMBINED_SYSTEM_PROMPT, COMBINED_USER_TEMPLATE
+from services.embeddings import EmbeddingModel
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -81,7 +80,7 @@ class CombinedOutput:
 class CombinedGradingFeedbackService:
     """채점 + 피드백을 단일 LLM 호출로 처리."""
 
-    def __init__(self, sbert_model: SentenceTransformer, llm_client: LLMClient | None = None) -> None:
+    def __init__(self, sbert_model: EmbeddingModel, llm_client: LLMClient | None = None) -> None:
         # llm_client를 외부에서 주입받으면 그것을 사용 (MLX는 lifespan에서 모델 로드 후 주입)
         # 주입이 없으면 기존처럼 자체 생성 (anthropic/ollama provider용)
         self._llm = llm_client if llm_client is not None else LLMClient()

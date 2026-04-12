@@ -21,9 +21,9 @@ import logging
 from dataclasses import dataclass
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 from config import settings
+from services.embeddings import EmbeddingModel
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class FeedbackOutput:
 
 
 class FeedbackService:
-    def __init__(self, sbert_model: SentenceTransformer) -> None:
+    def __init__(self, sbert_model: EmbeddingModel) -> None:
         self._llm = LLMClient()
         self._sbert = sbert_model
 
