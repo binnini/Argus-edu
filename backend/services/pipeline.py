@@ -3,6 +3,7 @@
 import json
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
@@ -122,16 +123,32 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out) -> No
         )
         db.add(grading_record)
 
-        queue_record = TeacherQueue(
-            submission_id=submission_id,
-            queue_type=trust.queue_type,
-            sla_deadline=trust.sla_deadline,
-        )
+        now = datetime.now(timezone.utc)
+        if trust.auto_approve:
+            # 만점·고신뢰도 → 자동 승인: 큐에 action='approve' 사전 설정
+            queue_record = TeacherQueue(
+                submission_id=submission_id,
+                queue_type=trust.queue_type,
+                sla_deadline=trust.sla_deadline,
+                action="approve",
+                reviewed_at=now,
+            )
+            final_status = "approved"
+            logger.info(f"자동 승인 submission_id={submission_id} score={out.total_score}/{total_score}")
+        else:
+            # 오답·저신뢰도 → 교사 검토 대기
+            queue_record = TeacherQueue(
+                submission_id=submission_id,
+                queue_type=trust.queue_type,
+                sla_deadline=trust.sla_deadline,
+            )
+            final_status = "graded"
+
         db.add(queue_record)
 
         result = await db.execute(select(Submission).where(Submission.id == submission_id))
         submission = result.scalar_one()
-        submission.status = "graded"
+        submission.status = final_status
         await db.commit()
 
 

@@ -3,13 +3,13 @@ trust_gate.py — 채점 점수 기반 신뢰도 계산 + 교사 큐 라우팅.
 
 변경 이력:
   - v1: HHEM × 0.6 + (1 - inconsistency_rate) × 0.4 → 실효성 낮음
-  - v2 (현재): AI 채점 점수 비율 기반 단순화
+  - v2: AI 채점 점수 비율 기반 단순화
     trust_score = ai_score / total_score
-    High (≥ threshold 0.5): 점수 즉시 노출, score_only 큐, 12h 검토
-    Low  (< threshold 0.5): 점수 숨김, full_review 큐, 24h 검토
-    (0점이면 항상 full_review)
-
-  할루시네이션 검증은 배치 LLM 방식으로 별도 구현 예정.
+  - v3 (현재): 자동 승인 + 즉시 정답 공개
+    score_visible = True 항상 (정답/오답 즉시 표시)
+    auto_approve  = (ai_score == total_score) OR (trust_score >= threshold)
+      → 자동 승인 시: 피드백 즉시 공개, 교사 큐 action='approve' 사전 설정
+      → 오답(0점) 또는 저신뢰도: 피드백 교사 검토 후 공개
 """
 
 import logging
@@ -26,8 +26,9 @@ class TrustResult:
     trust_score: float
     trust_level: str         # "high" | "low"
     queue_type: str          # "score_only" | "full_review"
-    score_visible: bool
-    feedback_visible: bool   # 정답+고신뢰도면 교사 승인 전 피드백 노출 가능
+    score_visible: bool      # 항상 True — 정답/오답 즉시 표시
+    feedback_visible: bool   # auto_approve 시 교사 검토 없이 피드백 공개
+    auto_approve: bool       # True 시 pipeline이 큐를 사전 승인 처리
     sla_deadline: datetime
 
 
@@ -37,9 +38,10 @@ def calculate_trust(
 ) -> TrustResult:
     """
     채점 점수 비율로 신뢰도 결정.
-    0점이면 무조건 full_review.
-    feedback_visible: 고신뢰도 + 오답 아님(부분 정답 포함)이면 교사 승인 전 노출 허용.
-    단, 0점(완전 오답)이면 무조건 교사 승인 필요.
+
+    score_visible: 항상 True — 정답/오답 즉시 학생에게 표시.
+    auto_approve:  (만점) or (신뢰도 ≥ 임계값) → 피드백 즉시 공개, 교사 큐 사전 승인.
+    그 외(오답·저신뢰도): 피드백은 교사 검토 후 공개.
     """
     if total_score <= 0:
         trust_score = 0.0
@@ -48,12 +50,17 @@ def calculate_trust(
 
     trust_score = max(0.0, min(1.0, trust_score))
     is_high = trust_score >= settings.trust_threshold
+    is_perfect = (total_score > 0) and (ai_score == total_score)
 
     trust_level = "high" if is_high else "low"
     queue_type = "score_only" if is_high else "full_review"
-    score_visible = is_high
-    # 오답(0점)이거나 신뢰도가 낮으면 교사 승인 전 피드백 노출 금지
-    feedback_visible = is_high and ai_score > 0
+
+    # 정답/오답 즉시 공개
+    score_visible = True
+
+    # 만점이거나 신뢰도 High면 자동 승인 → 피드백 즉시 공개
+    auto_approve = is_perfect or is_high
+    feedback_visible = auto_approve
 
     now = datetime.now(tz=timezone.utc)
     sla_hours = settings.sla_high_risk_hours if is_high else settings.sla_normal_hours
@@ -61,7 +68,7 @@ def calculate_trust(
 
     logger.info(
         f"신뢰도 계산: score={ai_score}/{total_score} "
-        f"→ trust={trust_score:.3f} ({trust_level}), queue={queue_type}"
+        f"→ trust={trust_score:.3f} ({trust_level}), auto_approve={auto_approve}"
     )
 
     return TrustResult(
@@ -70,6 +77,7 @@ def calculate_trust(
         queue_type=queue_type,
         score_visible=score_visible,
         feedback_visible=feedback_visible,
+        auto_approve=auto_approve,
         sla_deadline=sla_deadline,
     )
 
@@ -114,9 +122,10 @@ def get_submission_response(
         score_visible = False
         feedback_visible = False
     else:
-        final_score = ai_score if trust_result.score_visible else None
-        score_visible = trust_result.score_visible
-        # 정답+고신뢰도면 교사 승인 전에도 피드백 노출 (오답·저신뢰도는 차단)
+        # 정답/오답은 항상 즉시 공개
+        final_score = ai_score
+        score_visible = True
+        # auto_approve(만점·고신뢰도)면 피드백도 즉시 공개, 그 외 교사 검토 필요
         if trust_result.feedback_visible:
             final_feedback = ai_feedback
             feedback_visible = True

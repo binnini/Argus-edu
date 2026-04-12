@@ -494,12 +494,14 @@ async def get_submission_status(
     from datetime import timedelta
     total_score = submission.problem.rubric.get("total_score", 0) if submission.problem else 0
     is_high = gr.trust_level == "high"
+    is_auto_approved = tq is not None and tq.action == "approve" and tq.reviewed_at is not None and tq.teacher_score is None
     trust = TrustResult(
         trust_score=gr.trust_score,
         trust_level=gr.trust_level,
         queue_type=tq.queue_type if tq else "score_only",
-        score_visible=is_high,
-        feedback_visible=is_high and gr.ai_score > 0,
+        score_visible=True,
+        feedback_visible=is_auto_approved or is_high,
+        auto_approve=is_auto_approved,
         sla_deadline=tq.sla_deadline if tq else datetime.now(timezone.utc) + timedelta(hours=24),
     )
 
@@ -522,11 +524,13 @@ async def get_submission_status(
         ai_feedback=ai_feedback_dict,
     )
 
-    if teacher_action is None:
+    if is_auto_approved:
+        message = None  # 자동 승인 — 별도 안내 없이 결과 표시
+    elif teacher_action is None:
         if resp_data.get("feedback_visible"):
             message = "AI 피드백을 확인할 수 있습니다. 교사 검토 후 최종 확정됩니다."
         else:
-            message = "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."
+            message = "오답입니다. 교사 검토 후 상세 피드백을 확인할 수 있습니다."
     elif teacher_action == "reject":
         message = "채점이 반려되었습니다. 교사에게 문의해주세요."
     else:
