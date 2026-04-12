@@ -657,7 +657,7 @@ def run_mlx_benchmark(
                 print(f"\n  [DEBUG raw ({problem['id']})]:\n{raw[:600]}\n{'─'*40}")
             parsed = parse_response(raw, is_deepseek=deepseek, is_gemma4=gemma4)
             ai_score = int(parsed["grading"]["total_score"])
-            key_concept = parsed["feedback"].get("key_concept", "")[:60]
+            key_concept = parsed["feedback"].get("key_concept", "")
             mistake_count = len(parsed["feedback"].get("student_mistakes", []))
         except Exception as e:
             raw_preview = raw[:120].replace("\n", " ") if raw else "<empty>"
@@ -740,7 +740,7 @@ def run_ollama_benchmark(
             raw = resp.choices[0].message.content or ""
             parsed = parse_response(raw, is_deepseek=deepseek)
             ai_score = int(parsed["grading"]["total_score"])
-            key_concept = parsed["feedback"].get("key_concept", "")[:60]
+            key_concept = parsed["feedback"].get("key_concept", "")
             mistake_count = len(parsed["feedback"].get("student_mistakes", []))
         except Exception as e:
             error = str(e)[:120]
