@@ -123,6 +123,11 @@ _data_dir = Path(__file__).parent.parent / "data"
 if _data_dir.exists():
     app.mount("/data", StaticFiles(directory=str(_data_dir)), name="data")
 
+# 업로드 이미지 정적 서빙 (submissions.py가 backend/uploads/ 에 저장)
+_uploads_dir = Path(__file__).parent / "uploads"
+_uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
+
 
 @app.get("/health")
 async def health():
