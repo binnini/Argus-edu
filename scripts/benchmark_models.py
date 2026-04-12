@@ -548,7 +548,7 @@ def is_deepseek_r1(name: str) -> bool:
     return any(name.startswith(p) for p in DEEPSEEK_R1_PREFIXES)
 
 
-def build_prompt_mlx(tokenizer, problem: dict) -> str:
+def build_prompt_mlx(tokenizer, problem: dict, disable_thinking: bool = False) -> str:
     user_content = USER_TEMPLATE.format(
         problem_content=problem["content"],
         answer=problem["answer"],
@@ -560,9 +560,17 @@ def build_prompt_mlx(tokenizer, problem: dict) -> str:
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
-    # chat_template이 실제로 설정된 경우에만 apply_chat_template 사용
     chat_template = getattr(tokenizer, "chat_template", None)
     if chat_template:
+        # Gemma 4 등 thinking 지원 모델: enable_thinking=False로 thinking 채널 비활성화
+        if disable_thinking:
+            try:
+                return tokenizer.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True,
+                    enable_thinking=False,
+                )
+            except TypeError:
+                pass  # 해당 모델이 enable_thinking 파라미터 미지원 → 아래로 fallthrough
         try:
             return tokenizer.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
@@ -617,7 +625,7 @@ def run_mlx_benchmark(
     results: list[BenchmarkResult] = []
 
     for i, problem in enumerate(problems, 1):
-        prompt = build_prompt_mlx(tokenizer, problem)
+        prompt = build_prompt_mlx(tokenizer, problem, disable_thinking=gemma4)
         t0 = time.perf_counter()
         error = ""
         ai_score = None
