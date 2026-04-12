@@ -201,9 +201,11 @@ export default function StudentPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">최종 답 <span className="text-xs text-muted-foreground">(간단히 기입)</span></label>
+              <label className="text-sm font-medium">
+                최종 답 <span className="text-xs text-muted-foreground">(복수 정답은 쉼표 , 로 구분)</span>
+              </label>
               <Input
-                placeholder="예) x = 3, 12cm², ③번"
+                placeholder="예) x = 3, y = 5 또는 12cm², ③번"
                 value={student.finalAnswer}
                 onChange={(e) => student.setFinalAnswer(e.target.value)}
               />
