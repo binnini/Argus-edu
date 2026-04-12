@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, AlertCircle, CheckCircle2, Lightbulb } from "lucide-react"
+import { Clock, AlertCircle, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react"
 import { renderMath } from "@/lib/renderMath"
 
 interface ReviewCardProps {
@@ -37,6 +37,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
   const [teacherFeedback, setTeacherFeedback] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showProblem, setShowProblem] = useState(false)
 
   async function handleAction(action: TeacherAction) {
     if (action === "modify" && !showModify) {
@@ -99,14 +100,30 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         {/* 문제 본문 */}
         {item.problem_content && (
           <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1.5 uppercase tracking-wide">문제</p>
-            <div className="text-sm leading-relaxed text-foreground">
-              {renderMath(item.problem_content)}
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">문제</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-950/50"
+                onClick={() => setShowProblem((v) => !v)}
+              >
+                {showProblem ? "접기" : "보기"}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showProblem ? "rotate-180" : ""}`} />
+              </Button>
             </div>
-            {item.problem_answer && (
-              <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
-                <span className="text-xs text-blue-600 mr-1.5">정답:</span>
-                <span className="text-sm font-medium">{renderMath(item.problem_answer)}</span>
+            {showProblem && (
+              <div className="mt-2">
+                <div className="text-sm leading-relaxed text-foreground">
+                  {renderMath(item.problem_content)}
+                </div>
+                {item.problem_answer && (
+                  <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
+                    <span className="text-xs text-blue-600 mr-1.5">정답:</span>
+                    <span className="text-sm font-medium">{renderMath(item.problem_answer)}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

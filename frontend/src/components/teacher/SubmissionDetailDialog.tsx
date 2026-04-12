@@ -61,13 +61,15 @@ export default function SubmissionDetailDialog({ item, open, onClose }: Submissi
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">제출 답변</p>
             {item.input_type === "image" && item.image_path ? (
-              <img
-                src={`${apiOrigin()}/${item.image_path}`}
-                alt="학생 제출 이미지"
-                className="max-w-full max-h-[400px] rounded-xl border object-contain"
-              />
+              <div className="rounded-lg bg-gray-50 p-3">
+                <img
+                  src={`${apiOrigin()}/${item.image_path}`}
+                  alt="학생 제출 이미지"
+                  className="max-w-full max-h-[400px] rounded-lg border object-contain"
+                />
+              </div>
             ) : (
-              <div className="rounded-xl bg-muted/50 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-relaxed whitespace-pre-wrap">
                 {item.student_answer ?? "—"}
               </div>
             )}
@@ -75,13 +77,13 @@ export default function SubmissionDetailDialog({ item, open, onClose }: Submissi
 
           {/* 점수 정보 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-muted p-3">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
               <p className="text-xs text-muted-foreground mb-1">AI 점수</p>
-              <p className="font-semibold">{item.ai_score !== null ? `${item.ai_score}점` : "—"}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-50">{item.ai_score !== null ? `${item.ai_score}점` : "—"}</p>
             </div>
-            <div className="rounded-xl bg-muted p-3">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
               <p className="text-xs text-muted-foreground mb-1">최종 점수</p>
-              <p className="font-semibold">{item.final_score !== null ? `${item.final_score}점` : "—"}</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-50">{item.final_score !== null ? `${item.final_score}점` : "—"}</p>
             </div>
           </div>
 

@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
-import { Search } from "lucide-react"
+import { Search, Users } from "lucide-react"
 
 interface KnownStudent { student_id: string; student_name: string }
 
@@ -133,7 +133,7 @@ export default function GroupManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:bg-card">
         <Input
           placeholder="새 그룹 이름"
           value={newGroupName}
@@ -158,7 +158,11 @@ export default function GroupManager() {
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">그룹 목록</h3>
             {groups.length === 0 && (
-              <p className="text-sm text-muted-foreground">등록된 그룹이 없습니다.</p>
+              <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
+                <Users className="h-12 w-12 text-gray-300" />
+                <p className="mt-3 text-sm font-semibold text-gray-900">등록된 그룹이 없습니다</p>
+                <p className="mt-1 text-xs text-gray-500">새 그룹을 만든 뒤 학생을 추가하세요.</p>
+              </div>
             )}
             {groups.map((group) => (
               <Card
@@ -167,7 +171,7 @@ export default function GroupManager() {
                 onClick={() => setSelectedGroupId(group.id)}
               >
                 <CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-sm font-medium">
+                  <CardTitle className="text-sm font-semibold">
                     {group.name}
                     <span className="ml-2 text-xs text-muted-foreground">({group.members.length}명)</span>
                   </CardTitle>
@@ -195,7 +199,7 @@ export default function GroupManager() {
                 {/* 이름/학번 검색으로 학생 선택 */}
                 {knownStudents.length > 0 && (
                   <div className="relative">
-                    <div className="flex items-center gap-1.5 border rounded-lg px-2.5 py-1.5 text-sm bg-background">
+                    <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm">
                       <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <input
                         className="flex-1 outline-none bg-transparent placeholder:text-muted-foreground text-sm"
@@ -207,7 +211,7 @@ export default function GroupManager() {
                       />
                     </div>
                     {searchOpen && studentSearch.trim() && filteredStudents.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 border rounded-lg bg-background shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg max-h-48">
                         {filteredStudents.map((s) => (
                           <button
                             key={s.student_id}
@@ -253,13 +257,16 @@ export default function GroupManager() {
 
               {/* 멤버 목록 */}
               {selectedGroup.members.length === 0 ? (
-                <p className="text-sm text-muted-foreground">멤버가 없습니다.</p>
+                <div className="rounded-lg border border-dashed border-gray-200 bg-white p-8 text-center">
+                  <Users className="mx-auto h-10 w-10 text-gray-300" />
+                  <p className="mt-2 text-sm font-medium text-gray-600">멤버가 없습니다</p>
+                </div>
               ) : (
                 <div className="space-y-1">
                   {selectedGroup.members.map((member) => (
                     <div
                       key={member.student_id}
-                      className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm"
                     >
                       <span>
                         <span className="font-medium">{member.student_name}</span>

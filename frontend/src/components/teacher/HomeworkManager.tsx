@@ -11,6 +11,7 @@ import { getProblems, type Problem } from "@/api/submissions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ClipboardList, FileText } from "lucide-react"
 
 export default function HomeworkManager() {
   const [homeworks, setHomeworks] = useState<HomeworkResponse[]>([])
@@ -126,7 +127,7 @@ export default function HomeworkManager() {
           <div className="space-y-1">
             <label className="text-sm font-medium">그룹 선택 (선택사항)</label>
             <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm dark:bg-background"
               value={selectedGroupId}
               onChange={(e) => setSelectedGroupId(e.target.value)}
             >
@@ -157,18 +158,18 @@ export default function HomeworkManager() {
             ) : problems.length === 0 ? (
               <p className="text-sm text-muted-foreground">등록된 문제가 없습니다.</p>
             ) : (
-              <div className="max-h-48 overflow-y-auto space-y-1 rounded-md border p-2">
+              <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-2">
                 {problems.map((problem) => (
                   <label
                     key={problem.id}
-                    className="flex items-center gap-2 rounded px-2 py-1 cursor-pointer hover:bg-muted text-sm"
+                    className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 cursor-pointer hover:bg-gray-50 text-sm"
                   >
                     <input
                       type="checkbox"
                       checked={selectedProblemIds.has(problem.id)}
                       onChange={() => toggleProblem(problem.id)}
                     />
-                    <span className="font-medium">{problem.title}</span>
+                    <span className="font-medium text-gray-900">{problem.title}</span>
                     {problem.domain && (
                       <span className="text-xs text-muted-foreground">[{problem.domain}]</span>
                     )}
@@ -196,13 +197,17 @@ export default function HomeworkManager() {
         </h3>
         {loading && <p className="text-sm text-muted-foreground">로딩 중...</p>}
         {!loading && homeworks.length === 0 && (
-          <p className="text-sm text-muted-foreground">등록된 숙제가 없습니다.</p>
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
+            <ClipboardList className="h-12 w-12 text-gray-300" />
+            <p className="mt-3 text-sm font-semibold text-gray-900">등록된 숙제가 없습니다</p>
+            <p className="mt-1 text-xs text-gray-500">상단에서 문제를 선택해 새 숙제를 만들 수 있습니다.</p>
+          </div>
         )}
         {homeworks.map((hw) => (
           <Card key={hw.id}>
             <CardHeader className="py-3 px-4 flex flex-row items-start justify-between space-y-0">
               <div className="space-y-1">
-                <CardTitle className="text-sm font-medium">{hw.title}</CardTitle>
+                <CardTitle className="text-sm font-semibold">{hw.title}</CardTitle>
                 <div className="flex gap-3 text-xs text-muted-foreground">
                   <span>그룹: {hw.group_name ?? "없음"}</span>
                   <span>마감: {formatDate(hw.due_date)}</span>
@@ -213,8 +218,9 @@ export default function HomeworkManager() {
                     {hw.problems.map((p) => (
                       <span
                         key={p.problem_id}
-                        className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs"
+                        className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600"
                       >
+                        <FileText className="mr-1 h-3 w-3 text-gray-400" />
                         {p.problem_title || `문제 #${p.problem_id}`}
                       </span>
                     ))}
