@@ -10,11 +10,18 @@ class Settings(BaseSettings):
     # Anthropic
     anthropic_api_key: str = ""
 
-    # LLM 제공자 — "anthropic" | "ollama"
+    # LLM 제공자 — "anthropic" | "ollama" | "mlx"
     llm_provider: str = "anthropic"
+
+    # 배치 할루시네이션 검증 간격 (초) — APScheduler
+    hallucination_batch_interval_seconds: int = 300  # 5분
 
     # Ollama (llm_provider="ollama" 시 사용)
     ollama_base_url: str = "http://localhost:11434"
+
+    # MLX (llm_provider="mlx" 시 사용)
+    mlx_model_path: str = "unsloth/gemma-4-E4B-it-MLX-8bit"
+    mlx_max_tokens: int = 4096  # thinking 비활성화 시에도 수식 풀이 여유 확보
 
     # AI 모델 — 절대 하드코딩 금지, 환경변수에서 로드
     # ollama 사용 시: GRADING_MODEL=gemma4:26b 등으로 변경

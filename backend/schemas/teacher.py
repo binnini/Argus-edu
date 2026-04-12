@@ -22,6 +22,10 @@ class TeacherQueueItem(BaseModel):
     queue_type: str
     sla_deadline: datetime
     queued_at: datetime
+    # 배치 LLM 할루시네이션 검증 결과 (ADR-026)
+    hallucination_status: str = "pending"   # pending | running | done | failed
+    hallucination_score: Optional[float] = None   # 높을수록 신뢰 (done 상태에서만 유효)
+    hallucination_issues: Optional[str] = None    # JSON 배열 문자열
 
 
 class TeacherQueueResponse(BaseModel):

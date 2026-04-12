@@ -100,8 +100,10 @@ class CombinedOutput:
 class CombinedGradingFeedbackService:
     """채점 + 피드백을 단일 LLM 호출로 처리."""
 
-    def __init__(self, sbert_model: SentenceTransformer) -> None:
-        self._llm = LLMClient()
+    def __init__(self, sbert_model: SentenceTransformer, llm_client: LLMClient | None = None) -> None:
+        # llm_client를 외부에서 주입받으면 그것을 사용 (MLX는 lifespan에서 모델 로드 후 주입)
+        # 주입이 없으면 기존처럼 자체 생성 (anthropic/ollama provider용)
+        self._llm = llm_client if llm_client is not None else LLMClient()
         self._sbert = sbert_model
 
     async def run(
@@ -123,16 +125,19 @@ class CombinedGradingFeedbackService:
 
         timeout = settings.llm_timeout_seconds
         try:
-            response = await asyncio.wait_for(
-                self._llm.chat(
-                    system_prompt=COMBINED_SYSTEM_PROMPT,
-                    user_prompt=user_prompt,
-                    model=settings.grading_model,
-                    max_tokens=2048,
-                    temperature=0.7,
-                ),
-                timeout=timeout,
-            )
+            # grading_context: 채점 진행 중임을 LLMClient에 알림
+            # → HallucinationBatchService가 이 구간에 GPU를 선점하지 않음
+            async with self._llm.grading_context():
+                response = await asyncio.wait_for(
+                    self._llm.chat(
+                        system_prompt=COMBINED_SYSTEM_PROMPT,
+                        user_prompt=user_prompt,
+                        model=settings.grading_model,
+                        max_tokens=2048,
+                        temperature=0.7,
+                    ),
+                    timeout=timeout,
+                )
         except asyncio.TimeoutError:
             raise CombinedError(f"LLM 타임아웃 ({timeout:.0f}초)")
         except Exception as e:

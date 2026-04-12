@@ -89,6 +89,9 @@ async def get_queue(
                 queue_type=tq.queue_type,
                 sla_deadline=tq.sla_deadline,
                 queued_at=tq.queued_at,
+                hallucination_status=gr.hallucination_status,
+                hallucination_score=gr.hallucination_score,
+                hallucination_issues=gr.hallucination_issues,
             )
         )
 

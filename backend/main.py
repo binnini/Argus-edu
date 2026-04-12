@@ -10,12 +10,16 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sentence_transformers import SentenceTransformer
 
+from config import settings
 from services.grading_feedback import CombinedGradingFeedbackService
+from services.hallucination_batch import HallucinationBatchService
+from services.llm_client import LLMClient
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
 from routers import groups
@@ -44,12 +48,46 @@ async def lifespan(app: FastAPI):
     app.state.sbert = sbert
     logger.info("SBERT 로딩 완료")
 
-    app.state.combined_service = CombinedGradingFeedbackService(sbert)
+    # LLM 클라이언트 초기화
+    # MLX provider: 무거운 모델을 lifespan에서 1회만 로드
+    if settings.llm_provider == "mlx":
+        logger.info(f"MLX 모델 로딩 시작: {settings.mlx_model_path}")
+        from mlx_lm import load as mlx_load
+        mlx_model, mlx_tokenizer = mlx_load(settings.mlx_model_path)
+        app.state.mlx_model = mlx_model
+        app.state.mlx_tokenizer = mlx_tokenizer
+        llm_client = LLMClient(mlx_model=mlx_model, mlx_tokenizer=mlx_tokenizer)
+        logger.info("MLX 모델 로딩 완료")
+    else:
+        llm_client = LLMClient()
+
+    app.state.llm_client = llm_client
+    app.state.combined_service = CombinedGradingFeedbackService(sbert, llm_client=llm_client)
     app.state.ocr_service = OCRService()
+
+    # 배치 할루시네이션 검증 스케줄러 (ADR-026)
+    hallucination_svc = HallucinationBatchService(llm_client=llm_client)
+    app.state.hallucination_svc = hallucination_svc
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        hallucination_svc.run_batch,
+        trigger="interval",
+        seconds=settings.hallucination_batch_interval_seconds,
+        id="hallucination_batch",
+        max_instances=1,        # 이전 배치가 끝나기 전에 중복 실행 방지
+        misfire_grace_time=60,
+    )
+    scheduler.start()
+    app.state.scheduler = scheduler
+    logger.info(
+        f"할루시네이션 배치 스케줄러 시작: {settings.hallucination_batch_interval_seconds}s 간격"
+    )
     logger.info("서비스 인스턴스 초기화 완료. 서버 준비됨.")
 
     yield
 
+    scheduler.shutdown(wait=False)
     logger.info("서버 종료.")
 
 

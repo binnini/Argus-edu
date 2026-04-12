@@ -283,10 +283,9 @@ async def _run_grading_pipeline(
                 ai_score=out.total_score,
                 ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
                 sbert_similarity=out.sbert_similarity,
-                hhem_score=None,
-                inconsistency_rate=0.0,
                 trust_score=trust.trust_score,
                 trust_level=trust.trust_level,
+                hallucination_status="pending",  # 배치 스케줄러가 비동기 처리
             )
             db.add(grading_record)
 

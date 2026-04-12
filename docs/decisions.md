@@ -598,6 +598,95 @@ GET /api/v1/submissions/homework?student_id=xxx
 
 **기존 "history" 스테이지 제거**: 별도 이력 페이지 없이 사이드바에 통합.
 
+
+### ADR-025 로컬 채점 LLM 모델 선정 (gemma4:e4b)
+**날짜**: 2026-04-12  
+**가역성**: 🟢 가역 (`.env` `GRADING_MODEL` 변경으로 즉시 교체 가능)
+
+**결정**: Argus 채점 엔진의 로컬 LLM 모델로 `gemma4:e4b` (Ollama 태그)를 채택한다.
+
+**배경**: Claude API 의존성을 줄이고 Mac Mini M4에서 완전 로컬 서빙을 구현하기 위해(ADR-019) 후보 모델 9종을 2단계 벤치마크로 평가했다.
+
+**벤치마크 개요**:
+
+| 단계 | 문항 수 | 후보 | 도구 |
+|---|---|---|---|
+| 예선 (5-문제 스크리닝) | 5 | gemma4:e4b, gemma4:e2b, qwen2.5:7b, qwen2.5:14b, mathstral:7b, deepseek-r1:7b, deepseek-r1:14b, phi4:14b, exaone3.5:7.8b | MLX (`mlx_lm`) |
+| 본선 (30-문제 최종) | 30 | gemma4:e4b, gemma4:e2b, qwen2.5:7b | MLX (`mlx_lm`) |
+
+벤치마크 결과 파일: `benchmark_consolidated.csv` (예선), `benchmark_30q_final.csv` (본선)  
+벤치마크 스크립트: `scripts/benchmark_models.py`
+
+**30-문제 최종 결과**:
+
+| 모델 | 정확도 (전체) | 파싱 성공률 | 파싱 기준 정확도 | 평균 응답속도 |
+|---|---|---|---|---|
+| **gemma4:e4b** | **93.3%** (28/30) | 96.7% | **96.6%** | 26.8s |
+| gemma4:e2b | 90.0% (27/30) | 100% | 90.0% | **10.4s** |
+| qwen2.5:7b | 73.3% (22/30) | 86.7% | 84.6% | 21.4s |
+
+레벨별 분석 (gemma4:e4b 기준):
+- 초등3–6: 8/8 (100%)
+- 중1–3: 10/10 (100%)
+- 고1–3: 10/11 (91%) — H04 1건 오답 (두 Gemma 모델 모두 동일하게 틀림, 루브릭 모호성 의심)
+
+**선택 근거**:
+- gemma4:e4b: 최고 정확도 93.3%, 중·고등 전 구간에서 고른 성능, 단일 파싱 오류는 재시도 로직으로 흡수 가능
+- gemma4:e2b 탈락 이유: 초등6·중3 구간에서 비교적 높은 오답률, 정확도 3.3%p 차이
+- qwen2.5:7b 탈락 이유: 파싱오류 13.3% (4/30), 고3 구간 33%로 신뢰도 부족
+- 예선 탈락 모델: deepseek-r1:7b (파싱오류 60%), deepseek-r1:14b (응답 61.5s), exaone3.5:7.8b (40%), mathstral:7b (60%), phi4:14b (60%), qwen2.5:14b (80% + 33s)
+
+**기술 선택 사항**:
+- Gemma 4 모델 thinking 모드: `apply_chat_template(enable_thinking=False)` 로 비활성화 (JSON 출력 안정성)
+- 4-bit mlx-community 버전의 PLE 양자화 버그로 인해 8-bit unsloth 변환본(`unsloth/gemma-4-E4B-it-MLX-8bit`) 사용
+- 프로덕션 서빙: Ollama (`gemma4:e4b`) — MLX는 벤치마크 전용
+
+**트레이드오프**:
+- 응답 속도 26.8s/문제 — gemma4:e2b(10.4s) 대비 2.6배 느림. 단, 클래스룸 환경에서 허용 가능한 수준이며 Mac Mini M4의 동시 처리 능력으로 부분 보상
+- 정확도 우선: MVP 단계에서는 교사 검토 비율보다 AI-교사 일치율이 중요
+
+**변경 조건**: 파일럿 데이터에서 AI-교사 일치율이 70% 미만이면 프롬프트 튜닝 또는 gemma4:27b 등 대형 모델로 재검토.
+
+---
+
+---
+
+### ADR-026 할루시네이션 검증 전략 변경 (HHEM → LLM 배치)
+**날짜**: 2026-04-12  
+**가역성**: 🟡 준가역 (DB 컬럼 마이그레이션 필요)
+
+**결정**: HHEM + 다중 샘플링 방식을 폐기하고, LLM 배치 호출 기반 비동기 할루시네이션 검증으로 전환한다.
+
+**기존 방식 (폐기)**:
+- 피드백 3회 멀티샘플링 → SBERT 불일치율 계산
+- HF Inference API (HHEM-2.1-Open) 호출 → 팩추얼 일관성 스코어
+- 문제점: 동기 블로킹으로 응답 레이턴시에 직접 영향 / HF API 장애 시 fallback / 실효성 의문
+
+**신규 방식**:
+```
+제출 → 채점+피드백(1회) → DB 저장(hallucination_status=pending) → 즉시 응답
+                                                                       ↓
+[APScheduler, 5분 간격]  grading_results WHERE status='pending' LIMIT 8
+→ LLM 배치 프롬프트 1회 호출 (구조화 JSON 입력 → JSON 배열 출력)
+→ hallucination_score / hallucination_issues / hallucination_status 갱신
+→ 교사 큐에서 할루시네이션 의심 항목 식별 가능
+```
+
+**LLM 판단 기준**:
+1. `student_mistakes`가 채점 오답 단계와 일치하는가
+2. `correct_approach`가 `reference_solution`을 근거로 수학적으로 올바른가
+3. `key_concept`이 실제 오류 원인을 정확히 설명하는가
+
+**검증 모델**: 현재 `GRADING_MODEL` (gemma4:e4b MLX) 사용. 검증 정확도 파일럿 후 Claude API 전환 검토.
+
+**DB 변경** (마이그레이션 `0005_hallucination_batch.py`):
+- `grading_results` 테이블: `hhem_score`, `inconsistency_rate` 제거
+- `grading_results` 테이블: `hallucination_status`, `hallucination_score`, `hallucination_issues`, `hallucination_checked_at` 추가
+
+**트레이드오프**:
+- 채점 결과는 즉시 응답, 할루시네이션 검증은 최대 5분 지연 → 교사 큐 진입 시점엔 대부분 검증 완료
+- 같은 모델(gemma4:e4b)이 생성+검증을 모두 담당하는 bias 위험 → 파일럿 정확도 측정 후 판단
+
 ---
 
 ## 변경 이력
@@ -621,3 +710,5 @@ GET /api/v1/submissions/homework?student_id=xxx
 | ADR-022 | 2026-04-11 | UX 2차 개선 (점수→정답/오답, 리뷰카드 개편, 검색 필터, 캔버스 지우개) |
 | ADR-023 | 2026-04-11 | 학생 풀이 상세 조회 + 답안 재제출 기능 (PUT /submissions/{id}) |
 | ADR-024 | 2026-04-11 | 숙제/그룹 시스템 + 학생 대시보드 2단 레이아웃 |
+| ADR-025 | 2026-04-12 | 로컬 채점 LLM 모델 선정 (gemma4:e4b, 30-문제 벤치마크 기반) |
+| ADR-026 | 2026-04-12 | 할루시네이션 검증 전략 변경 (HHEM+다중샘플링 → LLM 배치 비동기) |

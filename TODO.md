@@ -324,12 +324,16 @@
   - `pytest tests/test_integration.py -v --timeout=1200 -k "not load_test"`
   - 목표: `grading_out` NameError 수정 후 전체 통과
 
-### 8-6. 모델 벤치마크 (진행 예정)
+### 8-6. 모델 벤치마크 ✅
 
-- [ ] Ollama 로컬 모델 벤치마크 실행
-  - `python scripts/benchmark_models.py --models <model1>,<model2> --limit 10`
-  - 후보: `qwen2.5:7b-instruct`, `phi4:latest`, `gemma3:12b`, `llama3.1:8b`
-- [ ] 벤치마크 결과 기반 `.env` `GRADING_MODEL` 최적 모델로 교체
+- [x] MLX(`mlx_lm`) 기반 벤치마크 스크립트 작성 (`scripts/benchmark_models.py`)
+  - 후보 9종 5-문제 예선: gemma4:e4b, gemma4:e2b, qwen2.5:7b, qwen2.5:14b, mathstral:7b, deepseek-r1:7b, deepseek-r1:14b, phi4:14b, exaone3.5:7.8b
+  - 결과: `benchmark_consolidated.csv` (예선 통합)
+- [x] 상위 3모델 30-문제 본선 실행 (gemma4:e4b, gemma4:e2b, qwen2.5:7b)
+  - 결과: `benchmark_30q_final.csv`
+  - **최종 선정: gemma4:e4b** (93.3%, 파싱오류 1건, 26.8s/문제)
+- [x] `.env` `GRADING_MODEL=gemma4:e4b` 확인 (이미 반영)
+- [x] ADR-025 작성 (`docs/decisions.md`)
 - [ ] 교체 후 통합 테스트 재실행 통과 확인
 
 ---
