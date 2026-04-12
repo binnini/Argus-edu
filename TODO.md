@@ -320,9 +320,9 @@
   - OCR 원문(`ocr_raw_text`) 저장 확인, 교사 큐 `input_type=image` 확인
 - [x] 할루시네이션 탐지 방향 변경 검증 (피드백 정확성)
   - `test_e2e_ocr_hallucination_direction` 추가 — `low_trust_detection_precision` 필드 검증
-- [ ] 통합 테스트 최종 전체 통과 확인
+- [x] 통합 테스트 최종 전체 통과 확인
   - `pytest tests/test_integration.py -v --timeout=1200 -k "not load_test"`
-  - 목표: `grading_out` NameError 수정 후 전체 통과
+  - 결과: **20 passed, 1 skipped** (OCR E2E는 GOT-OCR 모델 미준비 환경에서 soft-skip)
 
 ### 8-6. 모델 벤치마크 ✅
 
@@ -334,7 +334,7 @@
   - **최종 선정: gemma4:e4b** (93.3%, 파싱오류 1건, 26.8s/문제)
 - [x] `.env` `GRADING_MODEL=gemma4:e4b` 확인 (이미 반영)
 - [x] ADR-025 작성 (`docs/decisions.md`)
-- [ ] 교체 후 통합 테스트 재실행 통과 확인
+- [x] 교체 후 통합 테스트 재실행 통과 확인 (20 passed, 1 skipped)
 
 ---
 
