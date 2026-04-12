@@ -597,9 +597,13 @@ def run_mlx_benchmark(
     trust_remote = any(p in hf_id.lower() for p in TRUST_REMOTE_CODE)
 
     # Gemma 4는 thinking 블록이 길어 max_tokens를 늘려야 JSON에 도달
-    if gemma4:
-        max_tokens = max(max_tokens, 6144)
-        print(f"  ※ Gemma 4: thinking 블록 대비 max_tokens={max_tokens}으로 조정")
+    # e2b(2B): thinking ~1,000토큰 → 4096 권장
+    # e4b(4B): thinking ~2,000토큰 → 8192 권장
+    # CLI --max-tokens로 명시적으로 지정한 경우엔 그 값 우선
+    GEMMA4_MIN_TOKENS = {"gemma4:e2b": 4096, "gemma4:e4b": 8192}
+    if gemma4 and max_tokens < GEMMA4_MIN_TOKENS.get(model_name, 4096):
+        max_tokens = GEMMA4_MIN_TOKENS.get(model_name, 4096)
+        print(f"  ※ Gemma 4: thinking 블록 대비 max_tokens={max_tokens}으로 자동 조정")
 
     print(f"  모델 로딩: {hf_id}")
     load_start = time.perf_counter()
