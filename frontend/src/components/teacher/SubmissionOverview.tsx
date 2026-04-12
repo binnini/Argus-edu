@@ -5,6 +5,7 @@ import { getTeacherProblems } from "@/api/problems"
 import type { TeacherProblemItem } from "@/api/problems"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -137,13 +138,31 @@ export default function SubmissionOverview() {
           <Button variant="outline" size="sm" onClick={load} className="mt-3">다시 시도</Button>
         </div>
       ) : items.length === 0 ? (
-        <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm dark:bg-card">
-          <FileText className="h-12 w-12 text-gray-300" />
-          <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-gray-50">제출 내역이 없습니다</p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="제출 내역이 없습니다"
+          description={filterProblem || filterStatus || filterName ? "필터 조건을 조정해 보세요." : "학생 제출이 들어오면 이 목록에 표시됩니다."}
+          action={
+            filterProblem || filterStatus || filterName ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFilterProblem("")
+                  setFilterStatus("")
+                  setFilterName("")
+                  setNameInput("")
+                  setPage(1)
+                }}
+              >
+                필터 초기화
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-gray-50 dark:bg-muted/50">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">학생</th>

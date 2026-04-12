@@ -237,20 +237,20 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* 액션 버튼 */}
-        <div className="flex gap-2 border-t border-gray-200 pt-4">
+        <div className="grid grid-cols-2 gap-2 border-t border-gray-200 pt-4 sm:grid-cols-[1fr_auto_auto]">
           <Button
             variant="default"
             size="sm"
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 sm:col-span-1 sm:min-w-44"
             onClick={() => handleAction("approve")}
             disabled={submitting}
           >
-            승인
+            승인하기
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-zinc-900"
+            className="border-gray-300 px-5 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-zinc-900"
             onClick={() => handleAction("modify")}
             disabled={submitting || (showModify && (!teacherScore.trim() || !teacherFeedback.trim()))}
           >
@@ -259,7 +259,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           <Button
             variant="destructive"
             size="sm"
-            className="flex-1"
+            className="px-5"
             onClick={() => handleAction("reject")}
             disabled={submitting}
           >

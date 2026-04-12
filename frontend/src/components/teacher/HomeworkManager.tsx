@@ -9,6 +9,7 @@ import {
 } from "@/api/teacher"
 import { getProblems, type Problem } from "@/api/submissions"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClipboardList, FileText } from "lucide-react"
@@ -156,7 +157,12 @@ export default function HomeworkManager() {
             {loading ? (
               <p className="text-sm text-muted-foreground">문제 로딩 중...</p>
             ) : problems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">등록된 문제가 없습니다.</p>
+              <EmptyState
+                icon={FileText}
+                title="등록된 문제가 없습니다"
+                description="문제를 먼저 등록한 뒤 숙제를 만들 수 있습니다."
+                className="min-h-40 border-gray-200 bg-gray-50 shadow-none"
+              />
             ) : (
               <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-gray-200 bg-gray-50 p-2">
                 {problems.map((problem) => (
@@ -197,11 +203,12 @@ export default function HomeworkManager() {
         </h3>
         {loading && <p className="text-sm text-muted-foreground">로딩 중...</p>}
         {!loading && homeworks.length === 0 && (
-          <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-            <ClipboardList className="h-12 w-12 text-gray-300" />
-            <p className="mt-3 text-sm font-semibold text-gray-900">등록된 숙제가 없습니다</p>
-            <p className="mt-1 text-xs text-gray-500">상단에서 문제를 선택해 새 숙제를 만들 수 있습니다.</p>
-          </div>
+          <EmptyState
+            icon={ClipboardList}
+            title="등록된 숙제가 없습니다"
+            description="상단에서 문제를 선택해 새 숙제를 만들 수 있습니다."
+            className="min-h-48"
+          />
         )}
         {homeworks.map((hw) => (
           <Card key={hw.id}>

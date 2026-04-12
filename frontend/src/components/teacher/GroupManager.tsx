@@ -10,6 +10,7 @@ import {
   type GroupMemberItem,
 } from "@/api/teacher"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, Users } from "lucide-react"
@@ -158,11 +159,12 @@ export default function GroupManager() {
           <div className="space-y-2">
             <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">그룹 목록</h3>
             {groups.length === 0 && (
-              <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-                <Users className="h-12 w-12 text-gray-300" />
-                <p className="mt-3 text-sm font-semibold text-gray-900">등록된 그룹이 없습니다</p>
-                <p className="mt-1 text-xs text-gray-500">새 그룹을 만든 뒤 학생을 추가하세요.</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title="등록된 그룹이 없습니다"
+                description="새 그룹을 만든 뒤 학생을 추가하세요."
+                className="min-h-48"
+              />
             )}
             {groups.map((group) => (
               <Card
@@ -257,10 +259,11 @@ export default function GroupManager() {
 
               {/* 멤버 목록 */}
               {selectedGroup.members.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-gray-200 bg-white p-8 text-center">
-                  <Users className="mx-auto h-10 w-10 text-gray-300" />
-                  <p className="mt-2 text-sm font-medium text-gray-600">멤버가 없습니다</p>
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="멤버가 없습니다"
+                  className="min-h-40 p-8 shadow-none"
+                />
               ) : (
                 <div className="space-y-1">
                   {selectedGroup.members.map((member) => (

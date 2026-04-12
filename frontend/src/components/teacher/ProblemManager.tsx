@@ -2,9 +2,10 @@ import * as React from "react"
 import { getTeacherProblems, deleteProblem, type TeacherProblemItem } from "@/api/problems"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
 import ProblemFormDialog from "./ProblemFormDialog"
-import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, FileQuestion, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -171,8 +172,8 @@ export default function ProblemManager() {
           {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
+          <table className="w-full min-w-[860px] text-sm">
             <thead className="bg-gray-50 dark:bg-muted">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">제목</th>
@@ -187,8 +188,19 @@ export default function ProblemManager() {
             <tbody>
               {filteredProblems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground">
-                    등록된 문제가 없습니다
+                  <td colSpan={7} className="p-4">
+                    <EmptyState
+                      icon={FileQuestion}
+                      title="등록된 문제가 없습니다"
+                      description="새 문제를 등록하면 이 목록에서 관리할 수 있습니다."
+                      action={
+                        <Button size="sm" onClick={() => { setEditTarget(null); setDialogOpen(true) }}>
+                          <Plus className="h-4 w-4" />
+                          문제 등록
+                        </Button>
+                      }
+                      className="min-h-48 border-0 shadow-none"
+                    />
                   </td>
                 </tr>
               ) : (
