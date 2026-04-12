@@ -5,8 +5,8 @@ trust_gate.py — 채점 점수 기반 신뢰도 계산 + 교사 큐 라우팅.
   - v1: HHEM × 0.6 + (1 - inconsistency_rate) × 0.4 → 실효성 낮음
   - v2 (현재): AI 채점 점수 비율 기반 단순화
     trust_score = ai_score / total_score
-    High (≥ threshold 0.5): 점수 즉시 노출, score_only 큐
-    Low  (< threshold 0.5): 점수 숨김, full_review 큐
+    High (≥ threshold 0.5): 점수 즉시 노출, score_only 큐, 12h 검토
+    Low  (< threshold 0.5): 점수 숨김, full_review 큐, 24h 검토
     (0점이면 항상 full_review)
 
   할루시네이션 검증은 배치 LLM 방식으로 별도 구현 예정.
@@ -51,7 +51,7 @@ def calculate_trust(
     score_visible = is_high
 
     now = datetime.now(tz=timezone.utc)
-    sla_hours = settings.sla_normal_hours if is_high else settings.sla_high_risk_hours
+    sla_hours = settings.sla_high_risk_hours if is_high else settings.sla_normal_hours
     sla_deadline = now + timedelta(hours=sla_hours)
 
     logger.info(

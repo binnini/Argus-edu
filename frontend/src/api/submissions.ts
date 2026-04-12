@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? "/api/v1";
+import { apiFetch } from "@/api/client";
 
 export interface Problem {
   id: number;
@@ -69,21 +69,15 @@ export interface StudentHistoryResponse {
 }
 
 export async function getProblems(page = 1, pageSize = 30): Promise<ProblemListPagedResponse> {
-  const res = await fetch(`${API_BASE}/problems?page=${page}&page_size=${pageSize}`);
-  if (!res.ok) throw new Error(`문제 목록 조회 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/problems?page=${page}&page_size=${pageSize}`, undefined, "문제 목록 조회 실패");
 }
 
 export async function getStudentHistory(studentId: string): Promise<StudentHistoryResponse> {
-  const res = await fetch(`${API_BASE}/submissions?student_id=${encodeURIComponent(studentId)}`);
-  if (!res.ok) throw new Error(`이력 조회 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/submissions?student_id=${encodeURIComponent(studentId)}`, undefined, "이력 조회 실패");
 }
 
 export async function getProblem(problemId: number): Promise<Problem> {
-  const res = await fetch(`${API_BASE}/problems/${problemId}`);
-  if (!res.ok) throw new Error(`문제 조회 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/problems/${problemId}`, undefined, "문제 조회 실패");
 }
 
 export async function verifyStudent(
@@ -91,9 +85,7 @@ export async function verifyStudent(
   studentName: string,
 ): Promise<{ valid: boolean; message: string }> {
   const params = new URLSearchParams({ student_id: studentId, student_name: studentName });
-  const res = await fetch(`${API_BASE}/students/verify?${params.toString()}`);
-  if (!res.ok) throw new Error(`인증 확인 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/students/verify?${params.toString()}`, undefined, "인증 확인 실패");
 }
 
 export async function submitAnswerText(
@@ -103,7 +95,7 @@ export async function submitAnswerText(
   studentId?: string,
   finalAnswer?: string,
 ): Promise<SubmissionCreateResponse> {
-  const res = await fetch(`${API_BASE}/submissions`, {
+  return apiFetch("/submissions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -113,12 +105,7 @@ export async function submitAnswerText(
       student_id: studentId ?? null,
       final_answer: finalAnswer ?? null,
     }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `제출 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "제출 실패");
 }
 
 export async function submitAnswerImage(
@@ -139,39 +126,27 @@ export async function submitAnswerImage(
     formData.append("student_final_answer", finalAnswer.trim());
   }
 
-  const res = await fetch(`${API_BASE}/submissions/image`, {
+  return apiFetch("/submissions/image", {
     method: "POST",
     body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `이미지 제출 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "이미지 제출 실패");
 }
 
 export async function getSubmissionStatus(
   submissionId: number
 ): Promise<SubmissionStatusResponse> {
-  const res = await fetch(`${API_BASE}/submissions/${submissionId}`);
-  if (!res.ok) throw new Error(`채점 결과 조회 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/submissions/${submissionId}`, undefined, "채점 결과 조회 실패");
 }
 
 export async function updateSubmission(
   submissionId: number,
   studentAnswer: string,
 ): Promise<SubmissionCreateResponse> {
-  const res = await fetch(`${API_BASE}/submissions/${submissionId}`, {
+  return apiFetch(`/submissions/${submissionId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ student_answer: studentAnswer }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `수정 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "수정 실패");
 }
 
 export interface HomeworkProblemStatus {
@@ -196,7 +171,5 @@ export interface StudentHomeworkResponse {
 }
 
 export async function getStudentHomework(studentId: string): Promise<StudentHomeworkResponse> {
-  const res = await fetch(`${API_BASE}/submissions/homework?student_id=${encodeURIComponent(studentId)}`);
-  if (!res.ok) throw new Error(`숙제 조회 실패: ${res.status}`);
-  return res.json();
+  return apiFetch(`/submissions/homework?student_id=${encodeURIComponent(studentId)}`, undefined, "숙제 조회 실패");
 }

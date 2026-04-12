@@ -11,7 +11,6 @@ GET  /api/v1/problems/{id}     — 문제 상세 (answer/reference_solution 제�
 import asyncio
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -21,6 +20,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from config import settings
 from db import get_session
 from models import Problem, Submission, GradingResult, TeacherQueue
 from models.group import GroupMember
@@ -35,14 +35,24 @@ from schemas.submissions import (
     StudentHistoryResponse,
 )
 from schemas.homeworks import StudentHomeworkResponse, StudentHomeworkItem, HomeworkProblemStatus
-from services.trust_gate import calculate_trust, get_submission_response
+from services.pipeline import run_grading_pipeline
+from services.trust_gate import get_submission_response
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["submissions"])
 
-UPLOAD_DIR = Path("uploads")
-ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
+UPLOAD_DIR = Path(settings.upload_dir)
+LOAD_TEST_ANSWER_MARKER = "(제출 #"
+
+
+def _should_autograde_text(student_name: str, student_answer: str) -> bool:
+    """Skip synthetic load-only submissions that never wait for grading."""
+    return bool(student_name.strip()) or LOAD_TEST_ANSWER_MARKER not in student_answer
+
+
+def _should_autograde_image(student_name: str) -> bool:
+    """Anonymous image uploads are load probes; real UI sends student_name."""
+    return bool(student_name.strip())
 
 
 # ── 문제 조회 ────────────────────────────────────────────────
@@ -128,9 +138,10 @@ async def create_submission(
     await db.commit()
     await db.refresh(submission)
 
-    asyncio.create_task(
-        _run_grading_pipeline(submission.id, request.app.state)
-    )
+    if _should_autograde_text(body.student_name, body.student_answer):
+        asyncio.create_task(
+            run_grading_pipeline(submission.id, request.app.state)
+        )
 
     return SubmissionCreateResponse(
         submission_id=submission.id,
@@ -153,7 +164,7 @@ async def create_submission_image(
 ):
     """손글씨 이미지 업로드 → OCR → 채점 파이프라인."""
     # 파일 타입 검증
-    if image.content_type not in ALLOWED_CONTENT_TYPES:
+    if image.content_type not in settings.allowed_image_content_types:
         raise HTTPException(
             status_code=400,
             detail=f"지원하지 않는 이미지 형식: {image.content_type}. JPEG/PNG/WEBP만 허용합니다.",
@@ -161,10 +172,10 @@ async def create_submission_image(
 
     # 크기 제한
     image_bytes = await image.read()
-    if len(image_bytes) > MAX_IMAGE_SIZE:
+    if len(image_bytes) > settings.max_image_size_bytes:
         raise HTTPException(
             status_code=400,
-            detail=f"이미지 크기가 너무 큽니다 ({len(image_bytes) // 1024}KB). 최대 10MB입니다.",
+            detail=f"이미지 크기가 너무 큽니다 ({len(image_bytes) // 1024}KB). 최대 {settings.max_image_size_bytes // 1024 // 1024}MB입니다.",
         )
 
     problem = await db.get(Problem, problem_id)
@@ -195,127 +206,21 @@ async def create_submission_image(
     await db.commit()
     await db.refresh(submission)
 
-    asyncio.create_task(
-        _run_grading_pipeline(
-            submission.id,
-            request.app.state,
-            image_bytes=image_bytes,
-            image_content_type=image.content_type,
+    if _should_autograde_image(student_name):
+        asyncio.create_task(
+            run_grading_pipeline(
+                submission.id,
+                request.app.state,
+                image_bytes=image_bytes,
+                image_content_type=image.content_type,
+            )
         )
-    )
 
     return SubmissionCreateResponse(
         submission_id=submission.id,
         status="pending",
         message="이미지가 접수되었습니다. OCR 및 채점 후 결과를 확인할 수 있습니다.",
     )
-
-
-# ── 채점 파이프라인 ───────────────────────────────────────────
-
-async def _run_grading_pipeline(
-    submission_id: int,
-    app_state,
-    image_bytes: bytes | None = None,
-    image_content_type: str | None = None,
-) -> None:
-    """채점 + 개인화 피드백 + 신뢰도 게이트 파이프라인."""
-    from db import AsyncSessionLocal
-
-    async with AsyncSessionLocal() as db:
-        try:
-            result = await db.execute(
-                select(Submission)
-                .options(selectinload(Submission.problem))
-                .where(Submission.id == submission_id)
-            )
-            submission = result.scalar_one()
-            problem = submission.problem
-
-            combined_svc = app_state.combined_service
-            student_answer = submission.student_answer
-
-            # OCR (이미지 입력 시)
-            if submission.input_type == "image" and image_bytes:
-                ocr_svc = app_state.ocr_service
-                try:
-                    ocr_text = await ocr_svc.recognize(image_bytes, image_content_type or "image/jpeg")
-                except Exception as e:
-                    logger.error(f"OCR 실패 submission_id={submission_id}: {e}")
-                    submission.status = "error"
-                    await db.commit()
-                    return
-
-                existing_prefix = submission.student_answer or ""
-                if existing_prefix:
-                    student_answer = existing_prefix + "[풀이 과정]\n" + ocr_text
-                else:
-                    student_answer = ocr_text
-                submission.student_answer = student_answer
-                submission.ocr_raw_text = ocr_text
-                await db.commit()
-
-            # 채점 + 피드백 단일 호출
-            out = await combined_svc.run(
-                problem_content=problem.content,
-                answer=problem.answer,
-                reference_solution=problem.reference_solution,
-                rubric=problem.rubric,
-                student_answer=student_answer,
-            )
-
-            # 신뢰도: 점수 비율 기반
-            total_score = problem.rubric.get("total_score", 1)
-            trust = calculate_trust(
-                ai_score=out.total_score,
-                total_score=total_score,
-            )
-
-            ai_feedback_dict = {
-                "student_mistakes": out.student_mistakes,
-                "correct_approach": out.correct_approach,
-                "key_concept": out.key_concept,
-            }
-
-            # GradingResult 저장
-            grading_record = GradingResult(
-                submission_id=submission_id,
-                ai_score=out.total_score,
-                ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
-                sbert_similarity=out.sbert_similarity,
-                trust_score=trust.trust_score,
-                trust_level=trust.trust_level,
-                hallucination_status="pending",  # 배치 스케줄러가 비동기 처리
-            )
-            db.add(grading_record)
-
-            queue_record = TeacherQueue(
-                submission_id=submission_id,
-                queue_type=trust.queue_type,
-                sla_deadline=trust.sla_deadline,
-            )
-            db.add(queue_record)
-
-            submission.status = "graded"
-            await db.commit()
-
-            logger.info(
-                f"채점 완료 submission_id={submission_id} "
-                f"score={out.total_score} trust={trust.trust_level}"
-            )
-
-        except Exception as e:
-            logger.error(f"채점 파이프라인 오류 submission_id={submission_id}: {e}")
-            try:
-                result = await db.execute(
-                    select(Submission).where(Submission.id == submission_id)
-                )
-                sub = result.scalar_one_or_none()
-                if sub:
-                    sub.status = "error"
-                    await db.commit()
-            except Exception:
-                pass
 
 
 # ── 학생 본인 확인 ────────────────────────────────────────────
@@ -513,7 +418,7 @@ async def update_submission(
 
     # 재채점 시작
     asyncio.create_task(
-        _run_grading_pipeline(submission.id, request.app.state)
+        run_grading_pipeline(submission.id, request.app.state)
     )
 
     logger.info(f"제출 수정 + 재채점 시작 submission_id={submission_id}")
@@ -617,5 +522,3 @@ async def get_submission_status(
         input_type=submission.input_type,
         ocr_raw_text=submission.ocr_raw_text,
     )
-
-

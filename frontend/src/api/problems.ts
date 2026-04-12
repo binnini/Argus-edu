@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? "/api/v1";
+import { apiFetch, teacherHeaders } from "@/api/client";
 
 export interface RubricStep {
   step: number;
@@ -35,21 +35,12 @@ export interface TeacherProblemItem {
 }
 
 export async function getProblems(): Promise<TeacherProblemItem[]> {
-  const res = await fetch(`${API_BASE}/problems`);
-  if (!res.ok) throw new Error(`문제 목록 조회 실패: ${res.status}`);
-  const data = await res.json();
+  const data = await apiFetch<{ problems: TeacherProblemItem[] }>("/problems", undefined, "문제 목록 조회 실패");
   return data.problems;
 }
 
 export async function getProblem(id: number): Promise<TeacherProblemItem> {
-  const res = await fetch(`${API_BASE}/problems/${id}`);
-  if (!res.ok) throw new Error(`문제 조회 실패: ${res.status}`);
-  return res.json();
-}
-
-function teacherHeaders(): HeadersInit {
-  const pw = localStorage.getItem("argus_teacher_pw") ?? "";
-  return { "X-Teacher-Password": pw, "Content-Type": "application/json" };
+  return apiFetch(`/problems/${id}`, undefined, "문제 조회 실패");
 }
 
 export interface TeacherProblemListResponse {
@@ -68,50 +59,29 @@ export async function getTeacherProblems(params?: {
   if (params?.page) query.set("page", String(params.page));
   if (params?.page_size) query.set("page_size", String(params.page_size));
   if (params?.has_submissions) query.set("has_submissions", "true");
-  const url = `${API_BASE}/teacher/problems${query.toString() ? `?${query.toString()}` : ""}`;
-  const res = await fetch(url, { headers: teacherHeaders() });
-  if (res.status === 401) throw new Error("교사 인증 실패");
-  if (!res.ok) throw new Error(`문제 목록 조회 실패: ${res.status}`);
-  return res.json();
+  const url = `/teacher/problems${query.toString() ? `?${query.toString()}` : ""}`;
+  return apiFetch(url, { headers: teacherHeaders() }, "문제 목록 조회 실패");
 }
 
 export async function createProblem(data: ProblemCreate): Promise<TeacherProblemItem> {
-  const res = await fetch(`${API_BASE}/teacher/problems`, {
+  return apiFetch("/teacher/problems", {
     method: "POST",
     headers: teacherHeaders(),
     body: JSON.stringify(data),
-  });
-  if (res.status === 401) throw new Error("교사 인증 실패");
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `문제 생성 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "문제 생성 실패");
 }
 
 export async function updateProblem(id: number, data: Partial<ProblemCreate>): Promise<TeacherProblemItem> {
-  const res = await fetch(`${API_BASE}/teacher/problems/${id}`, {
+  return apiFetch(`/teacher/problems/${id}`, {
     method: "PUT",
     headers: teacherHeaders(),
     body: JSON.stringify(data),
-  });
-  if (res.status === 401) throw new Error("교사 인증 실패");
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `문제 수정 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "문제 수정 실패");
 }
 
 export async function deleteProblem(id: number): Promise<{ id: number; deleted: boolean; soft_delete: boolean }> {
-  const res = await fetch(`${API_BASE}/teacher/problems/${id}`, {
+  return apiFetch(`/teacher/problems/${id}`, {
     method: "DELETE",
     headers: teacherHeaders(),
-  });
-  if (res.status === 401) throw new Error("교사 인증 실패");
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? `문제 삭제 실패: ${res.status}`);
-  }
-  return res.json();
+  }, "문제 삭제 실패");
 }

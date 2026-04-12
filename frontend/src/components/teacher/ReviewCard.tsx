@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { apiOrigin } from "@/api/client"
 import type { QueueItem, TeacherAction } from "@/api/teacher"
 import { postTeacherAction } from "@/api/teacher"
 import { Badge } from "@/components/ui/badge"
@@ -13,8 +14,6 @@ interface ReviewCardProps {
   item: QueueItem
   onActionComplete: () => void
 }
-
-const API_HOST = (import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")
 
 function formatDeadline(deadline: string): string {
   const diff = new Date(deadline).getTime() - Date.now()
@@ -119,10 +118,9 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">학생 답변</p>
             {item.input_type === "image" && item.image_path ? (
               <img
-                src={`${API_HOST}/${item.image_path}`}
+                src={`${apiOrigin()}/${item.image_path}`}
                 alt="학생 손글씨 풀이"
-                className="max-w-full rounded-lg border mt-1"
-                style={{ maxHeight: "300px", objectFit: "contain" }}
+                className="max-w-full max-h-[300px] rounded-lg border mt-1 object-contain"
               />
             ) : (
               <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
