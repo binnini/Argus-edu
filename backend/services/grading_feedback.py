@@ -17,67 +17,48 @@ from typing import Any
 from sentence_transformers import SentenceTransformer
 
 from config import settings
+from prompts.grading_feedback import COMBINED_SYSTEM_PROMPT, COMBINED_USER_TEMPLATE
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
 
-COMBINED_SYSTEM_PROMPT = """\
-당신은 한국 수학 채점 및 개인화 피드백 전문가입니다.
-학생 답변을 루브릭 기준으로 단계별 채점하고, 학생의 오류를 분석한 개인화 피드백을 작성하세요.
-반드시 아래 JSON 형식으로만 응답하세요. 수학적 사실에 근거하지 않는 내용은 절대 포함하지 마세요."""
+def parse_combined_response(raw: str) -> dict[str, Any]:
+    """Parse and validate combined grading/feedback JSON from LLM output."""
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        text = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
 
-COMBINED_USER_TEMPLATE = """\
-[문제]
-{problem_content}
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        text = match.group(0)
 
-[정답]
-{answer}
+    try:
+        data: dict[str, Any] = json.loads(text)
+    except json.JSONDecodeError:
+        text = re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", text)
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            raise CombinedError(f"JSON 파싱 실패: {e}\n원문: {raw[:300]}") from e
 
-[참조 풀이]
-{reference_solution}
+    if "grading" not in data:
+        raise CombinedError("응답에 'grading' 필드 없음")
+    if "feedback" not in data:
+        raise CombinedError("응답에 'feedback' 필드 없음")
 
-[채점 루브릭]
-{rubric_json}
+    grading = data["grading"]
+    if not isinstance(grading.get("total_score"), int):
+        try:
+            grading["total_score"] = int(grading["total_score"])
+        except (TypeError, ValueError):
+            raise CombinedError("total_score가 정수가 아닙니다")
 
-[학생 답변]
-{student_answer}
+    if not isinstance(grading.get("steps"), list):
+        raise CombinedError("steps가 리스트가 아닙니다")
 
-위 루브릭에 따라 채점하고, 학생의 오류를 분석한 개인화 피드백을 작성하세요.
-반드시 아래 JSON 형식으로만 응답하세요.
-
-{{
-  "grading": {{
-    "total_score": <총점, 정수>,
-    "steps": [
-      {{
-        "step": <단계 번호>,
-        "earned": <획득 점수, 정수>,
-        "max": <최대 점수, 정수>,
-        "reason": "<판단 근거, 1~2문장>"
-      }}
-    ],
-    "overall_comment": "<총평, 1~2문장>"
-  }},
-  "feedback": {{
-    "student_mistakes": [
-      {{
-        "step": <틀린 단계 번호, 없으면 0>,
-        "description": "<학생이 어디서 어떻게 틀렸는지 구체적 설명>"
-      }}
-    ],
-    "correct_approach": [
-      {{
-        "step": <단계 번호>,
-        "title": "<단계 제목>",
-        "content": "<이 학생이 이해해야 할 내용>"
-      }}
-    ],
-    "key_concept": "<이 문제에서 학생이 놓친 핵심 개념, 1~2문장>"
-  }}
-}}
-
-student_mistakes가 없으면 빈 배열 []로 응답하세요."""
+    return data
 
 
 @dataclass
@@ -143,7 +124,7 @@ class CombinedGradingFeedbackService:
         except Exception as e:
             raise CombinedError(f"LLM API 오류: {e}") from e
 
-        parsed = self._parse_response(response.text)
+        parsed = parse_combined_response(response.text)
         sbert_sim = self._compute_sbert_similarity(student_answer, reference_solution)
 
         grading = parsed["grading"]
@@ -161,44 +142,6 @@ class CombinedGradingFeedbackService:
             provider=response.provider,
             raw_response=response.text,
         )
-
-    def _parse_response(self, raw: str) -> dict:
-        text = raw.strip()
-        # 코드 블록 제거
-        if text.startswith("```"):
-            lines = text.split("\n")
-            text = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
-
-        # JSON 추출 (앞뒤 텍스트 제거)
-        match = re.search(r'\{.*\}', text, re.DOTALL)
-        if match:
-            text = match.group(0)
-
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            text = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', text)
-            try:
-                data = json.loads(text)
-            except json.JSONDecodeError as e:
-                raise CombinedError(f"JSON 파싱 실패: {e}\n원문: {raw[:300]}") from e
-
-        if "grading" not in data:
-            raise CombinedError("응답에 'grading' 필드 없음")
-        if "feedback" not in data:
-            raise CombinedError("응답에 'feedback' 필드 없음")
-
-        grading = data["grading"]
-        if not isinstance(grading.get("total_score"), int):
-            try:
-                grading["total_score"] = int(grading["total_score"])
-            except (TypeError, ValueError):
-                raise CombinedError("total_score가 정수가 아닙니다")
-
-        if not isinstance(grading.get("steps"), list):
-            raise CombinedError("steps가 리스트가 아닙니다")
-
-        return data
 
     def _compute_sbert_similarity(self, student_answer: str, reference_solution: str) -> float:
         try:

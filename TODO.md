@@ -358,6 +358,60 @@
 - [x] 재실행 결과: **정확도 100% (42/42)**, 패턴별 탐지율 전 항목 100%, 평균 confidence 0.91
 - [x] ADR-026 벤치마크 결과 반영
 
+### 8-9. 배포 전 전체 리팩토링 ✅
+
+> 브랜치: `feat/phase8-total-refacotring`
+
+#### 백엔드 ✅
+
+- [x] `backend/routers/submissions.py` 라우터 책임 축소
+  - `_run_grading_pipeline()` 본문을 `backend/services/pipeline.py`로 분리
+  - 텍스트/이미지 제출 HTTP 처리와 학생 조회 API 중심으로 정리
+  - 업로드 관련 상수(`upload_dir`, `allowed_image_content_types`, `max_image_size_bytes`)를 `config.py` Settings로 이동
+- [x] `backend/services/pipeline.py` 신규 작성
+  - OCR → 채점/피드백 → 신뢰도 게이트 → 교사 큐 저장 orchestration 담당
+  - LLM 호출 중 DB 세션을 장시간 점유하지 않도록 prepare/persist 세션 분리
+  - 합성 부하 테스트 제출이 MLX 채점 큐를 잠식하지 않도록 load-only 제출 autograde skip 처리
+- [x] `backend/services/llm_client.py` provider wrapper로 축소
+  - `services/providers/anthropic_provider.py`
+  - `services/providers/ollama_provider.py`
+  - `services/providers/mlx_provider.py`
+  - MLX 전용 Gemma4 thinking 후처리(`strip_gemma4_thinking`)를 provider로 이동
+- [x] `backend/services/ocr.py` OCR factory로 축소
+  - `services/engines/got_ocr.py`
+  - `services/engines/pix2tex.py`
+  - `services/engines/mathpix.py`
+  - GOT-OCR worker python 경로를 `GOT_OCR_WORKER_PYTHON` 설정으로 분리
+- [x] `backend/services/grading_feedback.py` 프롬프트/파싱 정리
+  - `backend/prompts/grading_feedback.py`로 prompt template 분리
+  - `parse_combined_response()` 독립 함수로 JSON 파싱/검증 추출
+- [x] `backend/services/trust_gate.py` SLA 정책 정정
+  - 테스트/ADR 기준에 맞춰 High trust 12h, Low trust 24h 적용
+
+#### 프론트엔드 ✅
+
+- [x] `frontend/src/api/client.ts` 공통 fetch wrapper 신규 작성
+  - `API_BASE`, `apiFetch`, `apiFetchVoid`, `teacherHeaders`, `apiOrigin` 공통화
+  - `submissions.ts`, `teacher.ts`, `problems.ts` 중복 fetch 패턴 제거
+- [x] `frontend/src/pages/StudentPage.tsx` 책임 분리
+  - `hooks/useStudentSubmission.ts`로 학생 제출 상태/비즈니스 로직 추출
+  - `components/student/HomeworkTab.tsx`로 숙제 탭 분리
+  - `lib/session.ts`로 학생 sessionStorage 접근 중앙화
+- [x] 하드코딩 이미지 origin/인라인 style 정리
+  - 교사 이미지 URL 생성은 `apiOrigin()` 사용
+  - 제출 이미지 max-height/object-fit 인라인 style을 Tailwind class로 교체
+
+#### 검증 ✅
+
+- [x] 백엔드 컴파일 검증
+  - `cd backend && ../.venv/bin/python -m compileall .`
+- [x] 프론트엔드 빌드 검증
+  - `cd frontend && npm run build`
+  - 결과: 빌드 성공 (Vite chunk size warning만 발생)
+- [x] 전체 테스트 통과
+  - `cd backend && ../.venv/bin/python -m pytest ../tests/ -x -q`
+  - 결과: **36 passed, 6 warnings in 463.58s**
+
 ---
 
 ## Phase 9: 배포 (Mac Mini M4 + Cloudflare Tunnel)

@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { verifyStudent } from "@/api/submissions"
+import { saveStudentSession } from "@/lib/session"
 
 interface StudentInfoFormProps {
   onComplete: (name: string, id: string) => void
@@ -33,13 +34,11 @@ export default function StudentInfoForm({ onComplete }: StudentInfoFormProps) {
         setError(result.message || "이름과 학번이 일치하지 않습니다.")
         return
       }
-      sessionStorage.setItem("argus_student_name", name.trim())
-      sessionStorage.setItem("argus_student_id", id.trim())
+      saveStudentSession(name.trim(), id.trim())
       onComplete(name.trim(), id.trim())
     } catch {
       // 서버 오류 시 허용 (네트워크 문제 등)
-      sessionStorage.setItem("argus_student_name", name.trim())
-      sessionStorage.setItem("argus_student_id", id.trim())
+      saveStudentSession(name.trim(), id.trim())
       onComplete(name.trim(), id.trim())
     } finally {
       setLoading(false)

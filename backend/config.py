@@ -31,9 +31,17 @@ class Settings(BaseSettings):
 
     # OCR 모델 경로 (got_ocr 사용 시)
     got_ocr_model_path: str = ""
+    got_ocr_worker_python: str = (
+        "/opt/homebrew/Caskroom/miniconda/base/envs/argus-gotocr/bin/python"
+    )
     # Mathpix API 인증 (mathpix 사용 시)
     mathpix_app_id: str = ""
     mathpix_app_key: str = ""
+
+    # 이미지 업로드
+    upload_dir: str = "uploads"
+    allowed_image_content_types: set[str] = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    max_image_size_bytes: int = 10 * 1024 * 1024
 
     # 신뢰도 게이트
     trust_threshold: float = 0.75

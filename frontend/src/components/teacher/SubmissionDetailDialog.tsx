@@ -1,4 +1,5 @@
 import type { SubmissionOverviewItem } from "@/api/teacher"
+import { apiOrigin } from "@/api/client"
 import {
   Dialog,
   DialogContent,
@@ -61,10 +62,9 @@ export default function SubmissionDetailDialog({ item, open, onClose }: Submissi
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">제출 답변</p>
             {item.input_type === "image" && item.image_path ? (
               <img
-                src={`${(import.meta.env.VITE_API_BASE as string ?? "/api/v1").replace("/api/v1", "")}/${item.image_path}`}
+                src={`${apiOrigin()}/${item.image_path}`}
                 alt="학생 제출 이미지"
-                className="max-w-full rounded-xl border"
-                style={{ maxHeight: "400px", objectFit: "contain" }}
+                className="max-w-full max-h-[400px] rounded-xl border object-contain"
               />
             ) : (
               <div className="rounded-xl bg-muted/50 p-3 text-sm leading-relaxed whitespace-pre-wrap">
