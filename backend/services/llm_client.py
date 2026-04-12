@@ -1,5 +1,6 @@
 """Thin wrapper around configured LLM provider implementations."""
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -21,6 +22,7 @@ class LLMClient:
     def __init__(self, provider: LLMProvider | None = None, mlx_model=None, mlx_tokenizer=None) -> None:
         self.provider = settings.llm_provider
         self._grading_inflight = 0
+        self._chat_lock = asyncio.Lock()
         self._provider = provider or self._build_provider(mlx_model, mlx_tokenizer)
         logger.info(f"LLM 클라이언트 초기화: provider={self.provider}")
 
@@ -62,13 +64,14 @@ class LLMClient:
         temperature: float = 1.0,
     ) -> LLMResponse:
         """Run a chat completion through the configured provider."""
-        return await self._provider.chat(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
+        async with self._chat_lock:
+            return await self._provider.chat(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
 
 
 __all__ = ["LLMClient", "LLMResponse"]

@@ -14,8 +14,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# DB URL 환경변수에서 로드
-database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/argus_dev")
+# DB URL 환경변수에서 로드. 없으면 로컬 배포 기본값을 사용한다.
+database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://argus@localhost/argus")
 config.set_main_option("sqlalchemy.url", database_url)
 
 # 모델 메타데이터 임포트

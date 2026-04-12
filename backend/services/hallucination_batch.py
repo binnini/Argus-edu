@@ -66,13 +66,23 @@ class HallucinationBatchService:
 
     def __init__(self, llm_client: LLMClient) -> None:
         self._llm = llm_client
+        self._run_lock = asyncio.Lock()
 
-    async def run_batch(self) -> int:
+    async def run_batch(self, limit: int | None = None) -> int:
         """
-        pending 항목을 최대 BATCH_SIZE건 가져와 LLM으로 검증.
+        pending 항목을 최대 limit 또는 BATCH_SIZE건 가져와 LLM으로 검증.
         채점(grading)이 진행 중이면 GPU를 양보하고 이번 회차를 건너뜀.
         처리된 건수를 반환.
         """
+        if self._run_lock.locked():
+            logger.info("할루시네이션 배치가 이미 실행 중 → 이번 회차 건너뜀")
+            return 0
+
+        async with self._run_lock:
+            return await self._run_batch_locked(limit=limit)
+
+    async def _run_batch_locked(self, limit: int | None = None) -> int:
+        """Run one hallucination batch while protected by the service lock."""
         # 채점 우선 처리: grading_inflight > 0 이면 이번 배치를 스킵하고 다음 인터벌에 재시도
         if self._llm.grading_inflight > 0:
             logger.info(
@@ -81,8 +91,10 @@ class HallucinationBatchService:
             )
             return 0
 
+        batch_limit = limit or BATCH_SIZE
+
         async with SessionLocal() as db:
-            items = await self._fetch_pending(db, BATCH_SIZE)
+            items = await self._fetch_pending(db, batch_limit)
             if not items:
                 return 0
 
@@ -129,6 +141,7 @@ class HallucinationBatchService:
                 "id": gr.id,
                 "reference_solution": (prob.reference_solution or "")[:800],
                 "grading_steps": self._parse_steps(gr),
+                "student_answer": (sub.student_answer or "")[:800],
                 "student_mistakes": feedback.get("student_mistakes", []),
                 "correct_approach": feedback.get("correct_approach", []),
                 "key_concept": feedback.get("key_concept", ""),
@@ -152,14 +165,12 @@ class HallucinationBatchService:
         return self._parse_verdicts(response.text)
 
     def _parse_steps(self, gr: GradingResult) -> list[dict]:
-        """ai_feedback의 steps 요약 (없으면 빈 배열)."""
+        """Return persisted grading steps used as feedback verification evidence."""
         try:
-            feedback = json.loads(gr.ai_feedback or "{}")
-            # grading_steps는 ai_feedback에 없을 수 있음 — submission 경유 시 확인 불가
-            # trust 판단용 단순 구조로 대체
+            steps = json.loads(gr.grading_steps or "[]")
+        except (TypeError, json.JSONDecodeError):
             return []
-        except Exception:
-            return []
+        return steps if isinstance(steps, list) else []
 
     def _parse_verdicts(self, raw: str) -> list[dict]:
         """LLM 응답에서 JSON 배열 추출."""

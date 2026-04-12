@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # DB
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost/argus_dev"
+    database_url: str = "postgresql+asyncpg://argus@localhost/argus"
 
     # Anthropic
     anthropic_api_key: str = ""

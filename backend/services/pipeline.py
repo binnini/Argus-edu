@@ -1,5 +1,6 @@
 """Student submission grading pipeline orchestration."""
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -46,7 +47,7 @@ async def run_grading_pipeline(
             rubric=pipeline_input.rubric,
             student_answer=pipeline_input.student_answer,
         )
-        await _persist_output(submission_id, pipeline_input.rubric, out)
+        await _persist_output(submission_id, pipeline_input.rubric, out, app_state)
         logger.info(
             f"채점 완료 submission_id={submission_id} "
             f"score={out.total_score}"
@@ -97,7 +98,7 @@ async def _prepare_input(
         )
 
 
-async def _persist_output(submission_id: int, rubric: dict[str, Any], out) -> None:
+async def _persist_output(submission_id: int, rubric: dict[str, Any], out, app_state) -> None:
     """Persist grading output and teacher queue entry in a short DB session."""
     total_score = rubric.get("total_score", 1)
     trust = calculate_trust(
@@ -116,6 +117,7 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out) -> No
             submission_id=submission_id,
             ai_score=out.total_score,
             ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
+            grading_steps=json.dumps(out.steps, ensure_ascii=False),
             sbert_similarity=0.0,   # SBERT 제거 — 컬럼 유지용 기본값
             trust_score=0.0,        # hallucination_batch 완료 후 갱신
             trust_level="low",      # hallucination_batch 완료 후 갱신
@@ -150,6 +152,19 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out) -> No
         submission = result.scalar_one()
         submission.status = final_status
         await db.commit()
+
+    _trigger_hallucination_if_idle(app_state)
+
+
+def _trigger_hallucination_if_idle(app_state) -> None:
+    """Kick low-priority trust scoring when no grading call is active."""
+    hallucination_svc = getattr(app_state, "hallucination_svc", None)
+    llm_client = getattr(app_state, "llm_client", None)
+    if hallucination_svc is None or llm_client is None:
+        return
+    if llm_client.grading_inflight > 0:
+        return
+    asyncio.create_task(hallucination_svc.run_batch(limit=1))
 
 
 async def _mark_submission_error(submission_id: int) -> None:

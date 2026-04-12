@@ -12,6 +12,7 @@ class GradingResult(Base):
     submission_id = Column(Integer, ForeignKey("submissions.id"), unique=True, nullable=False)
     ai_score = Column(SmallInteger, nullable=False)
     ai_feedback = Column(Text, nullable=False)
+    grading_steps = Column(Text, nullable=True)
     sbert_similarity = Column(Float, nullable=False)
     trust_score = Column(Float, nullable=False)
     trust_level = Column(String(10), nullable=False)  # 'high' | 'low'
