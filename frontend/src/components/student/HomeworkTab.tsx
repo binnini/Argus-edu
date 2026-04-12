@@ -2,6 +2,7 @@
 
 import { getProblem, type Problem, type StudentHomeworkItem } from "@/api/submissions"
 import { Badge } from "@/components/ui/badge"
+import { FolderOpen } from "lucide-react"
 
 interface HomeworkTabProps {
   homework: StudentHomeworkItem[]
@@ -36,9 +37,10 @@ export default function HomeworkTab({
   }
   if (homework.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-sm text-muted-foreground">할당된 숙제가 없습니다</p>
-        <p className="text-xs text-muted-foreground mt-1">선생님이 숙제를 할당할 때까지 기다려주세요</p>
+      <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+        <FolderOpen className="h-12 w-12 text-gray-300" />
+        <p className="mt-3 text-sm font-semibold text-gray-900">할당된 숙제가 없습니다</p>
+        <p className="mt-1 text-xs text-gray-500">선생님이 숙제를 할당할 때까지 기다려주세요</p>
       </div>
     )
   }
@@ -50,7 +52,7 @@ export default function HomeworkTab({
           <div key={hw.homework_id}>
             <div className="flex items-center justify-between mb-2">
               <div>
-                <h3 className="text-sm font-semibold">{hw.title}</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{hw.title}</h3>
                 {hw.group_name && (
                   <span className="text-xs text-muted-foreground">{hw.group_name}</span>
                 )}
@@ -73,10 +75,10 @@ export default function HomeworkTab({
                   <button
                     key={prob.problem_id}
                     disabled={isSubmitted}
-                    className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                    className={`w-full text-left rounded-lg border px-3 py-2 text-sm transition-colors ${
                       isSubmitted
                         ? "opacity-50 cursor-not-allowed bg-muted/30"
-                        : "bg-background hover:bg-muted/50 cursor-pointer"
+                        : "bg-white hover:bg-gray-50 cursor-pointer shadow-sm dark:bg-card"
                     }`}
                     onClick={async () => {
                       if (isSubmitted) return

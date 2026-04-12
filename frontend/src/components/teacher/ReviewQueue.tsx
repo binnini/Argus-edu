@@ -5,7 +5,7 @@ import ReviewCard from "./ReviewCard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Search } from "lucide-react"
+import { ClipboardCheck, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -69,23 +69,23 @@ export default function ReviewQueue() {
     <div className="space-y-6">
       {/* 통계 카드 */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border bg-card p-4 text-center">
-          <p className="text-2xl font-bold">{items.length}</p>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm dark:bg-card">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{items.length}</p>
           <p className="text-xs text-muted-foreground mt-1">미처리</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 text-center">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm dark:bg-card">
           <p className="text-2xl font-bold text-rose-600">{lowCount}</p>
           <p className="text-xs text-muted-foreground mt-1">신뢰도 Low</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 text-center">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 text-center shadow-sm dark:bg-card">
           <p className="text-2xl font-bold text-amber-600">{slaUrgent}</p>
           <p className="text-xs text-muted-foreground mt-1">SLA 3시간 내</p>
         </div>
       </div>
 
       {/* 필터 */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">신뢰도 필터:</span>
+      <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:bg-card">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">신뢰도 필터:</span>
         {(["all", "high", "low"] as TrustFilter[]).map((f) => (
           <Button
             key={f}
@@ -110,7 +110,7 @@ export default function ReviewQueue() {
       </div>
 
       {/* 검색 + 정렬 */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:bg-card">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -153,15 +153,17 @@ export default function ReviewQueue() {
           ))}
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <Button variant="outline" size="sm" onClick={load} className="mt-3">
             다시 시도
           </Button>
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border bg-card p-12 text-center">
-          <p className="text-muted-foreground">검토할 항목이 없습니다</p>
+        <div className="flex min-h-60 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm dark:bg-card">
+          <ClipboardCheck className="h-12 w-12 text-gray-300" />
+          <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-gray-50">검토할 항목이 없습니다</p>
+          <p className="mt-1 text-xs text-gray-500">현재 승인이나 수정이 필요한 풀이가 없습니다.</p>
         </div>
       ) : (
         <div className="space-y-4">

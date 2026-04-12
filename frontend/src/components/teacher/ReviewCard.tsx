@@ -67,10 +67,10 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
   return (
     <Card className="w-full overflow-hidden">
       {/* 헤더 */}
-      <CardHeader className="pb-3 border-b">
+      <CardHeader className="pb-3 border-b border-gray-200">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="space-y-0.5 flex-1 min-w-0">
-            <p className="font-bold text-base leading-tight truncate">{item.problem_title}</p>
+            <p className="font-bold text-base leading-tight truncate text-gray-900 dark:text-gray-50">{item.problem_title}</p>
             <p className="text-sm text-muted-foreground">
               {item.student_name}
               {item.student_id && <span className="ml-1 text-xs opacity-70">({item.student_id})</span>}
@@ -90,7 +90,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           <Clock className="h-3 w-3" />
           <span>SLA {formatDeadline(item.sla_deadline)} 남음</span>
           <span className="mx-1">·</span>
-          <span>AI 채점: {item.ai_score > 0 ? "정답" : "오답"}</span>
+          <span>AI 채점: {item.ai_score}점</span>
         </div>
       </CardHeader>
 
@@ -98,41 +98,47 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
 
         {/* 문제 본문 */}
         {item.problem_content && (
-          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 p-3">
-            <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1.5 uppercase tracking-wide">문제</p>
+          <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3">
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1.5 uppercase tracking-wide">문제</p>
             <div className="text-sm leading-relaxed text-foreground">
               {renderMath(item.problem_content)}
             </div>
             {item.problem_answer && (
-              <div className="mt-2 pt-2 border-t border-indigo-200 dark:border-indigo-700">
-                <span className="text-xs text-indigo-500 mr-1.5">정답:</span>
+              <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
+                <span className="text-xs text-blue-600 mr-1.5">정답:</span>
                 <span className="text-sm font-medium">{renderMath(item.problem_answer)}</span>
               </div>
             )}
           </div>
         )}
 
-        {/* 학생 답변 + OCR */}
-        <div className={item.ocr_raw_text ? "grid grid-cols-2 gap-3" : ""}>
-          <div className="rounded-xl bg-zinc-50 dark:bg-zinc-900 border p-3">
-            <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">학생 답변</p>
-            {item.input_type === "image" && item.image_path ? (
-              <img
-                src={`${apiOrigin()}/${item.image_path}`}
-                alt="학생 손글씨 풀이"
-                className="max-w-full max-h-[300px] rounded-lg border mt-1 object-contain"
-              />
-            ) : (
-              <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
+        {/* 학생 답변 + OCR 결과 */}
+        <div className="rounded-lg bg-gray-50 p-4 dark:bg-zinc-900">
+          <div className={item.input_type === "image" ? "grid gap-4 md:grid-cols-2" : ""}>
+            <div className="rounded-lg border border-gray-200 bg-white p-3 dark:bg-card">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wide">학생 답변</p>
+              {item.input_type === "image" && item.image_path ? (
+                <img
+                  src={`${apiOrigin()}/${item.image_path}`}
+                  alt="학생 손글씨 풀이"
+                  className="max-w-full max-h-[300px] rounded-lg border mt-1 object-contain"
+                />
+              ) : (
+                <div className="text-sm leading-relaxed">{renderMath(item.student_answer)}</div>
+              )}
+            </div>
+
+            {item.input_type === "image" && (
+              <div className="rounded-lg border border-gray-200 bg-white p-3 dark:bg-card">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1.5 uppercase tracking-wide">OCR 결과 (채점 사용)</p>
+                <div className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                  {item.ocr_raw_text ? renderMath(item.ocr_raw_text) : (
+                    <span className="text-muted-foreground italic">OCR 결과 없음</span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
-
-          {item.ocr_raw_text && (
-            <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-1.5 uppercase tracking-wide">OCR 원문</p>
-              <div className="text-sm leading-relaxed text-foreground">{renderMath(item.ocr_raw_text)}</div>
-            </div>
-          )}
         </div>
 
         {/* AI 피드백 (항상 표시) */}
@@ -141,14 +147,14 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">AI 피드백</p>
 
             {Array.isArray(feedback.student_mistakes) && feedback.student_mistakes.length > 0 && (
-              <div className="rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 p-3 space-y-1.5">
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 p-3 space-y-1.5">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
-                  <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">학생 실수</p>
+                  <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                  <p className="text-xs font-semibold text-red-700 dark:text-red-400">학생 실수</p>
                 </div>
                 {feedback.student_mistakes.map((m: { step: number; description: string }, i: number) => (
                   <div key={i} className="flex gap-2 text-sm">
-                    <span className="text-xs text-rose-400 mt-0.5 shrink-0">Step {m.step}</span>
+                    <span className="text-xs text-red-600 mt-0.5 shrink-0">Step {m.step}</span>
                     <span className="text-foreground leading-relaxed">{renderMath(m.description)}</span>
                   </div>
                 ))}
@@ -156,14 +162,14 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             )}
 
             {Array.isArray(feedback.correct_approach) && feedback.correct_approach.length > 0 && (
-              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 space-y-2">
+              <div className="rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 space-y-2">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">올바른 풀이</p>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-400">올바른 풀이</p>
                 </div>
                 {feedback.correct_approach.map((s: { step: number; title: string; content: string }, i: number) => (
                   <div key={i} className="text-sm">
-                    <span className="font-medium text-emerald-700 dark:text-emerald-300">Step {s.step}. {s.title}</span>
+                    <span className="font-medium text-green-700 dark:text-green-300">Step {s.step}. {s.title}</span>
                     <div className="text-foreground leading-relaxed mt-0.5">{renderMath(s.content)}</div>
                   </div>
                 ))}
@@ -171,24 +177,24 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             )}
 
             {feedback.key_concept && (
-              <div className="rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 p-3">
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Lightbulb className="h-3.5 w-3.5 text-sky-500" />
-                  <p className="text-xs font-semibold text-sky-600 dark:text-sky-400">핵심 개념</p>
+                  <Lightbulb className="h-3.5 w-3.5 text-blue-500" />
+                  <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">핵심 개념</p>
                 </div>
                 <div className="text-sm text-foreground leading-relaxed">{renderMath(feedback.key_concept)}</div>
               </div>
             )}
           </div>
         ) : (
-          <div className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">
+          <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
             {renderMath(String(item.ai_feedback ?? ""))}
           </div>
         )}
 
         {/* 수정 폼 */}
         {showModify && (
-          <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3">
+          <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 p-3">
             <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">수정 내용 입력</p>
             <div className="flex items-center gap-2">
               <label className="text-sm whitespace-nowrap">확정 점수</label>
@@ -214,33 +220,33 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* 액션 버튼 */}
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2 border-t border-gray-200 pt-4">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
-            className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium"
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={() => handleAction("approve")}
             disabled={submitting}
           >
-            ✓ 승인
+            승인
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 border-amber-300 text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 font-medium"
+            className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-zinc-900"
             onClick={() => handleAction("modify")}
             disabled={submitting || (showModify && (!teacherScore.trim() || !teacherFeedback.trim()))}
           >
-            {showModify ? "✎ 수정 제출" : "✎ 수정"}
+            {showModify ? "수정 제출" : "수정"}
           </Button>
           <Button
-            variant="outline"
+            variant="destructive"
             size="sm"
-            className="flex-1 border-rose-300 text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 font-medium"
+            className="flex-1"
             onClick={() => handleAction("reject")}
             disabled={submitting}
           >
-            ✕ 거부
+            거부
           </Button>
         </div>
       </CardContent>

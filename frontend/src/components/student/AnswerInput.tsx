@@ -48,7 +48,7 @@ export default function AnswerInput({ onFileReady }: AnswerInputProps) {
         <div
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
-          className="border-2 border-dashed border-border rounded-2xl p-8 text-center cursor-pointer hover:bg-accent/50 transition-colors"
+          className="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-8 text-center cursor-pointer hover:bg-gray-100 transition-colors"
           onClick={() => document.getElementById("file-upload")?.click()}
         >
           <input
@@ -59,7 +59,7 @@ export default function AnswerInput({ onFileReady }: AnswerInputProps) {
             onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
           />
           {preview ? (
-            <img src={preview} alt="미리보기" className="max-h-64 mx-auto rounded-xl object-contain" />
+            <img src={preview} alt="미리보기" className="max-h-64 mx-auto rounded-lg object-contain" />
           ) : (
             <div className="space-y-2">
               <Upload className="h-10 w-10 mx-auto text-muted-foreground" />
@@ -72,7 +72,7 @@ export default function AnswerInput({ onFileReady }: AnswerInputProps) {
 
       <TabsContent value="camera">
         <div className="space-y-4">
-          <label className="block border-2 border-dashed border-border rounded-2xl p-8 text-center cursor-pointer hover:bg-accent/50 transition-colors">
+          <label className="block rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-8 text-center cursor-pointer hover:bg-gray-100 transition-colors">
             <input
               type="file"
               accept="image/*"
@@ -81,7 +81,7 @@ export default function AnswerInput({ onFileReady }: AnswerInputProps) {
               onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
             />
             {preview ? (
-              <img src={preview} alt="카메라 미리보기" className="max-h-64 mx-auto rounded-xl object-contain" />
+              <img src={preview} alt="카메라 미리보기" className="max-h-64 mx-auto rounded-lg object-contain" />
             ) : (
               <div className="space-y-2">
                 <Camera className="h-10 w-10 mx-auto text-muted-foreground" />

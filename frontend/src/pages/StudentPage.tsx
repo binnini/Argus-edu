@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useStudentSubmission } from "@/hooks/useStudentSubmission"
 import { renderMath } from "@/lib/renderMath"
-import { BookOpen, ChevronLeft, ClipboardList, LogOut, Pencil, Plus } from "lucide-react"
+import { BookOpen, ChevronLeft, ClipboardList, FileText, FolderOpen, LogOut, Pencil, Plus } from "lucide-react"
 
 function statusBadge(status: string) {
   switch (status) {
@@ -52,14 +52,17 @@ function Sidebar({
   onHistoryClick,
 }: SidebarProps) {
   return (
-    <aside className="hidden md:flex flex-col w-72 lg:w-80 shrink-0 border-r bg-muted/20 min-h-[calc(100vh-57px)] p-4 gap-5">
+    <aside className="hidden md:flex flex-col w-72 lg:w-80 shrink-0 border-r border-gray-200 bg-white/80 dark:bg-background/80 min-h-[calc(100vh-57px)] p-4 gap-5">
       <div>
         <div className="flex items-center gap-2 mb-3">
           <ClipboardList className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold">숙제 현황</span>
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">숙제 현황</span>
         </div>
         {homework.length === 0 ? (
-          <p className="text-xs text-muted-foreground pl-1">할당된 숙제가 없습니다</p>
+          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-5 text-center">
+            <FolderOpen className="mx-auto h-9 w-9 text-gray-300" />
+            <p className="mt-2 text-xs font-medium text-gray-600">할당된 숙제가 없습니다</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {homework.map((hw) => {
@@ -68,11 +71,11 @@ function Sidebar({
               return (
                 <button
                   key={hw.homework_id}
-                  className="w-full text-left rounded-lg border bg-background px-3 py-2.5 text-sm hover:bg-muted/60 transition-colors cursor-pointer"
+                  className="w-full text-left rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm hover:bg-gray-50 transition-colors cursor-pointer dark:bg-card"
                   onClick={onHomeworkClick}
                 >
                   <div className="flex items-start justify-between gap-1">
-                    <span className="font-medium truncate">{hw.title}</span>
+                    <span className="font-medium truncate text-gray-900 dark:text-gray-50">{hw.title}</span>
                     <span className={`text-xs shrink-0 font-mono ${isDone ? "text-green-600" : "text-muted-foreground"}`}>
                       {hw.completed_problems}/{hw.total_problems}
                     </span>
@@ -99,20 +102,23 @@ function Sidebar({
       <div className="flex-1 min-h-0">
         <div className="flex items-center gap-2 mb-3">
           <BookOpen className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold">풀이 현황</span>
+          <span className="text-sm font-semibold text-gray-900 dark:text-gray-50">풀이 현황</span>
         </div>
         {history.length === 0 ? (
-          <p className="text-xs text-muted-foreground pl-1">아직 제출한 풀이가 없습니다</p>
+          <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-5 text-center">
+            <FileText className="mx-auto h-9 w-9 text-gray-300" />
+            <p className="mt-2 text-xs font-medium text-gray-600">아직 제출한 풀이가 없습니다</p>
+          </div>
         ) : (
           <div className="space-y-1.5">
             {history.slice(0, 5).map((item) => (
               <button
                 key={item.submission_id}
-                className="w-full text-left rounded-lg border bg-background px-3 py-2 text-xs hover:bg-muted/60 transition-colors cursor-pointer"
+                className="w-full text-left rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-sm hover:bg-gray-50 transition-colors cursor-pointer dark:bg-card"
                 onClick={() => onHistoryClick(item)}
               >
                 <div className="flex items-center justify-between gap-1">
-                  <span className="truncate font-medium">{item.problem_title}</span>
+                  <span className="truncate font-medium text-gray-900 dark:text-gray-50">{item.problem_title}</span>
                   {statusBadge(item.status)}
                 </div>
               </button>
@@ -152,6 +158,7 @@ export default function StudentPage() {
                 homeworkLoading={student.homeworkLoading}
                 setHomeworkLoading={student.setHomeworkLoading}
                 onSelectProblem={(p) => {
+                  student.setFinalAnswer("")
                   student.setProblem(p)
                   student.setStage("answer")
                 }}
@@ -160,6 +167,7 @@ export default function StudentPage() {
             <TabsContent value="all">
               <ProblemSelector
                 onSelect={(p) => {
+                  student.setFinalAnswer("")
                   student.setProblem(p)
                   student.setStage("answer")
                 }}
@@ -312,7 +320,7 @@ export default function StudentPage() {
               <img
                 src={`${apiOrigin()}/${student.selectedHistory.image_path}`}
                 alt="제출 이미지"
-                className="max-w-full max-h-[400px] rounded-xl border object-contain"
+                className="max-w-full max-h-[400px] rounded-lg border object-contain"
               />
             ) : (
               <div className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -398,8 +406,8 @@ export default function StudentPage() {
 
   if (student.stage === "info") {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b sticky top-0 bg-background/80 backdrop-blur z-10">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
+        <header className="border-b border-gray-200 sticky top-0 bg-white/85 backdrop-blur z-10 dark:bg-background/80">
           <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
             <h1 className="text-lg font-bold text-primary">Argus</h1>
           </div>
@@ -419,8 +427,8 @@ export default function StudentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b sticky top-0 bg-background/80 backdrop-blur z-10">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
+      <header className="border-b border-gray-200 sticky top-0 bg-white/85 backdrop-blur z-10 dark:bg-background/80">
         <div className="px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold text-primary">Argus</h1>
           <div className="flex items-center gap-3">

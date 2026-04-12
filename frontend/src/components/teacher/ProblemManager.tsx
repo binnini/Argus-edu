@@ -98,14 +98,14 @@ export default function ProblemManager() {
     <div className="space-y-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex justify-between items-center">
-        <h2 className="text-base font-semibold">문제 목록 (총 {total}개)</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-50">문제 목록 (총 {total}개)</h2>
         <Button size="sm" onClick={() => { setEditTarget(null); setDialogOpen(true) }}>
           <Plus className="h-4 w-4 mr-1" /> 문제 등록
         </Button>
       </div>
 
       {/* FilterBar */}
-      <div className="space-y-2 border rounded-2xl p-3 bg-muted/30">
+      <div className="space-y-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:bg-card">
         <div className="flex gap-2 items-center flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -171,17 +171,17 @@ export default function ProblemManager() {
           {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted">
+            <thead className="bg-gray-50 dark:bg-muted">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">제목</th>
-                <th className="text-left px-4 py-3 font-medium">학교급</th>
-                <th className="text-left px-4 py-3 font-medium">도메인</th>
-                <th className="text-left px-4 py-3 font-medium">난이도</th>
-                <th className="text-right px-4 py-3 font-medium">제출수</th>
-                <th className="text-right px-4 py-3 font-medium">생성일</th>
-                <th className="text-right px-4 py-3 font-medium">액션</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">제목</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">학교급</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">도메인</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">난이도</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">제출수</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">생성일</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">액션</th>
               </tr>
             </thead>
             <tbody>

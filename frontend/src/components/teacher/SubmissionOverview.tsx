@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import SubmissionDetailDialog from "./SubmissionDetailDialog"
-import { Search, ChevronLeft, ChevronRight } from "lucide-react"
+import { FileText, Search, ChevronLeft, ChevronRight } from "lucide-react"
 
 function statusBadge(status: string) {
   switch (status) {
@@ -84,7 +84,7 @@ export default function SubmissionOverview() {
   return (
     <div className="space-y-4">
       {/* 필터 바 */}
-      <div className="flex flex-wrap gap-2 items-end">
+      <div className="flex flex-wrap gap-2 items-end rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:bg-card">
         <Select value={filterProblem} onValueChange={(v) => { setFilterProblem(v === "all" ? "" : v); setPage(1) }}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="문제 전체" />
@@ -132,25 +132,26 @@ export default function SubmissionOverview() {
           {[1,2,3,4,5].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <Button variant="outline" size="sm" onClick={load} className="mt-3">다시 시도</Button>
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border bg-card p-12 text-center">
-          <p className="text-muted-foreground text-sm">제출 내역이 없습니다</p>
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-white p-12 text-center shadow-sm dark:bg-card">
+          <FileText className="h-12 w-12 text-gray-300" />
+          <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-gray-50">제출 내역이 없습니다</p>
         </div>
       ) : (
-        <div className="rounded-2xl border overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
+            <thead className="bg-gray-50 dark:bg-muted/50">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">학생</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">문제</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground">입력</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground">상태</th>
-                <th className="text-center px-3 py-3 font-medium text-muted-foreground">결과</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">제출시각</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">학생</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">문제</th>
+                <th className="text-center px-3 py-3 font-semibold text-gray-900 dark:text-gray-50">입력</th>
+                <th className="text-center px-3 py-3 font-semibold text-gray-900 dark:text-gray-50">상태</th>
+                <th className="text-center px-3 py-3 font-semibold text-gray-900 dark:text-gray-50">결과</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-900 dark:text-gray-50">제출시각</th>
               </tr>
             </thead>
             <tbody>
