@@ -1,0 +1,21 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.35
+asyncpg==0.29.0
+alembic==1.13.3
+pydantic==2.9.2
+pydantic-settings==2.5.2
+anthropic==0.34.2
+sentence-transformers==3.1.1
+# Main env (argus-ocr): transformers 5.x for MLX/gemma4
+transformers>=5.0.0
+torch>=2.9.0
+
+# GOT-OCR worker env (argus-gotocr) requirements:
+#   transformers==4.44.2 torch==2.4.0 torchvision timm einops tiktoken accelerate verovio
+python-multipart>=0.0.9
+httpx>=0.27.0
+pix2tex>=0.1.2
+sentence-transformers
+greenlet
+openai

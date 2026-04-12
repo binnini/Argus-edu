@@ -1,0 +1,162 @@
+[
+  {
+    "id": "수2_적분_001",
+    "domain": "수학2",
+    "topic": "적분",
+    "difficulty": 2,
+    "content": "정적분 ∫₁³ (3x² - 2x + 1) dx 의 값을 구하시오.",
+    "answer": "20",
+    "reference_solution": {
+      "steps": [
+        {
+          "step": 1,
+          "title": "부정적분 계산",
+          "content": "∫(3x² - 2x + 1)dx = x³ - x² + x + C"
+        },
+        {
+          "step": 2,
+          "title": "정적분 적용",
+          "content": "[x³ - x² + x]₁³ = (27 - 9 + 3) - (1 - 1 + 1)"
+        },
+        {
+          "step": 3,
+          "title": "계산 완료",
+          "content": "= 21 - 1 = 20. 아, 다시: (27 - 9 + 3) = 21, (1 - 1 + 1) = 1. 21 - 1 = 20. 정답: 20"
+        }
+      ]
+    },
+    "rubric": {
+      "total_score": 3,
+      "steps": [
+        {"step": 1, "description": "부정적분을 올바르게 계산", "score": 1},
+        {"step": 2, "description": "정적분의 상하한을 정확히 대입", "score": 1},
+        {"step": 3, "description": "최종 값을 정확히 계산", "score": 1}
+      ]
+    },
+    "test_answers": {
+      "correct": "∫₁³(3x²-2x+1)dx = [x³-x²+x]₁³ = (27-9+3)-(1-1+1) = 21-1 = 20",
+      "partial": "부정적분 x³ - x² + x까지 맞게 구했으나 상한/하한 대입에서 부호 오류",
+      "wrong": "∫3x²dx = x³, ∫2xdx = x²로만 계산하여 정적분 값을 26으로 오산"
+    }
+  },
+  {
+    "id": "수2_적분_002",
+    "domain": "수학2",
+    "topic": "적분",
+    "difficulty": 2,
+    "content": "곡선 y = x² - 4x + 3 과 x축으로 둘러싸인 도형의 넓이를 구하시오.",
+    "answer": "4/3",
+    "reference_solution": {
+      "steps": [
+        {
+          "step": 1,
+          "title": "x절편 탐색",
+          "content": "x² - 4x + 3 = (x - 1)(x - 3) = 0에서 x = 1 또는 x = 3"
+        },
+        {
+          "step": 2,
+          "title": "적분 범위 설정",
+          "content": "1 ≤ x ≤ 3에서 y ≤ 0이므로 넓이 = -∫₁³(x² - 4x + 3)dx"
+        },
+        {
+          "step": 3,
+          "title": "넓이 계산",
+          "content": "∫₁³(x² - 4x + 3)dx = [x³/3 - 2x² + 3x]₁³ = (9 - 18 + 9) - (1/3 - 2 + 3) = 0 - 4/3 = -4/3. 넓이 = 4/3"
+        }
+      ]
+    },
+    "rubric": {
+      "total_score": 3,
+      "steps": [
+        {"step": 1, "description": "x절편 x = 1, 3을 올바르게 탐색", "score": 1},
+        {"step": 2, "description": "넓이 공식을 올바르게 적용 (부호 처리)", "score": 1},
+        {"step": 3, "description": "넓이를 4/3으로 정확히 계산", "score": 1}
+      ]
+    },
+    "test_answers": {
+      "correct": "x = 1, 3에서 x절편. ∫₁³|x²-4x+3|dx = -∫₁³(x²-4x+3)dx = 4/3",
+      "partial": "x절편 x = 1, 3 구함. 적분 계산에서 절댓값 처리 없이 -4/3로 답함",
+      "wrong": "x² - 4x + 3을 전체 범위에서 적분하여 넓이를 0으로 잘못 계산"
+    }
+  },
+  {
+    "id": "수2_적분_003",
+    "domain": "수학2",
+    "topic": "적분",
+    "difficulty": 3,
+    "content": "직선 운동하는 점 P의 시각 t에서의 속도가 v(t) = 3t² - 6t + 2 일 때, t = 0부터 t = 3까지 점 P의 위치 변화량을 구하시오.",
+    "answer": "6",
+    "reference_solution": {
+      "steps": [
+        {
+          "step": 1,
+          "title": "위치 변화량 적분 설정",
+          "content": "위치 변화량 = ∫₀³ v(t) dt = ∫₀³ (3t² - 6t + 2) dt"
+        },
+        {
+          "step": 2,
+          "title": "부정적분 계산",
+          "content": "∫(3t² - 6t + 2)dt = t³ - 3t² + 2t + C"
+        },
+        {
+          "step": 3,
+          "title": "정적분 계산",
+          "content": "[t³ - 3t² + 2t]₀³ = (27 - 27 + 6) - 0 = 6. 정답: 6"
+        }
+      ]
+    },
+    "rubric": {
+      "total_score": 3,
+      "steps": [
+        {"step": 1, "description": "위치 변화량 = ∫₀³v(t)dt 로 올바르게 설정", "score": 1},
+        {"step": 2, "description": "부정적분을 올바르게 계산", "score": 1},
+        {"step": 3, "description": "정적분 값을 정확히 계산", "score": 1}
+      ]
+    },
+    "test_answers": {
+      "correct": "위치 변화량 = ∫₀³(3t²-6t+2)dt = [t³-3t²+2t]₀³ = 27-27+6 = 6",
+      "partial": "∫₀³v(t)dt 설정은 맞으나 부정적분에서 2t 항을 누락하여 오답",
+      "wrong": "속도의 절댓값을 적분하여 이동거리를 위치 변화량으로 혼동"
+    }
+  },
+  {
+    "id": "수2_적분_004",
+    "domain": "수학2",
+    "topic": "적분",
+    "difficulty": 3,
+    "content": "∫₀² f(x) dx = 5, ∫₀² g(x) dx = 3 일 때, ∫₀² {2f(x) - 3g(x) + 1} dx 의 값을 구하시오.",
+    "answer": "3",
+    "reference_solution": {
+      "steps": [
+        {
+          "step": 1,
+          "title": "적분의 선형성 적용",
+          "content": "∫₀²{2f(x) - 3g(x) + 1}dx = 2∫₀²f(x)dx - 3∫₀²g(x)dx + ∫₀²1dx"
+        },
+        {
+          "step": 2,
+          "title": "상수 적분 계산",
+          "content": "∫₀²1dx = [x]₀² = 2"
+        },
+        {
+          "step": 3,
+          "title": "최종 계산",
+          "content": "= 2(5) - 3(3) + 2 = 10 - 9 + 2 = 3. 정답: 3"
+        }
+      ]
+    },
+    "rubric": {
+      "total_score": 3,
+      "steps": [
+        {"step": 1, "description": "적분의 선형성을 올바르게 적용", "score": 1},
+        {"step": 2, "description": "∫₀²1dx = 2를 올바르게 계산", "score": 1},
+        {"step": 3, "description": "최종 값을 정확히 계산", "score": 1}
+      ]
+    },
+    "test_answers": {
+      "correct": "2∫₀²f(x)dx - 3∫₀²g(x)dx + ∫₀²1dx = 2(5) - 3(3) + 2 = 10 - 9 + 2 = 3",
+      "partial": "선형성 적용은 올바르나 상수 항 ∫₀²1dx를 1로 잘못 계산하여 오답",
+      "wrong": "∫₀²{2f(x)-3g(x)+1}dx = 2×5 - 3×3 + 1 = 2로 상수 적분 오류"
+    }
+  }
+]

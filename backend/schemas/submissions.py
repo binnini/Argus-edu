@@ -1,0 +1,131 @@
+from typing import Any, Optional, Union
+from datetime import datetime
+from pydantic import BaseModel, field_validator
+
+
+class SubmissionRequest(BaseModel):
+    problem_id: int
+    student_answer: str
+    student_name: str = ""
+    student_id: Optional[str] = None
+    final_answer: Optional[str] = None
+
+
+class SubmissionCreateResponse(BaseModel):
+    submission_id: int
+    status: str
+    message: str
+
+
+class FeedbackMistake(BaseModel):
+    step: Optional[int] = None
+    description: str = ""
+
+    @field_validator("step", mode="before")
+    @classmethod
+    def coerce_step(cls, v: Any) -> Optional[int]:
+        if v is None:
+            return None
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def coerce_description(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
+
+    model_config = {"extra": "ignore"}
+
+
+class FeedbackStep(BaseModel):
+    step: Optional[int] = None
+    title: str = ""
+    content: str = ""
+
+    @field_validator("step", mode="before")
+    @classmethod
+    def coerce_step(cls, v: Any) -> Optional[int]:
+        if v is None:
+            return None
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    model_config = {"extra": "ignore"}
+
+
+class FeedbackSchema(BaseModel):
+    student_mistakes: list[Union[FeedbackMistake, str]] = []
+    correct_approach: list[Union[FeedbackStep, str]] = []
+    key_concept: str = ""
+
+    @field_validator("student_mistakes", mode="before")
+    @classmethod
+    def normalize_mistakes(cls, v: Any) -> list:
+        if not isinstance(v, list):
+            return []
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append(FeedbackMistake(description=item))
+            elif isinstance(item, dict):
+                result.append(FeedbackMistake(**{k: val for k, val in item.items() if k in ("step", "description")}))
+            else:
+                result.append(item)
+        return result
+
+    @field_validator("correct_approach", mode="before")
+    @classmethod
+    def normalize_approach(cls, v: Any) -> list:
+        if not isinstance(v, list):
+            return []
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append(FeedbackStep(content=item))
+            elif isinstance(item, dict):
+                result.append(FeedbackStep(**{k: val for k, val in item.items() if k in ("step", "title", "content")}))
+            else:
+                result.append(item)
+        return result
+
+    model_config = {"extra": "ignore"}
+
+
+class SubmissionStatusResponse(BaseModel):
+    submission_id: int
+    status: str
+    score: Optional[int]
+    score_visible: bool
+    feedback: Optional[FeedbackSchema]   # 교사 승인 후에만 노출
+    teacher_approved: bool
+    message: Optional[str]
+    problem_title: Optional[str] = None
+    problem_content: Optional[str] = None
+    input_type: Optional[str] = None
+    ocr_raw_text: Optional[str] = None
+
+
+class StudentHistoryItem(BaseModel):
+    submission_id: int
+    problem_title: str
+    problem_domain: str
+    status: str
+    ai_score: Optional[int]
+    final_score: Optional[int]
+    input_type: str
+    submitted_at: datetime
+    image_path: Optional[str] = None
+    student_answer: Optional[str] = None
+
+
+class StudentHistoryResponse(BaseModel):
+    submissions: list[StudentHistoryItem]
+
+
+class SubmissionUpdateRequest(BaseModel):
+    student_answer: Optional[str] = None
+    # 이미지 수정은 multipart로 별도 처리

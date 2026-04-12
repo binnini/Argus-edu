@@ -1,0 +1,22 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0 -- /Users/yebin/workSpace/Argus/.venv/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/yebin/workSpace/Argus
+plugins: timeout-2.4.0, anyio-4.13.0
+timeout: 1000.0s
+timeout method: signal
+timeout func_only: False
+collecting ... collected 10 items
+
+tests/test_integration.py::test_health PASSED                            [ 10%]
+tests/test_integration.py::test_problems_list PASSED                     [ 20%]
+tests/test_integration.py::test_problem_no_answer_leak PASSED            [ 30%]
+tests/test_integration.py::test_teacher_auth_missing PASSED              [ 40%]
+tests/test_integration.py::test_teacher_auth_wrong PASSED                [ 50%]
+tests/test_integration.py::test_e2e_normal_flow PASSED                   [ 60%]
+tests/test_integration.py::test_e2e_low_trust PASSED                     [ 70%]
+tests/test_integration.py::test_explanation_blocked_before_approval PASSED [ 80%]
+tests/test_integration.py::test_teacher_modify PASSED                    [ 90%]
+tests/test_integration.py::test_feedback_summary PASSED                  [100%]
+
+======================= 10 passed in 1806.71s (0:30:06) ========================

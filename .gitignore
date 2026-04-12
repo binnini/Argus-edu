@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+frontend/dist/
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# DB
+*.db
+*.sqlite3
+
+# data (생성 파일 — convert_aihub.py로 재생성)
+data/AI_HUB/
+data/problems/*.json
+data/ocr_samples/labels.json
+data/ocr_samples/images/
+data/ocr_samples/dataset/
+
+# OCR 학습 출력물 (모델 가중치, 체크포인트, 로그)
+ocr_training/output/
+ocr_training/data
+*.safetensors
+*.bin
+*.tiktoken
+.aider*
+
+# 업로드 이미지 (런타임 생성, 재현 가능)
+backend/uploads/
+
+# 벤치마크 결과 CSV (루트/scripts 아래 임시 파일만 제외, tests/ 아래는 보관)
+benchmark_*.csv
+scripts/benchmark_*.csv
+!tests/benchmark_*.csv
