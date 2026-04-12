@@ -36,8 +36,10 @@ export interface SubmissionStatusResponse {
   submission_id: number;
   status: string;
   score: number | null;
+  max_score: number | null;     // 문제 만점 (부분 정답 판별용)
   score_visible: boolean;
-  feedback: Feedback | null;  // 교사 승인 후에만 노출
+  feedback: Feedback | null;    // 교사 승인 또는 feedback_visible 시 노출
+  feedback_visible: boolean;    // 정답+고신뢰도면 교사 승인 전에도 노출
   teacher_approved: boolean;
   message: string | null;
   problem_title: string | null;
@@ -68,8 +70,16 @@ export interface StudentHistoryResponse {
   submissions: StudentHistoryItem[];
 }
 
-export async function getProblems(page = 1, pageSize = 30): Promise<ProblemListPagedResponse> {
-  return apiFetch(`/problems?page=${page}&page_size=${pageSize}`, undefined, "문제 목록 조회 실패");
+export async function getProblems(
+  page = 1,
+  pageSize = 10,
+  options?: { q?: string; domain?: string; difficulty?: number },
+): Promise<ProblemListPagedResponse> {
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (options?.q) params.set("q", options.q);
+  if (options?.domain) params.set("domain", options.domain);
+  if (options?.difficulty != null) params.set("difficulty", String(options.difficulty));
+  return apiFetch(`/problems?${params.toString()}`, undefined, "문제 목록 조회 실패");
 }
 
 export async function getStudentHistory(studentId: string): Promise<StudentHistoryResponse> {

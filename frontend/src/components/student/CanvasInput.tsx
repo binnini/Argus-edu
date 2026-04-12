@@ -11,17 +11,42 @@ interface CanvasInputProps {
 
 type DrawMode = "pen" | "eraser"
 
+const CANVAS_HEIGHT = 480
+
 export default function CanvasInput({ onImageReady }: CanvasInputProps) {
   const canvasRef = React.useRef<SignatureCanvas>(null)
+  const wrapperRef = React.useRef<HTMLDivElement>(null)
   const [penWidth, setPenWidth] = React.useState(4)
   const [mode, setMode] = React.useState<DrawMode>("pen")
+  const [canvasWidth, setCanvasWidth] = React.useState(800)
+
+  // 컨테이너 너비에 맞게 캔버스 내부 해상도 동기화 (포인터 오프셋 방지)
+  React.useEffect(() => {
+    if (!wrapperRef.current) return
+
+    const observer = new ResizeObserver((entries) => {
+      const width = Math.floor(entries[0].contentRect.width)
+      if (width > 0 && width !== canvasWidth) {
+        // 크기 변경 시 캔버스 초기화 후 재조정
+        canvasRef.current?.clear()
+        setCanvasWidth(width)
+      }
+    })
+    observer.observe(wrapperRef.current)
+    // 초기 너비 설정
+    setCanvasWidth(Math.floor(wrapperRef.current.getBoundingClientRect().width) || 800)
+
+    return () => observer.disconnect()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const effectiveWidth = mode === "eraser" ? penWidth * 3 : penWidth
   const penColor = mode === "eraser" ? "white" : "black"
 
+  // 커서 SVG — 정확히 그리는 위치가 원의 중심이 되도록 hotspot 설정
   const cursorSize = effectiveWidth + 8
-  const cursorSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='${cursorSize}' height='${cursorSize}'><circle cx='${cursorSize/2}' cy='${cursorSize/2}' r='${effectiveWidth/2}' fill='${mode === "eraser" ? "rgba(200,200,200,0.7)" : "rgba(0,0,0,0.5)"}' stroke='${mode === "eraser" ? "#999" : "#333"}' stroke-width='1.5'/></svg>`
-  const cursorUrl = `url("data:image/svg+xml,${encodeURIComponent(cursorSvg)}") ${Math.floor(cursorSize/2)} ${Math.floor(cursorSize/2)}, crosshair`
+  const half = Math.floor(cursorSize / 2)
+  const cursorSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='${cursorSize}' height='${cursorSize}'><circle cx='${half}' cy='${half}' r='${effectiveWidth / 2}' fill='${mode === "eraser" ? "rgba(200,200,200,0.7)" : "rgba(0,0,0,0.5)"}' stroke='${mode === "eraser" ? "#999" : "#333"}' stroke-width='1.5'/></svg>`
+  const cursorUrl = `url("data:image/svg+xml,${encodeURIComponent(cursorSvg)}") ${half} ${half}, crosshair`
 
   function handleClear() {
     canvasRef.current?.clear()
@@ -30,10 +55,20 @@ export default function CanvasInput({ onImageReady }: CanvasInputProps) {
   function handleDone() {
     const canvas = canvasRef.current
     if (!canvas || canvas.isEmpty()) return
-    const dataUrl = canvas.toDataURL("image/png")
-    fetch(dataUrl)
-      .then((r) => r.blob())
-      .then((blob) => onImageReady(blob))
+
+    // 내부 canvas 요소를 직접 참조해 흰 배경 위에 합성 후 export
+    // (ResizeObserver 리사이즈 후 backgroundColor 재적용이 누락되는 경우를 방어)
+    const sigCanvas = canvas.getCanvas()
+    const exportCanvas = document.createElement("canvas")
+    exportCanvas.width = sigCanvas.width
+    exportCanvas.height = sigCanvas.height
+    const ctx = exportCanvas.getContext("2d")!
+    ctx.fillStyle = "white"
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height)
+    ctx.drawImage(sigCanvas, 0, 0)
+    exportCanvas.toBlob((blob) => {
+      if (blob) onImageReady(blob)
+    }, "image/png")
   }
 
   return (
@@ -90,8 +125,9 @@ export default function CanvasInput({ onImageReady }: CanvasInputProps) {
         </div>
       </div>
 
-      {/* 캔버스 */}
+      {/* 캔버스 — wrapper 너비와 내부 해상도를 일치시켜 포인터 오프셋 제거 */}
       <div
+        ref={wrapperRef}
         className="border rounded-2xl overflow-hidden bg-white"
         style={{ cursor: cursorUrl }}
       >
@@ -101,7 +137,11 @@ export default function CanvasInput({ onImageReady }: CanvasInputProps) {
           minWidth={effectiveWidth}
           maxWidth={effectiveWidth}
           backgroundColor="white"
-          canvasProps={{ width: 600, height: 300, className: "w-full", style: { cursor: "inherit" } }}
+          canvasProps={{
+            width: canvasWidth,
+            height: CANVAS_HEIGHT,
+            style: { display: "block", width: "100%", height: CANVAS_HEIGHT, cursor: "inherit" },
+          }}
         />
       </div>
 

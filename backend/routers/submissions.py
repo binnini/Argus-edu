@@ -61,17 +61,31 @@ def _should_autograde_image(student_name: str) -> bool:
 async def list_problems(
     db: AsyncSession = Depends(get_session),
     page: int = Query(1, ge=1),
-    page_size: int = Query(30, ge=1, le=100),
+    page_size: int = Query(10, ge=1, le=100),
+    domain: Optional[str] = Query(None, description="도메인 필터 (부분 일치)"),
+    difficulty: Optional[int] = Query(None, ge=1, le=5, description="난이도 필터 (1~5)"),
+    q: Optional[str] = Query(None, description="제목/내용 키워드 검색"),
 ):
-    total_result = await db.execute(
-        select(func.count()).select_from(Problem).where(Problem.soft_deleted.is_(False))
-    )
+    from sqlalchemy import or_, cast, String
+    base = select(Problem).where(Problem.soft_deleted.is_(False))
+
+    if domain:
+        base = base.where(Problem.domain.ilike(f"%{domain}%"))
+    if difficulty is not None:
+        base = base.where(Problem.difficulty == difficulty)
+    if q:
+        base = base.where(
+            or_(
+                Problem.title.ilike(f"%{q}%"),
+                Problem.domain.ilike(f"%{q}%"),
+            )
+        )
+
+    total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0
 
     result = await db.execute(
-        select(Problem)
-        .where(Problem.soft_deleted.is_(False))
-        .order_by(Problem.id)
+        base.order_by(Problem.difficulty, Problem.id)
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -456,12 +470,15 @@ async def get_submission_status(
             if submission.status == "error"
             else "채점 중입니다. 잠시 후 다시 확인해주세요."
         )
+        pending_max = submission.problem.rubric.get("total_score") if submission.problem else None
         return SubmissionStatusResponse(
             submission_id=submission_id,
             status=submission.status,
             score=None,
+            max_score=pending_max,
             score_visible=False,
             feedback=None,
+            feedback_visible=False,
             teacher_approved=False,
             message=message,
             problem_title=submission.problem.title if submission.problem else None,
@@ -475,11 +492,14 @@ async def get_submission_status(
 
     from services.trust_gate import TrustResult
     from datetime import timedelta
+    total_score = submission.problem.rubric.get("total_score", 0) if submission.problem else 0
+    is_high = gr.trust_level == "high"
     trust = TrustResult(
         trust_score=gr.trust_score,
         trust_level=gr.trust_level,
         queue_type=tq.queue_type if tq else "score_only",
-        score_visible=gr.trust_level == "high",
+        score_visible=is_high,
+        feedback_visible=is_high and gr.ai_score > 0,
         sla_deadline=tq.sla_deadline if tq else datetime.now(timezone.utc) + timedelta(hours=24),
     )
 
@@ -503,7 +523,10 @@ async def get_submission_status(
     )
 
     if teacher_action is None:
-        message = "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."
+        if resp_data.get("feedback_visible"):
+            message = "AI 피드백을 확인할 수 있습니다. 교사 검토 후 최종 확정됩니다."
+        else:
+            message = "교사 검토 중입니다. 피드백은 검토 완료 후 확인할 수 있습니다."
     elif teacher_action == "reject":
         message = "채점이 반려되었습니다. 교사에게 문의해주세요."
     else:
@@ -513,8 +536,10 @@ async def get_submission_status(
         submission_id=submission_id,
         status=submission.status,
         score=resp_data["score"],
+        max_score=total_score if total_score > 0 else None,
         score_visible=resp_data["score_visible"],
         feedback=resp_data["feedback"],
+        feedback_visible=resp_data["feedback_visible"],
         teacher_approved=resp_data["teacher_approved"],
         message=message,
         problem_title=submission.problem.title if submission.problem else None,

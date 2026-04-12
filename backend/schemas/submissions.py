@@ -99,8 +99,10 @@ class SubmissionStatusResponse(BaseModel):
     submission_id: int
     status: str
     score: Optional[int]
+    max_score: Optional[int] = None      # 문제 만점 (부분 정답 판별용)
     score_visible: bool
-    feedback: Optional[FeedbackSchema]   # 교사 승인 후에만 노출
+    feedback: Optional[FeedbackSchema]   # 교사 승인 또는 feedback_visible 시 노출
+    feedback_visible: bool = False       # 정답+고신뢰도면 교사 승인 전에도 노출
     teacher_approved: bool
     message: Optional[str]
     problem_title: Optional[str] = None

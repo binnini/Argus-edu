@@ -8,6 +8,21 @@ interface GradingStatusProps {
   result: SubmissionStatusResponse
 }
 
+function ScoreBadge({ score, maxScore }: { score: number; maxScore: number | null }) {
+  if (score === 0) {
+    return <Badge variant="destructive" className="text-base px-3 py-1">오답 (0점)</Badge>
+  }
+  if (maxScore !== null && score < maxScore) {
+    return (
+      <Badge variant="warning" className="text-base px-3 py-1">
+        부분 정답 ({score}/{maxScore}점)
+      </Badge>
+    )
+  }
+  const label = maxScore !== null ? `정답 (${score}/${maxScore}점)` : "정답"
+  return <Badge variant="success" className="text-base px-3 py-1">{label}</Badge>
+}
+
 export default function GradingStatus({ result }: GradingStatusProps) {
   if (result.status === "pending" || result.status === "error") {
     return (
@@ -28,15 +43,13 @@ export default function GradingStatus({ result }: GradingStatusProps) {
     )
   }
 
+  // 교사 승인 완료
   if (result.teacher_approved && result.feedback) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          {result.score !== null && result.score > 0 && (
-            <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
-          )}
-          {result.score !== null && result.score === 0 && (
-            <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
+        <div className="flex items-center gap-3 flex-wrap">
+          {result.score !== null && (
+            <ScoreBadge score={result.score} maxScore={result.max_score} />
           )}
           <Badge variant="default">교사 승인 완료</Badge>
         </div>
@@ -47,18 +60,34 @@ export default function GradingStatus({ result }: GradingStatusProps) {
 
   if (result.status === "graded") {
     if (result.score_visible && result.score !== null) {
+      // 정답+고신뢰도 → 피드백 바로 노출 (교사 검토 전이라도)
+      if (result.feedback_visible && result.feedback) {
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <ScoreBadge score={result.score} maxScore={result.max_score} />
+            </div>
+            <div className="rounded-2xl bg-blue-50 dark:bg-blue-950/30 p-3">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                AI 피드백을 미리 확인할 수 있습니다. 교사 검토 후 최종 확정됩니다.
+              </p>
+            </div>
+            <FeedbackPanel feedback={result.feedback} />
+          </div>
+        )
+      }
+      // 오답·저신뢰도 → 점수만 표시, 피드백 차단
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            {result.score > 0 && (
-              <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
-            )}
-            {result.score === 0 && (
-              <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
-            )}
+            <ScoreBadge score={result.score} maxScore={result.max_score} />
           </div>
           <div className="rounded-2xl bg-muted p-3">
-            <p className="text-sm text-muted-foreground">교사 검토 대기 중입니다. 피드백은 검토 후 확인할 수 있습니다.</p>
+            <p className="text-sm text-muted-foreground">
+              {result.score === 0
+                ? "오답입니다. 교사 검토 후 상세 피드백을 확인할 수 있습니다."
+                : "교사 검토 대기 중입니다. 피드백은 검토 후 확인할 수 있습니다."}
+            </p>
           </div>
         </div>
       )
@@ -73,11 +102,8 @@ export default function GradingStatus({ result }: GradingStatusProps) {
   if (result.status === "approved") {
     return (
       <div className="space-y-2">
-        {result.score !== null && result.score > 0 && (
-          <Badge variant="success" className="text-base px-3 py-1">정답</Badge>
-        )}
-        {result.score !== null && result.score === 0 && (
-          <Badge variant="destructive" className="text-base px-3 py-1">오답</Badge>
+        {result.score !== null && (
+          <ScoreBadge score={result.score} maxScore={result.max_score} />
         )}
         {result.feedback ? (
           <FeedbackPanel feedback={result.feedback} />

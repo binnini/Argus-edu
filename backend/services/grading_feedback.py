@@ -17,6 +17,7 @@ from typing import Any
 from config import settings
 from prompts.grading_feedback import COMBINED_SYSTEM_PROMPT, COMBINED_USER_TEMPLATE
 from services.embeddings import EmbeddingModel
+from services.grading import check_final_answer
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
@@ -95,12 +96,16 @@ class CombinedGradingFeedbackService:
         student_answer: str,
     ) -> CombinedOutput:
         """채점 + 피드백 단일 호출. 타임아웃은 LLM_TIMEOUT_SECONDS."""
+        answer_verdict = check_final_answer(student_answer, answer)
+        logger.info("최종 답 판별: %s", answer_verdict)
+
         user_prompt = COMBINED_USER_TEMPLATE.format(
             problem_content=problem_content,
             answer=answer,
             reference_solution=reference_solution,
             rubric_json=json.dumps(rubric, ensure_ascii=False, indent=2),
             student_answer=student_answer,
+            answer_verdict=answer_verdict,
         )
 
         timeout = settings.llm_timeout_seconds
@@ -128,6 +133,15 @@ class CombinedGradingFeedbackService:
 
         grading = parsed["grading"]
         feedback = parsed["feedback"]
+
+        # 오답으로 확정 판별된 경우 total_score를 0으로 강제
+        if "오답" in answer_verdict:
+            if grading["total_score"] != 0:
+                logger.warning(
+                    "오답 판별 → total_score %d → 0 강제 (answer_verdict=%s)",
+                    grading["total_score"], answer_verdict,
+                )
+            grading["total_score"] = 0
 
         return CombinedOutput(
             total_score=grading["total_score"],
