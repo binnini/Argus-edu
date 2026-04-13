@@ -139,3 +139,15 @@ class StudentHistoryItem(BaseModel):
 
 class StudentHistoryResponse(BaseModel):
     submissions: list[StudentHistoryItem]
+
+
+class PrototypeSampleImageItem(BaseModel):
+    sample_id: str
+    filename: str
+    content_url: str
+    is_answer: bool = False
+
+
+class PrototypeSampleImageListResponse(BaseModel):
+    enabled: bool
+    samples: list[PrototypeSampleImageItem]

@@ -1,4 +1,5 @@
 import { apiFetch } from "@/api/client";
+import { apiOrigin } from "@/api/client";
 
 export interface Problem {
   id: number;
@@ -89,6 +90,18 @@ export interface StudentHistoryResponse {
   submissions: StudentHistoryItem[];
 }
 
+export interface PrototypeSampleImageItem {
+  sample_id: string;
+  filename: string;
+  content_url: string;
+  is_answer?: boolean;
+}
+
+export interface PrototypeSampleImageListResponse {
+  enabled: boolean;
+  samples: PrototypeSampleImageItem[];
+}
+
 export async function getProblems(
   page = 1,
   pageSize = 10,
@@ -111,6 +124,30 @@ export async function getProblemDomains(schoolLevel?: string): Promise<ProblemDo
 
 export async function getStudentHistory(studentId: string): Promise<StudentHistoryResponse> {
   return apiFetch(`/submissions?student_id=${encodeURIComponent(studentId)}`, undefined, "이력 조회 실패");
+}
+
+export async function getPrototypeSampleImages(limit = 12): Promise<PrototypeSampleImageListResponse> {
+  return apiFetch(`/prototype/sample-images?limit=${limit}`, undefined, "샘플 이미지 조회 실패");
+}
+
+export async function getPrototypeProblemSampleImages(
+  problemId: number,
+): Promise<PrototypeSampleImageListResponse> {
+  return apiFetch(
+    `/prototype/problem-sample-images?problem_id=${problemId}`,
+    undefined,
+    "문제 샘플 이미지 조회 실패",
+  );
+}
+
+export async function fetchPrototypeSampleImageFile(sample: PrototypeSampleImageItem): Promise<File> {
+  const response = await fetch(`${apiOrigin()}${sample.content_url}`);
+  if (!response.ok) {
+    throw new Error("샘플 이미지 로드 실패");
+  }
+  const blob = await response.blob();
+  const contentType = blob.type || "image/png";
+  return new File([blob], sample.filename, { type: contentType });
 }
 
 export async function getProblem(problemId: number): Promise<Problem> {

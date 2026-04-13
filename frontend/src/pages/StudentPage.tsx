@@ -255,7 +255,10 @@ export default function StudentPage() {
                 />
               </TabsContent>
               <TabsContent value="image">
-                <AnswerInput onFileReady={(f) => student.setImageFile(f)} />
+                <AnswerInput
+                  problemId={student.problem.id}
+                  onFileReady={(f) => student.setImageFile(f)}
+                />
               </TabsContent>
             </Tabs>
 

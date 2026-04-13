@@ -9,6 +9,7 @@ GET  /api/v1/problems/{id}     — 문제 상세 (answer/reference_solution 제�
 """
 
 import asyncio
+import base64
 import json
 import logging
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -38,6 +40,8 @@ from schemas.submissions import (
     SubmissionStatusResponse,
     StudentHistoryItem,
     StudentHistoryResponse,
+    PrototypeSampleImageItem,
+    PrototypeSampleImageListResponse,
 )
 from schemas.homeworks import StudentHomeworkResponse, StudentHomeworkItem, HomeworkProblemStatus
 from services.pipeline import run_grading_pipeline
@@ -49,6 +53,8 @@ router = APIRouter(prefix="/api/v1", tags=["submissions"])
 UPLOAD_DIR = Path(settings.upload_dir)
 LOAD_TEST_ANSWER_MARKER = "(제출 #"
 AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ALLOWED_SAMPLE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
 
 
 def _should_autograde_text(student_name: str, student_answer: str) -> bool:
@@ -61,7 +67,170 @@ def _should_autograde_image(student_name: str) -> bool:
     return bool(student_name.strip())
 
 
+def _sample_dir() -> Path:
+    configured = Path(settings.prototype_sample_image_dir)
+    if configured.is_absolute():
+        return configured
+    return (PROJECT_ROOT / configured).resolve()
+
+
+def _encode_sample_id(path: Path) -> str:
+    raw = str(path).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("ascii")
+
+
+def _decode_sample_id(sample_id: str) -> Path:
+    try:
+        raw = base64.urlsafe_b64decode(sample_id.encode("ascii")).decode("utf-8")
+    except Exception:
+        raise HTTPException(status_code=400, detail="잘못된 sample_id 입니다")
+    root = _sample_dir()
+    resolved = (root / raw).resolve()
+    if not str(resolved).startswith(str(root)):
+        raise HTTPException(status_code=400, detail="잘못된 sample_id 입니다")
+    return resolved
+
+
+def _sample_item_from_submission(sub: Submission, *, is_answer: bool) -> PrototypeSampleImageItem:
+    content_url = f"/{(sub.image_path or '').lstrip('/')}"
+    return PrototypeSampleImageItem(
+        sample_id=str(sub.id),
+        filename=Path(sub.image_path or "").name or f"submission_{sub.id}.png",
+        content_url=content_url,
+        is_answer=is_answer,
+    )
+
+
 # ── 문제 조회 ────────────────────────────────────────────────
+
+@router.get("/prototype/sample-images", response_model=PrototypeSampleImageListResponse)
+async def list_prototype_sample_images(
+    limit: int = Query(12, ge=1, le=100),
+):
+    if not settings.prototype_sample_images_enabled:
+        return PrototypeSampleImageListResponse(enabled=False, samples=[])
+
+    root = _sample_dir()
+    if not root.exists() or not root.is_dir():
+        return PrototypeSampleImageListResponse(enabled=True, samples=[])
+
+    candidates = []
+    for p in root.rglob("*"):
+        if not p.is_file():
+            continue
+        if p.suffix.lower() not in ALLOWED_SAMPLE_SUFFIXES:
+            continue
+        try:
+            mtime = p.stat().st_mtime
+        except OSError:
+            continue
+        candidates.append((mtime, p))
+
+    candidates.sort(key=lambda x: x[0], reverse=True)
+    cap = min(limit, settings.prototype_sample_image_limit)
+    selected = candidates[:cap]
+
+    samples: list[PrototypeSampleImageItem] = []
+    for _, path in selected:
+        rel = path.relative_to(root)
+        sample_id = _encode_sample_id(rel)
+        samples.append(
+            PrototypeSampleImageItem(
+                sample_id=sample_id,
+                filename=path.name,
+                content_url=f"/api/v1/prototype/sample-images/{sample_id}/content",
+            )
+        )
+    return PrototypeSampleImageListResponse(enabled=True, samples=samples)
+
+
+@router.get("/prototype/problem-sample-images", response_model=PrototypeSampleImageListResponse)
+async def list_problem_prototype_sample_images(
+    problem_id: int = Query(..., ge=1),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    문제별 데모 샘플 목록:
+    - 정답 후보 1개(해당 문제의 정답 제출 이미지) 반드시 포함
+    - 나머지 후보 4개는 랜덤(우선: 해당 문제 오답 이미지)
+    """
+    if not settings.prototype_sample_images_enabled:
+        return PrototypeSampleImageListResponse(enabled=False, samples=[])
+
+    answer_query = (
+        select(Submission)
+        .join(GradingResult, GradingResult.submission_id == Submission.id)
+        .where(
+            Submission.problem_id == problem_id,
+            Submission.image_path.is_not(None),
+            Submission.image_path != "",
+            GradingResult.ai_score > 0,
+        )
+        .order_by(func.random())
+        .limit(1)
+    )
+    answer_result = await db.execute(answer_query)
+    answer_sub = answer_result.scalar_one_or_none()
+    if answer_sub is None:
+        raise HTTPException(
+            status_code=404,
+            detail="해당 문제의 정답 샘플 이미지를 찾을 수 없습니다. 샘플 데이터셋을 먼저 준비해주세요.",
+        )
+
+    picked_ids = {answer_sub.id}
+    candidates: list[PrototypeSampleImageItem] = [
+        _sample_item_from_submission(answer_sub, is_answer=True)
+    ]
+
+    wrong_query = (
+        select(Submission)
+        .join(GradingResult, GradingResult.submission_id == Submission.id)
+        .where(
+            Submission.problem_id == problem_id,
+            Submission.id.notin_(picked_ids),
+            Submission.image_path.is_not(None),
+            Submission.image_path != "",
+            GradingResult.ai_score == 0,
+        )
+        .order_by(func.random())
+        .limit(4)
+    )
+    wrong_result = await db.execute(wrong_query)
+    wrong_subs = list(wrong_result.scalars().all())
+    for sub in wrong_subs:
+        picked_ids.add(sub.id)
+        candidates.append(_sample_item_from_submission(sub, is_answer=False))
+
+    needed = max(0, 5 - len(candidates))
+    if needed > 0:
+        fallback_query = (
+            select(Submission)
+            .where(
+                Submission.id.notin_(picked_ids),
+                Submission.image_path.is_not(None),
+                Submission.image_path != "",
+            )
+            .order_by(func.random())
+            .limit(needed)
+        )
+        fallback_result = await db.execute(fallback_query)
+        for sub in fallback_result.scalars().all():
+            candidates.append(_sample_item_from_submission(sub, is_answer=False))
+
+    return PrototypeSampleImageListResponse(enabled=True, samples=candidates[:5])
+
+
+@router.get("/prototype/sample-images/{sample_id}/content")
+async def get_prototype_sample_image_content(sample_id: str):
+    if not settings.prototype_sample_images_enabled:
+        raise HTTPException(status_code=404, detail="샘플 이미지 기능이 비활성화되어 있습니다")
+
+    path = _decode_sample_id(sample_id)
+    if not path.exists() or not path.is_file():
+        raise HTTPException(status_code=404, detail="샘플 이미지를 찾을 수 없습니다")
+    if path.suffix.lower() not in ALLOWED_SAMPLE_SUFFIXES:
+        raise HTTPException(status_code=400, detail="지원하지 않는 샘플 이미지 형식입니다")
+    return FileResponse(path=str(path), filename=path.name)
 
 @router.get("/problems", response_model=ProblemListPagedResponse)
 async def list_problems(
