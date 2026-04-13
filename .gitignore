@@ -51,4 +51,4 @@ backend/uploads/
 # 벤치마크 결과 CSV (루트/scripts 아래 임시 파일만 제외, tests/ 아래는 보관)
 benchmark_*.csv
 scripts/benchmark_*.csv
-!tests/benchmark_*.csv
+tests/benchmark_*.csv
