@@ -21,6 +21,8 @@ class Settings(BaseSettings):
 
     # MLX (llm_provider="mlx" 시 사용)
     mlx_model_path: str = "unsloth/gemma-4-E4B-it-MLX-8bit"
+    mlx_grading_model_path: str = ""
+    mlx_feedback_model_path: str = ""
     mlx_max_tokens: int = 4096  # thinking 비활성화 시에도 수식 풀이 여유 확보
 
     # AI 모델 — 절대 하드코딩 금지, 환경변수에서 로드

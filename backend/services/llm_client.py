@@ -19,14 +19,29 @@ class LLMClient:
     main.py lifespan에서 로드한 model/tokenizer를 주입해야 한다.
     """
 
-    def __init__(self, provider: LLMProvider | None = None, mlx_model=None, mlx_tokenizer=None) -> None:
+    def __init__(
+        self,
+        provider: LLMProvider | None = None,
+        mlx_model=None,
+        mlx_tokenizer=None,
+        mlx_model_path: str | None = None,
+    ) -> None:
         self.provider = settings.llm_provider
         self._grading_inflight = 0
         self._chat_lock = asyncio.Lock()
-        self._provider = provider or self._build_provider(mlx_model, mlx_tokenizer)
+        self._provider = provider or self._build_provider(
+            mlx_model,
+            mlx_tokenizer,
+            mlx_model_path,
+        )
         logger.info(f"LLM 클라이언트 초기화: provider={self.provider}")
 
-    def _build_provider(self, mlx_model=None, mlx_tokenizer=None) -> LLMProvider:
+    def _build_provider(
+        self,
+        mlx_model=None,
+        mlx_tokenizer=None,
+        mlx_model_path: str | None = None,
+    ) -> LLMProvider:
         if self.provider == "anthropic":
             return AnthropicProvider()
         if self.provider == "ollama":
@@ -37,8 +52,9 @@ class LLMClient:
                     "LLM_PROVIDER=mlx 일 때 mlx_model과 mlx_tokenizer를 주입해야 합니다. "
                     "main.py lifespan에서 mlx_lm.load() 후 LLMClient(mlx_model=...) 형태로 생성하세요."
                 )
-            logger.info(f"MLX 클라이언트 준비 완료: model_path={settings.mlx_model_path}")
-            return MLXProvider(mlx_model, mlx_tokenizer)
+            active_model_path = mlx_model_path or settings.mlx_grading_model_path or settings.mlx_model_path
+            logger.info(f"MLX 클라이언트 준비 완료: model_path={active_model_path}")
+            return MLXProvider(mlx_model, mlx_tokenizer, active_model_path)
         raise ValueError(f"지원하지 않는 LLM_PROVIDER: {self.provider}")
 
     @property

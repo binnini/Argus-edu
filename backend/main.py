@@ -46,12 +46,17 @@ async def lifespan(app: FastAPI):
     # LLM 클라이언트 초기화
     # MLX provider: 무거운 모델을 lifespan에서 1회만 로드
     if settings.llm_provider == "mlx":
-        logger.info(f"MLX 모델 로딩 시작: {settings.mlx_model_path}")
+        initial_mlx_model_path = settings.mlx_grading_model_path or settings.mlx_model_path
+        logger.info(f"MLX 모델 로딩 시작: {initial_mlx_model_path}")
         from mlx_lm import load as mlx_load
-        mlx_model, mlx_tokenizer = mlx_load(settings.mlx_model_path)
+        mlx_model, mlx_tokenizer = mlx_load(initial_mlx_model_path)
         app.state.mlx_model = mlx_model
         app.state.mlx_tokenizer = mlx_tokenizer
-        llm_client = LLMClient(mlx_model=mlx_model, mlx_tokenizer=mlx_tokenizer)
+        llm_client = LLMClient(
+            mlx_model=mlx_model,
+            mlx_tokenizer=mlx_tokenizer,
+            mlx_model_path=initial_mlx_model_path,
+        )
         logger.info("MLX 모델 로딩 완료")
     else:
         llm_client = LLMClient()
