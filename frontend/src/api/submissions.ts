@@ -126,15 +126,23 @@ export async function getStudentHistory(studentId: string): Promise<StudentHisto
   return apiFetch(`/submissions?student_id=${encodeURIComponent(studentId)}`, undefined, "이력 조회 실패");
 }
 
-export async function getPrototypeSampleImages(limit = 12): Promise<PrototypeSampleImageListResponse> {
-  return apiFetch(`/prototype/sample-images?limit=${limit}`, undefined, "샘플 이미지 조회 실패");
+export async function getPrototypeSampleImages(
+  schoolLevel?: string,
+  domain?: string,
+): Promise<PrototypeSampleImageListResponse> {
+  const params = new URLSearchParams();
+  if (schoolLevel) params.set("school_level", schoolLevel);
+  if (domain) params.set("domain", domain);
+  const query = params.toString();
+  return apiFetch(`/prototype/sample-images${query ? `?${query}` : ""}`, undefined, "샘플 이미지 조회 실패");
 }
 
 export async function getPrototypeProblemSampleImages(
-  problemId: number,
+  schoolLevel: string,
+  domain: string,
 ): Promise<PrototypeSampleImageListResponse> {
   return apiFetch(
-    `/prototype/problem-sample-images?problem_id=${problemId}`,
+    `/prototype/problem-sample-images?school_level=${encodeURIComponent(schoolLevel)}&domain=${encodeURIComponent(domain)}`,
     undefined,
     "문제 샘플 이미지 조회 실패",
   );

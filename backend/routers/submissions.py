@@ -9,9 +9,9 @@ GET  /api/v1/problems/{id}     — 문제 상세 (answer/reference_solution 제�
 """
 
 import asyncio
-import base64
 import json
 import logging
+import random
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -54,7 +54,8 @@ UPLOAD_DIR = Path(settings.upload_dir)
 LOAD_TEST_ANSWER_MARKER = "(제출 #"
 AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-ALLOWED_SAMPLE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp"}
+DEMO_IMAGES_ROOT = PROJECT_ROOT / "demo" / "images"
+DEMO_MANIFEST_PATH = DEMO_IMAGES_ROOT / "manifest.json"
 
 
 def _should_autograde_text(student_name: str, student_answer: str) -> bool:
@@ -67,87 +68,59 @@ def _should_autograde_image(student_name: str) -> bool:
     return bool(student_name.strip())
 
 
-def _sample_dir() -> Path:
-    configured = Path(settings.prototype_sample_image_dir)
-    if configured.is_absolute():
-        return configured
-    return (PROJECT_ROOT / configured).resolve()
-
-
-def _encode_sample_id(path: Path) -> str:
-    raw = str(path).encode("utf-8")
-    return base64.urlsafe_b64encode(raw).decode("ascii")
-
-
-def _decode_sample_id(sample_id: str) -> Path:
+def _load_demo_manifest() -> list[dict]:
+    if not DEMO_MANIFEST_PATH.exists():
+        return []
     try:
-        raw = base64.urlsafe_b64decode(sample_id.encode("ascii")).decode("utf-8")
-    except Exception:
-        raise HTTPException(status_code=400, detail="잘못된 sample_id 입니다")
-    root = _sample_dir()
-    resolved = (root / raw).resolve()
-    if not str(resolved).startswith(str(root)):
-        raise HTTPException(status_code=400, detail="잘못된 sample_id 입니다")
-    return resolved
-
-
-def _sample_item_from_submission(sub: Submission, *, is_answer: bool) -> PrototypeSampleImageItem:
-    content_url = f"/{(sub.image_path or '').lstrip('/')}"
-    return PrototypeSampleImageItem(
-        sample_id=str(sub.id),
-        filename=Path(sub.image_path or "").name or f"submission_{sub.id}.png",
-        content_url=content_url,
-        is_answer=is_answer,
-    )
+        payload = json.loads(DEMO_MANIFEST_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    samples = payload.get("samples", [])
+    return samples if isinstance(samples, list) else []
 
 
 # ── 문제 조회 ────────────────────────────────────────────────
 
 @router.get("/prototype/sample-images", response_model=PrototypeSampleImageListResponse)
 async def list_prototype_sample_images(
-    limit: int = Query(12, ge=1, le=100),
+    school_level: Optional[str] = Query(None),
+    domain: Optional[str] = Query(None),
 ):
+    """샘플 존재 데이터(학교급/도메인)만 반환."""
     if not settings.prototype_sample_images_enabled:
         return PrototypeSampleImageListResponse(enabled=False, samples=[])
 
-    root = _sample_dir()
-    if not root.exists() or not root.is_dir():
-        return PrototypeSampleImageListResponse(enabled=True, samples=[])
-
-    candidates = []
-    for p in root.rglob("*"):
-        if not p.is_file():
+    all_samples = _load_demo_manifest()
+    seen: set[tuple[str, str]] = set()
+    candidates: list[PrototypeSampleImageItem] = []
+    for row in all_samples:
+        lvl = str(row.get("school_level", ""))
+        dm = str(row.get("domain", ""))
+        if not lvl or not dm:
             continue
-        if p.suffix.lower() not in ALLOWED_SAMPLE_SUFFIXES:
+        if school_level and lvl != school_level:
             continue
-        try:
-            mtime = p.stat().st_mtime
-        except OSError:
+        if domain and dm != domain:
             continue
-        candidates.append((mtime, p))
-
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    cap = min(limit, settings.prototype_sample_image_limit)
-    selected = candidates[:cap]
-
-    samples: list[PrototypeSampleImageItem] = []
-    for _, path in selected:
-        rel = path.relative_to(root)
-        sample_id = _encode_sample_id(rel)
-        samples.append(
+        key = (lvl, dm)
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append(
             PrototypeSampleImageItem(
-                sample_id=sample_id,
-                filename=path.name,
-                content_url=f"/api/v1/prototype/sample-images/{sample_id}/content",
+                sample_id=f"{lvl}::{dm}",
+                filename=f"{lvl} / {dm}",
+                content_url="",
+                is_answer=False,
             )
         )
-    return PrototypeSampleImageListResponse(enabled=True, samples=samples)
+    return PrototypeSampleImageListResponse(enabled=True, samples=candidates)
 
 
 @router.get("/prototype/problem-sample-images", response_model=PrototypeSampleImageListResponse)
 async def list_problem_prototype_sample_images(
-    problem_id: int = Query(..., ge=1),
-    db: AsyncSession = Depends(get_session),
+    school_level: str = Query(...),
+    domain: str = Query(...),
 ):
     """
     문제별 데모 샘플 목록:
@@ -157,67 +130,45 @@ async def list_problem_prototype_sample_images(
     if not settings.prototype_sample_images_enabled:
         return PrototypeSampleImageListResponse(enabled=False, samples=[])
 
-    answer_query = (
-        select(Submission)
-        .join(GradingResult, GradingResult.submission_id == Submission.id)
-        .where(
-            Submission.problem_id == problem_id,
-            Submission.image_path.is_not(None),
-            Submission.image_path != "",
-            GradingResult.ai_score > 0,
-        )
-        .order_by(func.random())
-        .limit(1)
-    )
-    answer_result = await db.execute(answer_query)
-    answer_sub = answer_result.scalar_one_or_none()
-    if answer_sub is None:
+    pool = [
+        row for row in _load_demo_manifest()
+        if row.get("school_level") == school_level and row.get("domain") == domain
+    ]
+    if not pool:
+        pool = [
+            row for row in _load_demo_manifest()
+            if row.get("school_level") == school_level
+        ]
+    if not pool:
+        return PrototypeSampleImageListResponse(enabled=True, samples=[])
+
+    answer_pool = [row for row in pool if bool(row.get("is_answer"))]
+    if not answer_pool:
         raise HTTPException(
             status_code=404,
-            detail="해당 문제의 정답 샘플 이미지를 찾을 수 없습니다. 샘플 데이터셋을 먼저 준비해주세요.",
+            detail="해당 학교급/도메인의 정답 샘플 이미지를 찾을 수 없습니다.",
         )
+    answer = random.choice(answer_pool)
+    answer_id = str(answer.get("sample_id", ""))
 
-    picked_ids = {answer_sub.id}
-    candidates: list[PrototypeSampleImageItem] = [
-        _sample_item_from_submission(answer_sub, is_answer=True)
-    ]
+    distractors_pool = [row for row in pool if str(row.get("sample_id", "")) != answer_id]
+    random.shuffle(distractors_pool)
+    picked = [answer, *distractors_pool[:4]]
 
-    wrong_query = (
-        select(Submission)
-        .join(GradingResult, GradingResult.submission_id == Submission.id)
-        .where(
-            Submission.problem_id == problem_id,
-            Submission.id.notin_(picked_ids),
-            Submission.image_path.is_not(None),
-            Submission.image_path != "",
-            GradingResult.ai_score == 0,
-        )
-        .order_by(func.random())
-        .limit(4)
-    )
-    wrong_result = await db.execute(wrong_query)
-    wrong_subs = list(wrong_result.scalars().all())
-    for sub in wrong_subs:
-        picked_ids.add(sub.id)
-        candidates.append(_sample_item_from_submission(sub, is_answer=False))
-
-    needed = max(0, 5 - len(candidates))
-    if needed > 0:
-        fallback_query = (
-            select(Submission)
-            .where(
-                Submission.id.notin_(picked_ids),
-                Submission.image_path.is_not(None),
-                Submission.image_path != "",
+    samples: list[PrototypeSampleImageItem] = []
+    for row in picked:
+        sid = str(row.get("sample_id", ""))
+        filename = str(row.get("filename", sid))
+        rel_path = str(row.get("relative_path", ""))
+        samples.append(
+            PrototypeSampleImageItem(
+                sample_id=sid,
+                filename=filename,
+                content_url=f"/api/v1/prototype/sample-images/{sid}/content",
+                is_answer=bool(row.get("is_answer")),
             )
-            .order_by(func.random())
-            .limit(needed)
         )
-        fallback_result = await db.execute(fallback_query)
-        for sub in fallback_result.scalars().all():
-            candidates.append(_sample_item_from_submission(sub, is_answer=False))
-
-    return PrototypeSampleImageListResponse(enabled=True, samples=candidates[:5])
+    return PrototypeSampleImageListResponse(enabled=True, samples=samples)
 
 
 @router.get("/prototype/sample-images/{sample_id}/content")
@@ -225,11 +176,23 @@ async def get_prototype_sample_image_content(sample_id: str):
     if not settings.prototype_sample_images_enabled:
         raise HTTPException(status_code=404, detail="샘플 이미지 기능이 비활성화되어 있습니다")
 
-    path = _decode_sample_id(sample_id)
+    sample = None
+    for row in _load_demo_manifest():
+        if str(row.get("sample_id", "")) == sample_id:
+            sample = row
+            break
+    if sample is None:
+        raise HTTPException(status_code=404, detail="샘플 이미지를 찾을 수 없습니다")
+
+    rel_path = str(sample.get("relative_path", ""))
+    if not rel_path:
+        raise HTTPException(status_code=404, detail="샘플 이미지를 찾을 수 없습니다")
+
+    path = (DEMO_IMAGES_ROOT / rel_path).resolve()
+    if not str(path).startswith(str(DEMO_IMAGES_ROOT.resolve())):
+        raise HTTPException(status_code=400, detail="잘못된 샘플 경로입니다")
     if not path.exists() or not path.is_file():
         raise HTTPException(status_code=404, detail="샘플 이미지를 찾을 수 없습니다")
-    if path.suffix.lower() not in ALLOWED_SAMPLE_SUFFIXES:
-        raise HTTPException(status_code=400, detail="지원하지 않는 샘플 이미지 형식입니다")
     return FileResponse(path=str(path), filename=path.name)
 
 @router.get("/problems", response_model=ProblemListPagedResponse)

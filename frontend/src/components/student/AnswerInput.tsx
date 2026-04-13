@@ -3,6 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import CanvasInput, { CANVAS_ENABLED } from "./CanvasInput"
 import {
   fetchPrototypeSampleImageFile,
+  getPrototypeSampleImages,
   getPrototypeProblemSampleImages,
   type PrototypeSampleImageItem,
 } from "@/api/submissions"
@@ -11,30 +12,39 @@ import { Upload, Camera, PenLine, Images } from "lucide-react"
 
 interface AnswerInputProps {
   onFileReady: (file: File) => void
-  problemId?: number
+  schoolLevel?: string | null
+  domain?: string | null
 }
 
 const SAMPLE_IMAGE_ENABLED = String(import.meta.env.VITE_ENABLE_SAMPLE_IMAGE_INPUT ?? "false").toLowerCase() === "true"
 
-export default function AnswerInput({ onFileReady, problemId }: AnswerInputProps) {
+export default function AnswerInput({ onFileReady, schoolLevel, domain }: AnswerInputProps) {
   const [preview, setPreview] = React.useState<string | null>(null)
   const [samples, setSamples] = React.useState<PrototypeSampleImageItem[]>([])
+  const [catalog, setCatalog] = React.useState<PrototypeSampleImageItem[]>([])
   const [sampleEnabledByServer, setSampleEnabledByServer] = React.useState(false)
   const [sampleLoading, setSampleLoading] = React.useState(false)
   const [sampleError, setSampleError] = React.useState("")
 
   React.useEffect(() => {
-    if (!SAMPLE_IMAGE_ENABLED || !problemId) return
+    if (!SAMPLE_IMAGE_ENABLED || !schoolLevel || !domain) return
     setSampleLoading(true)
     setSampleError("")
-    getPrototypeProblemSampleImages(problemId)
+    getPrototypeProblemSampleImages(schoolLevel, domain)
       .then((res) => {
         setSampleEnabledByServer(res.enabled)
         setSamples(res.samples ?? [])
       })
       .catch((e: unknown) => setSampleError(e instanceof Error ? e.message : "샘플 이미지 조회 실패"))
       .finally(() => setSampleLoading(false))
-  }, [problemId])
+  }, [schoolLevel, domain])
+
+  React.useEffect(() => {
+    if (!SAMPLE_IMAGE_ENABLED) return
+    getPrototypeSampleImages()
+      .then((res) => setCatalog(res.samples ?? []))
+      .catch(() => setCatalog([]))
+  }, [])
 
   function handleFileChange(file: File | null) {
     if (!file) return
@@ -146,7 +156,7 @@ export default function AnswerInput({ onFileReady, problemId }: AnswerInputProps
             ) : !sampleEnabledByServer ? (
               <p className="text-sm text-muted-foreground">현재 샘플 이미지 기능이 비활성화되어 있습니다.</p>
             ) : samples.length === 0 ? (
-              <p className="text-sm text-muted-foreground">사용 가능한 샘플 이미지가 없습니다.</p>
+              <p className="text-sm text-muted-foreground">현재 선택한 학교급/도메인에 샘플 이미지가 없습니다.</p>
             ) : (
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 {samples.map((sample) => (
@@ -174,6 +184,18 @@ export default function AnswerInput({ onFileReady, problemId }: AnswerInputProps
               </div>
             )}
             {sampleError && <p className="text-xs text-destructive">{sampleError}</p>}
+            {catalog.length > 0 && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                <p className="mb-1 text-xs text-muted-foreground">샘플 제공 데이터(학교급/도메인)</p>
+                <div className="flex flex-wrap gap-1">
+                  {catalog.map((item) => (
+                    <span key={item.sample_id} className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                      {item.filename}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {preview && (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <p className="mb-1 text-xs text-muted-foreground">선택된 샘플</p>

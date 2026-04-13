@@ -68,8 +68,6 @@ class Settings(BaseSettings):
 
     # 프로토타입 데모: 학생 샘플 이미지 입력
     prototype_sample_images_enabled: bool = False
-    prototype_sample_image_dir: str = "uploads"
-    prototype_sample_image_limit: int = 24
 
     model_config = {
         "env_file": ("../.env", ".env"),  # backend/ 또는 루트 모두 탐색
