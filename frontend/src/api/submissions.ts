@@ -95,6 +95,7 @@ export interface PrototypeSampleImageItem {
   filename: string;
   content_url: string;
   is_answer?: boolean;
+  answer_text?: string | null;
 }
 
 export interface PrototypeSampleImageListResponse {
@@ -139,11 +140,12 @@ export async function getPrototypeSampleImages(
 }
 
 export async function getPrototypeProblemSampleImages(
+  problemId: number,
   schoolLevel: string,
   domain: string,
 ): Promise<PrototypeSampleImageListResponse> {
   return apiFetch(
-    `/prototype/problem-sample-images?school_level=${encodeURIComponent(schoolLevel)}&domain=${encodeURIComponent(domain)}`,
+    `/prototype/problem-sample-images?problem_id=${encodeURIComponent(String(problemId))}&school_level=${encodeURIComponent(schoolLevel)}&domain=${encodeURIComponent(domain)}`,
     undefined,
     "문제 샘플 이미지 조회 실패",
   );

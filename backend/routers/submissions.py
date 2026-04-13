@@ -131,8 +131,10 @@ async def list_prototype_sample_images(
 
 @router.get("/prototype/problem-sample-images", response_model=PrototypeSampleImageListResponse)
 async def list_problem_prototype_sample_images(
+    problem_id: Optional[int] = Query(None),
     school_level: str = Query(...),
     domain: str = Query(...),
+    db: AsyncSession = Depends(get_session),
 ):
     """
     문제별 데모 샘플 목록:
@@ -142,6 +144,14 @@ async def list_problem_prototype_sample_images(
     """
     if not settings.prototype_sample_images_enabled:
         return PrototypeSampleImageListResponse(enabled=False, samples=[])
+
+    problem_answer: Optional[str] = None
+    if problem_id is not None:
+        problem = await db.get(Problem, problem_id)
+        if problem:
+            school_level = problem.school_level or school_level
+            domain = problem.domain or domain
+            problem_answer = problem.answer
 
     pool = [
         row for row in _load_demo_manifest()
@@ -178,6 +188,7 @@ async def list_problem_prototype_sample_images(
                 filename=filename,
                 content_url=f"/api/v1/prototype/sample-images/{sid}/content",
                 is_answer=bool(row.get("is_answer")),
+                answer_text=problem_answer if bool(row.get("is_answer")) else None,
             )
         )
     return PrototypeSampleImageListResponse(enabled=True, samples=samples)

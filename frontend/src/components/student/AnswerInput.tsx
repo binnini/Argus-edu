@@ -11,13 +11,21 @@ import { Upload, Camera, PenLine, Images } from "lucide-react"
 
 interface AnswerInputProps {
   onFileReady: (file: File) => void
+  onAutoFillFinalAnswer?: (value: string) => void
+  problemId?: number
   schoolLevel?: string | null
   domain?: string | null
 }
 
 const SAMPLE_IMAGE_ENABLED = String(import.meta.env.VITE_ENABLE_SAMPLE_IMAGE_INPUT ?? "false").toLowerCase() === "true"
 
-export default function AnswerInput({ onFileReady, schoolLevel, domain }: AnswerInputProps) {
+export default function AnswerInput({
+  onFileReady,
+  onAutoFillFinalAnswer,
+  problemId,
+  schoolLevel,
+  domain,
+}: AnswerInputProps) {
   const [preview, setPreview] = React.useState<string | null>(null)
   const [samples, setSamples] = React.useState<PrototypeSampleImageItem[]>([])
   const [sampleEnabledByServer, setSampleEnabledByServer] = React.useState(false)
@@ -25,17 +33,17 @@ export default function AnswerInput({ onFileReady, schoolLevel, domain }: Answer
   const [sampleError, setSampleError] = React.useState("")
 
   React.useEffect(() => {
-    if (!SAMPLE_IMAGE_ENABLED || !schoolLevel || !domain) return
+    if (!SAMPLE_IMAGE_ENABLED || !problemId || !schoolLevel || !domain) return
     setSampleLoading(true)
     setSampleError("")
-    getPrototypeProblemSampleImages(schoolLevel, domain)
+    getPrototypeProblemSampleImages(problemId, schoolLevel, domain)
       .then((res) => {
         setSampleEnabledByServer(res.enabled)
         setSamples(res.samples ?? [])
       })
       .catch((e: unknown) => setSampleError(e instanceof Error ? e.message : "샘플 이미지 조회 실패"))
       .finally(() => setSampleLoading(false))
-  }, [schoolLevel, domain])
+  }, [problemId, schoolLevel, domain])
 
   function handleFileChange(file: File | null) {
     if (!file) return
@@ -59,6 +67,9 @@ export default function AnswerInput({ onFileReady, schoolLevel, domain }: Answer
     try {
       const file = await fetchPrototypeSampleImageFile(sample)
       handleFileChange(file)
+      if (sample.is_answer && sample.answer_text && onAutoFillFinalAnswer) {
+        onAutoFillFinalAnswer(sample.answer_text)
+      }
     } catch (e) {
       setSampleError(e instanceof Error ? e.message : "샘플 이미지 선택 실패")
     }

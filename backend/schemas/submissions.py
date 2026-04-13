@@ -146,6 +146,7 @@ class PrototypeSampleImageItem(BaseModel):
     filename: str
     content_url: str
     is_answer: bool = False
+    answer_text: Optional[str] = None
 
 
 class PrototypeSampleImageListResponse(BaseModel):
