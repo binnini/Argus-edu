@@ -460,25 +460,25 @@
 > `*.pages.dev`는 정적 프론트엔드 전용, `*.workers.dev`는 Workers 서버리스용이므로
 > FastAPI + PostgreSQL + MLX + GOT-OCR 로컬 서빙 구조에는 Quick Tunnel이 가장 단순함.
 
-- [ ] Quick Tunnel 실행
+- [x] Quick Tunnel 실행
   ```bash
   cloudflared tunnel --url http://localhost:80
   ```
-- [ ] 출력된 `https://*.trycloudflare.com` URL을 `.env`의 `ALLOWED_ORIGINS`에 추가
+- [x] 출력된 `https://*.trycloudflare.com` URL을 `.env`의 `ALLOWED_ORIGINS`에 추가
   ```env
   ALLOWED_ORIGINS=http://localhost,http://localhost:80,https://<generated>.trycloudflare.com
   ```
-- [ ] backend launchd 재시작
+- [x] backend launchd 재시작
   ```bash
   launchctl unload ~/Library/LaunchAgents/com.argus.backend.plist
   launchctl load ~/Library/LaunchAgents/com.argus.backend.plist
   ```
-- [ ] 외부 URL 접속 확인
+- [x] 외부 URL 접속 확인
   - 학생 화면 접속
   - 교사 화면 접속 (`TEACHER_PASSWORD=argus`)
   - 답안 제출 + 교사 승인 흐름 확인
   - 이미지 업로드 + GOT-OCR 흐름 확인
-- [ ] 심사 기간 동안 Mac Mini 잠자기 방지
+- [x] 심사 기간 동안 Mac Mini 잠자기 방지
   ```bash
   caffeinate -dimsu
   ```
@@ -486,10 +486,10 @@
 ### 9-5. 선택 사항: 고정 도메인 Cloudflare Tunnel
 > 공모전 이후 계속 운영할 때만 진행. 도메인 구매/소유가 필요함.
 
-- [ ] `cloudflared tunnel create argus` 실행
-- [ ] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 실제 소유 도메인 교체
-- [ ] `cloudflared tunnel route dns argus <owned-domain>` 실행
-- [ ] launchd 서비스 등록 + HTTPS 최종 접속 확인
+- [x] `cloudflared tunnel create argus` 실행
+- [x] `deploy/cloudflare-tunnel.yml` — `<TUNNEL_ID>` + 실제 소유 도메인 교체
+- [x] `cloudflared tunnel route dns argus <owned-domain>` 실행
+- [x] launchd 서비스 등록 + HTTPS 최종 접속 확인
 
 ---
 
