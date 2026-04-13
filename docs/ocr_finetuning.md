@@ -127,6 +127,8 @@ ocr_training/output/
 └── evaluation_comparison.json      ← 평가 결과 JSON
 ```
 
+*학습 파라미터는 Repo에 미포함*
+
 ---
 
 ## 6. 서빙 설정

@@ -52,27 +52,6 @@ OCR 기술로 추출된 학생의 풀이 과정을 LLM이 분석하여 피드백
 4. 이후 Gemma4:E2B가 해당 피드백에 대한 할루시네이션을 검증(job_type=`hallucination`), 풀이의 신뢰도 반환
 5. 높은 신뢰도의 피드백은 자동 승인되어 학생에게 공개, 그 외는 교사가 검토 큐에서 승인 여부 처리
 
-## Tech Stack
-
-- Backend: FastAPI, SQLAlchemy Async, Alembic, PostgreSQL
-- Frontend: React 18, TypeScript, Vite, Tailwind
-- OCR: `got_ocr-2.0`
-- LLM Provider: `anthropic` | `mlx` | `ollama`
-- LLM : Gemma4:E2B
-
-## Performance
-
-
-
-## OCR
-
-사용 데이터
-- [AI-Hub: 수식,도형,낙서기호 OCR 데이터](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&dataSetSn=479)
-- [AI-Hub: 수학 과목 자동 풀이 데이터](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&dataSetSn=71716)
-
-
-결과는 다음 문서를 참조 : [/docs/ocr_finetuning.md](./docs/ocr_finetuning.md)
-
 ## Directory
 ```text
 Argus/
@@ -87,9 +66,59 @@ Argus/
 └── ocr_training/          # GOT-OCR 학습/평가 스크립트
 ```
 
+## Tech Stack
+
+- Backend: FastAPI, SQLAlchemy Async, Alembic, PostgreSQL
+- Frontend: React 18, TypeScript, Vite, Tailwind
+- OCR: `got_ocr-2.0`
+- LLM Provider: `anthropic` | `mlx` | `ollama`
+- LLM : Gemma4:E2B
+
+
+## OCR
+
+사용 데이터
+- [AI-Hub: 수식,도형,낙서기호 OCR 데이터](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&dataSetSn=479)
+- [AI-Hub: 수학 과목 자동 풀이 데이터](https://aihub.or.kr/aihubdata/data/view.do?currMenu=115&topMenu=100&dataSetSn=71716)
+
+결과는 다음 문서를 참조 : [/docs/ocr_finetuning.md](./docs/ocr_finetuning.md)
+
+
+## LLM Performance
+
+피드백 및 할루시네이션 검증용 LLM의 정확도 및 지연 시간을 테스트
+
+
+[LLM 채점 및 피드백 생성 벤치마크 테스트 (30 문제)] ([ADR-025 문서 바로가기](./docs/decisions.md#adr-025-로컬-채점-llm-모델-선정-gemma4e4b))
+
+- 총 9가지 sLLM 테스트 후 상위 3개 후보
+
+
+| 모델 | 정확도 (전체) | 파싱 성공률 | 파싱 기준 정확도 | 평균 응답속도 |
+|---|---|---|---|---|
+| **gemma4:e4b** | **93.3%** (28/30) | 96.7% | **96.6%** | 26.8s |
+| gemma4:e2b | 90.0% (27/30) | 100% | 90.0% | **10.4s** |
+| qwen2.5:7b | 73.3% (22/30) | 86.7% | 84.6% | 21.4s |
+
+[할루시네이션 신뢰도 벤치마크 테스트] ([ADR-026 바로가기](./docs/decisions.md#adr-026-할루시네이션-검증-전략-변경-hhem--llm-배치))
+
+- Gemma4:E4B 기준 40개 피드백 테스트 결과 91% 신뢰도 확보
+
+
+[동시성 및 E2E Latency 테스트] [벤치마크 리포트 바로가기](./docs/benchmark_concurrency_report_2026-04-13.md)
+| 동시 접속자 수 | 테스트 문제 수 | 피드백 지연 시간 (p50/p95/max) | 할루시네이션 검증 지연 시간 (p50/p95/max) |
+| :--- | :---: | :--- | :--- |
+| 1명 | 10 | 20.1 / 24.0 / 24.491 | 11.7 / 11.9 / 11.9 |
+| 2명 | 20 | 57.4 / 71.3 / 73.630 | 43.1 / 49.0 / 49.5 |
+| 3명 | 30 | 56.9 / 69.4 / 71.191 | 49.6 / 56.3 / 56.8 |
+
 ## Deployment
 
 운영 배포 절차는 [docs/deployment.md](docs/deployment.md)를 참고하세요.
+
+## UI
+
+[ui/README.md](./ui/README.md) 참조
 
 ## 문서 인덱스
 
@@ -101,5 +130,4 @@ Argus/
 - 데이터셋: [docs/dataset.md](docs/dataset.md)
 - 로컬 환경 설정: [docs/local_setting.md](docs/local_setting.md)
 - 프론트엔드: [docs/frontend.md](docs/frontend.md)
-
 - 작업 관리: [./TODO.md](./TODO.md)
