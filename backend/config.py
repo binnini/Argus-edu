@@ -23,13 +23,16 @@ class Settings(BaseSettings):
     mlx_model_path: str = "unsloth/gemma-4-E4B-it-MLX-8bit"
     mlx_grading_model_path: str = ""
     mlx_feedback_model_path: str = ""
+    mlx_hallucination_model_path: str = ""
     mlx_max_tokens: int = 4096  # thinking 비활성화 시에도 수식 풀이 여유 확보
 
     # AI 모델 — 절대 하드코딩 금지, 환경변수에서 로드
-    # ollama 사용 시: GRADING_MODEL=gemma4:26b 등으로 변경
+    # 현재 운영 경로는 FEEDBACK_MODEL + HALLUCINATION_MODEL 사용
+    # (GRADING_MODEL은 레거시 LLM 채점 경로 호환용)
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     grading_model: str = "claude-sonnet-4-6"
     feedback_model: str = "claude-sonnet-4-6"
+    hallucination_model: str = ""
     ocr_model: str = "pix2tex"  # pix2tex | mathpix | got_ocr
 
     # OCR 모델 경로 (got_ocr 사용 시)

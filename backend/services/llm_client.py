@@ -5,6 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from config import settings
+from services.mlx_model_path import resolve_mlx_model_path
 from services.providers import AnthropicProvider, MLXProvider, OllamaProvider
 from services.providers.base import LLMProvider, LLMResponse
 
@@ -52,7 +53,9 @@ class LLMClient:
                     "LLM_PROVIDER=mlx 일 때 mlx_model과 mlx_tokenizer를 주입해야 합니다. "
                     "main.py lifespan에서 mlx_lm.load() 후 LLMClient(mlx_model=...) 형태로 생성하세요."
                 )
-            active_model_path = mlx_model_path or settings.mlx_grading_model_path or settings.mlx_model_path
+            active_model_path = resolve_mlx_model_path(
+                mlx_model_path or settings.mlx_feedback_model_path or settings.mlx_model_path
+            )
             logger.info(f"MLX 클라이언트 준비 완료: model_path={active_model_path}")
             return MLXProvider(mlx_model, mlx_tokenizer, active_model_path)
         raise ValueError(f"지원하지 않는 LLM_PROVIDER: {self.provider}")

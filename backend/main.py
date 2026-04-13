@@ -23,6 +23,7 @@ from services.feedback_generation import FeedbackReviewService
 from services.hallucination_batch import HallucinationBatchService
 from services.job_queue import JobWorker, queue_counts
 from services.llm_client import LLMClient
+from services.mlx_model_path import resolve_mlx_model_path
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
 from routers import groups
@@ -51,7 +52,9 @@ async def lifespan(app: FastAPI):
     # LLM 클라이언트 초기화
     # MLX provider: 무거운 모델을 lifespan에서 1회만 로드
     if settings.llm_provider == "mlx":
-        initial_mlx_model_path = settings.mlx_grading_model_path or settings.mlx_model_path
+        initial_mlx_model_path = resolve_mlx_model_path(
+            settings.mlx_feedback_model_path or settings.mlx_model_path
+        )
         logger.info(f"MLX 모델 로딩 시작: {initial_mlx_model_path}")
         from mlx_lm import load as mlx_load
         mlx_model, mlx_tokenizer = mlx_load(initial_mlx_model_path)

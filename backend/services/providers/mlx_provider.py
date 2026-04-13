@@ -5,6 +5,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 
 from config import settings
+from services.mlx_model_path import resolve_mlx_model_path
 from services.providers.base import LLMResponse
 
 MLX_WORKERS = 1
@@ -32,13 +33,19 @@ class MLXProvider:
     def _resolve_model_path(self, model: str) -> str:
         """Map logical model names to MLX model paths."""
         if model == settings.grading_model:
-            return settings.mlx_grading_model_path or settings.mlx_model_path
+            return settings.mlx_grading_model_path or settings.mlx_feedback_model_path or settings.mlx_model_path
         if model == settings.feedback_model:
             return settings.mlx_feedback_model_path or settings.mlx_model_path
+        if model == settings.hallucination_model:
+            return (
+                settings.mlx_hallucination_model_path
+                or settings.mlx_feedback_model_path
+                or settings.mlx_model_path
+            )
         return model or settings.mlx_model_path
 
     async def _ensure_model_loaded(self, model: str) -> str:
-        target_path = self._resolve_model_path(model)
+        target_path = resolve_mlx_model_path(self._resolve_model_path(model))
         if target_path == self._active_model_path:
             return target_path
 

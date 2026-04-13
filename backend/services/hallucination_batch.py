@@ -190,7 +190,7 @@ class HallucinationBatchService:
             self._llm.chat(
                 system_prompt=HALLUCINATION_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                model=settings.feedback_model,
+                model=settings.hallucination_model or settings.feedback_model,
                 max_tokens=MAX_TOKENS,
                 temperature=0.1,   # 검증은 결정론적으로
             ),

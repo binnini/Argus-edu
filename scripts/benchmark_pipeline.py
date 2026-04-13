@@ -4,6 +4,7 @@
 Examples:
     python scripts/benchmark_pipeline.py --users 1 --wait-feedback --output tests/benchmark_pipeline_smoke.csv
     python scripts/benchmark_pipeline.py --users 1,3,5,10 --wait-feedback
+    python scripts/benchmark_pipeline.py --users 1,3,5 --wait-hallucination --problem-count 5
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ FEEDBACK_TARGET_S = 30.0
 class BenchmarkRow:
     scenario: str
     n_users: int
+    problem_id: int | None
     submission_id: int | None
     submit_latency_s: float | None
     grading_latency_s: float | None
@@ -86,13 +88,13 @@ def get_health(base_url: str) -> dict[str, Any]:
     return resp.json()
 
 
-def get_first_problem(base_url: str) -> dict[str, Any]:
-    resp = requests.get(f"{base_url}/api/v1/problems?page=1&page_size=1", timeout=10)
+def get_problems(base_url: str, limit: int) -> list[dict[str, Any]]:
+    resp = requests.get(f"{base_url}/api/v1/problems?page=1&page_size={limit}", timeout=10)
     resp.raise_for_status()
     problems = resp.json().get("problems", [])
     if not problems:
         raise RuntimeError("No problems available in DB")
-    return problems[0]
+    return problems
 
 
 def submit_answer(base_url: str, problem_id: int, idx: int) -> tuple[int, float]:
@@ -196,29 +198,33 @@ def wait_submission(
 def run_scenario(
     base_url: str,
     n_users: int,
+    problem_ids: list[int],
     wait_feedback: bool,
     wait_hallucination: bool,
     timeout_s: float,
 ) -> list[BenchmarkRow]:
-    problem = get_first_problem(base_url)
     memory_start = get_health(base_url).get("memory_mb")
-    scenario = f"users_{n_users}"
+    scenario = f"users_{n_users}_problems_{len(problem_ids)}"
 
-    submitted: list[tuple[int, int, float]] = []
+    submitted: list[tuple[int, int, int, float]] = []
     rows: list[BenchmarkRow] = []
 
     with ThreadPoolExecutor(max_workers=n_users) as pool:
-        futures = {pool.submit(submit_answer, base_url, problem["id"], i): i for i in range(n_users)}
+        futures = {}
+        for i in range(n_users):
+            problem_id = problem_ids[i % len(problem_ids)]
+            futures[pool.submit(submit_answer, base_url, problem_id, i)] = (i, problem_id)
         for future in as_completed(futures):
-            idx = futures[future]
+            idx, problem_id = futures[future]
             try:
                 sid, submit_latency = future.result()
-                submitted.append((idx, sid, submit_latency))
+                submitted.append((idx, sid, problem_id, submit_latency))
             except Exception as exc:
                 rows.append(
                     BenchmarkRow(
                         scenario=scenario,
                         n_users=n_users,
+                        problem_id=problem_id,
                         submission_id=None,
                         submit_latency_s=None,
                         grading_latency_s=None,
@@ -245,12 +251,13 @@ def run_scenario(
             pool.submit(wait_submission, base_url, sid, wait_feedback, wait_hallucination, timeout_s): (
                 idx,
                 sid,
+                problem_id,
                 submit_latency,
             )
-            for idx, sid, submit_latency in submitted
+            for idx, sid, problem_id, submit_latency in submitted
         }
         for future in as_completed(futures):
-            _idx, sid, submit_latency = futures[future]
+            _idx, sid, problem_id, submit_latency = futures[future]
             data, backlog, error = future.result()
             memory_end = get_health(base_url).get("memory_mb")
             submitted_at = parse_server_dt(data.get("submitted_at"))
@@ -267,6 +274,7 @@ def run_scenario(
                 BenchmarkRow(
                     scenario=scenario,
                     n_users=n_users,
+                    problem_id=problem_id,
                     submission_id=sid,
                     submit_latency_s=round(submit_latency, 4),
                     grading_latency_s=round(grading_latency, 4) if grading_latency is not None else None,
@@ -346,6 +354,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--users", default="1")
+    parser.add_argument("--problem-count", type=int, default=1)
+    parser.add_argument("--problem-ids", default="")
     parser.add_argument("--wait-feedback", action="store_true")
     parser.add_argument("--wait-hallucination", action="store_true")
     parser.add_argument("--reset-running-jobs", action="store_true")
@@ -366,14 +376,27 @@ def main() -> int:
         print(f"Server health check failed: {exc}", file=sys.stderr)
         return 2
 
+    all_problems = get_problems(args.base_url, max(1, args.problem_count))
+    if args.problem_ids.strip():
+        wanted = {int(p.strip()) for p in args.problem_ids.split(",") if p.strip()}
+        selected = [p for p in all_problems if int(p.get("id")) in wanted]
+        if not selected:
+            raise RuntimeError(f"No matching problems for --problem-ids={args.problem_ids}")
+    else:
+        selected = all_problems[: max(1, args.problem_count)]
+    problem_ids = [int(p["id"]) for p in selected]
+    print(f"Problems selected ({len(problem_ids)}): {problem_ids}")
+
     for n_users in parse_users(args.users):
         print(
             f"\nRunning scenario users={n_users} "
+            f"problems={len(problem_ids)} "
             f"wait_feedback={args.wait_feedback} wait_hallucination={args.wait_hallucination}"
         )
         rows = run_scenario(
             args.base_url,
             n_users,
+            problem_ids,
             args.wait_feedback,
             args.wait_hallucination,
             args.timeout,
