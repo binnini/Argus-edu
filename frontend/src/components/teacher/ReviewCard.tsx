@@ -36,6 +36,14 @@ function parseFeedback(raw: string | object) {
   }
 }
 
+function extractFinalAnswer(studentAnswer: string | null | undefined): string | null {
+  if (!studentAnswer) return null
+  const m = studentAnswer.match(/\[최종 답\]\s*(.+?)(?:\n|$)/)
+  if (!m) return null
+  const value = m[1]?.trim()
+  return value ? value : null
+}
+
 export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) {
   const [showModify, setShowModify] = useState(false)
   const [teacherScore, setTeacherScore] = useState("")
@@ -68,6 +76,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
   }
 
   const feedback = parseFeedback(item.ai_feedback)
+  const finalAnswer = extractFinalAnswer(item.student_answer)
   const isDeadlineSoon = new Date(item.sla_deadline).getTime() - Date.now() < 3_600_000 * 3
   const imageUrl = item.image_path ? `${apiOrigin()}/${item.image_path}` : null
   const isReviewed = !!item.action
@@ -161,6 +170,12 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
 
         {/* 학생 답변 + OCR 결과 */}
         <div className="rounded-lg bg-gray-50 p-4 dark:bg-zinc-900">
+          <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-800 dark:bg-indigo-950/30">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">학생 제출 답</p>
+            <div className="mt-1 text-sm leading-relaxed text-foreground">
+              {finalAnswer ? renderMath(finalAnswer) : (item.student_answer ? renderMath(item.student_answer) : "—")}
+            </div>
+          </div>
           <div className={item.input_type === "image" ? "grid gap-4 md:grid-cols-2" : ""}>
             <div className="rounded-lg border border-gray-200 bg-white p-3 dark:bg-card">
               <div className="mb-2 flex items-center justify-between gap-2">
