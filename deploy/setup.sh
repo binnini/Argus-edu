@@ -29,6 +29,10 @@ set -a
 source "$ARGUS_DIR/.env"
 set +a
 
+# psql/createdb 등 CLI는 SQLAlchemy DSN 스킴(postgresql+asyncpg://)을 인식하지 못한다.
+# DB 마이그레이션은 DATABASE_URL(원본)을 사용하고, psql 호출에는 변환된 DSN을 사용한다.
+PSQL_DATABASE_URL="${DATABASE_URL/postgresql+asyncpg:\/\//postgresql://}"
+
 required_vars=(
     DATABASE_URL
     TEACHER_PASSWORD
@@ -137,7 +141,7 @@ DATABASE_URL="$DATABASE_URL" ../.venv/bin/alembic upgrade head
 echo "[3/9] DB 마이그레이션 완료"
 
 echo "[3b/9] school_level 데이터 추출 및 업데이트 중..."
-"$PG_BIN/psql" "$DATABASE_URL" -c "
+"$PG_BIN/psql" "$PSQL_DATABASE_URL" -c "
     UPDATE problems 
     SET school_level = SUBSTRING(source FROM '(초등학교|중학교|고등학교)') 
     WHERE school_level IS NULL AND source ~ '(초등학교|중학교|고등학교)';"

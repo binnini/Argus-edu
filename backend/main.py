@@ -100,10 +100,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-_ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:80,http://localhost",
-).split(",")
+_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in settings.allowed_origins.split(",")
+    if origin.strip()
+]
 
 app.add_middleware(
     CORSMiddleware,

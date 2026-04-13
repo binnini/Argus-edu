@@ -66,6 +66,9 @@ class Settings(BaseSettings):
     # 교사 인증
     teacher_password: str = "changeme"
 
+    # CORS 허용 출처 (콤마 구분)
+    allowed_origins: str = "http://localhost:5173,http://localhost:80,http://localhost"
+
     # 프로토타입 데모: 학생 샘플 이미지 입력
     prototype_sample_images_enabled: bool = False
 
