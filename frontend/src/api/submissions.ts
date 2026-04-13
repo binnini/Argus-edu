@@ -5,6 +5,7 @@ export interface Problem {
   title: string;
   content: string;
   domain: string;
+  school_level?: string | null;
   difficulty: number;
   total_score: number;
 }
@@ -82,11 +83,12 @@ export interface StudentHistoryResponse {
 export async function getProblems(
   page = 1,
   pageSize = 10,
-  options?: { q?: string; domain?: string; difficulty?: number },
+  options?: { q?: string; domain?: string; school_level?: string; difficulty?: number },
 ): Promise<ProblemListPagedResponse> {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (options?.q) params.set("q", options.q);
   if (options?.domain) params.set("domain", options.domain);
+  if (options?.school_level) params.set("school_level", options.school_level);
   if (options?.difficulty != null) params.set("difficulty", String(options.difficulty));
   return apiFetch(`/problems?${params.toString()}`, undefined, "문제 목록 조회 실패");
 }

@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClipboardList, FileText } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function HomeworkManager() {
   const [homeworks, setHomeworks] = useState<HomeworkResponse[]>([])
@@ -27,6 +28,7 @@ export default function HomeworkManager() {
   const [dueDate, setDueDate] = useState("")
   const [selectedProblemIds, setSelectedProblemIds] = useState<Set<number>>(new Set())
   const [creating, setCreating] = useState(false)
+  const [schoolLevelFilter, setSchoolLevelFilter] = useState<string>("all")
 
   async function fetchAll() {
     setLoading(true)
@@ -35,7 +37,9 @@ export default function HomeworkManager() {
       const [hwData, groupData, problemData] = await Promise.all([
         getHomeworks(),
         getGroups(),
-        getProblems(1, 100),
+        getProblems(1, 100, {
+          school_level: schoolLevelFilter === "all" ? undefined : schoolLevelFilter,
+        }),
       ])
       setHomeworks(hwData.homeworks)
       setGroups(groupData.groups)
@@ -49,7 +53,7 @@ export default function HomeworkManager() {
 
   useEffect(() => {
     fetchAll()
-  }, [])
+  }, [schoolLevelFilter])
 
   function toggleProblem(problemId: number) {
     setSelectedProblemIds((prev) => {
@@ -154,6 +158,20 @@ export default function HomeworkManager() {
             <label className="text-sm font-medium">
               문제 선택 ({selectedProblemIds.size}개 선택됨)
             </label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">학교급:</span>
+              <Select value={schoolLevelFilter} onValueChange={setSchoolLevelFilter}>
+                <SelectTrigger className="h-8 w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">전체</SelectItem>
+                  <SelectItem value="초등학교">초등학교</SelectItem>
+                  <SelectItem value="중학교">중학교</SelectItem>
+                  <SelectItem value="고등학교">고등학교</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {loading ? (
               <p className="text-sm text-muted-foreground">문제 로딩 중...</p>
             ) : problems.length === 0 ? (

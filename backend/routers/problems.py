@@ -54,6 +54,7 @@ async def create_problem(
         reference_solution=body.reference_solution,
         rubric=body.rubric.model_dump(),
         domain=body.domain,
+        school_level=body.school_level or None,
         difficulty=body.difficulty,
         soft_deleted=False,
     )
@@ -69,6 +70,7 @@ async def create_problem(
         reference_solution=problem.reference_solution,
         rubric=problem.rubric,
         domain=problem.domain or "수학2",
+        school_level=problem.school_level,
         difficulty=problem.difficulty or 2,
         submission_count=0,
         created_at=problem.created_at,
@@ -82,6 +84,7 @@ async def list_teacher_problems(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     has_submissions: bool = Query(False),
+    school_level: Optional[str] = Query(None, description="학교급 필터 (부분 일치)"),
 ):
     # submission count 서브쿼리
     subq = (
@@ -95,6 +98,8 @@ async def list_teacher_problems(
         .outerjoin(subq, Problem.id == subq.c.problem_id)
         .where(Problem.soft_deleted.is_(False))
     )
+    if school_level:
+        base_query = base_query.where(Problem.school_level.ilike(f"%{school_level}%"))
     if has_submissions:
         base_query = base_query.where(subq.c.cnt > 0)
 
@@ -124,6 +129,7 @@ async def list_teacher_problems(
                 reference_solution=problem.reference_solution,
                 rubric=problem.rubric,
                 domain=problem.domain or "수학2",
+                school_level=problem.school_level,
                 difficulty=problem.difficulty or 2,
                 submission_count=cnt or 0,
                 created_at=problem.created_at,
@@ -155,6 +161,8 @@ async def update_problem(
         problem.rubric = body.rubric.model_dump()
     if body.domain is not None:
         problem.domain = body.domain
+    if body.school_level is not None:
+        problem.school_level = body.school_level or None
     if body.difficulty is not None:
         problem.difficulty = body.difficulty
 
@@ -171,6 +179,7 @@ async def update_problem(
         reference_solution=problem.reference_solution,
         rubric=problem.rubric,
         domain=problem.domain or "수학2",
+        school_level=problem.school_level,
         difficulty=problem.difficulty or 2,
         submission_count=count,
         created_at=problem.created_at,

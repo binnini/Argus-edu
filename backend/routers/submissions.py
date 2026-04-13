@@ -62,6 +62,7 @@ async def list_problems(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     domain: Optional[str] = Query(None, description="도메인 필터 (부분 일치)"),
+    school_level: Optional[str] = Query(None, description="학교급 필터 (부분 일치)"),
     difficulty: Optional[int] = Query(None, ge=1, le=5, description="난이도 필터 (1~5)"),
     q: Optional[str] = Query(None, description="제목/내용 키워드 검색"),
 ):
@@ -70,6 +71,8 @@ async def list_problems(
 
     if domain:
         base = base.where(Problem.domain.ilike(f"%{domain}%"))
+    if school_level:
+        base = base.where(Problem.school_level.ilike(f"%{school_level}%"))
     if difficulty is not None:
         base = base.where(Problem.difficulty == difficulty)
     if q:
@@ -96,6 +99,7 @@ async def list_problems(
                 title=p.title,
                 content=p.content,
                 domain=p.domain,
+                school_level=p.school_level,
                 difficulty=p.difficulty,
                 total_score=p.rubric["total_score"],
             )
@@ -117,6 +121,7 @@ async def get_problem(problem_id: int, db: AsyncSession = Depends(get_session)):
         title=problem.title,
         content=problem.content,
         domain=problem.domain,
+        school_level=problem.school_level,
         difficulty=problem.difficulty,
         total_score=problem.rubric["total_score"],
     )

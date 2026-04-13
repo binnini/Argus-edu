@@ -11,7 +11,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -43,21 +43,33 @@ def _verify_teacher(x_teacher_password: str = Header(default="")):
 @router.get("/queue", response_model=TeacherQueueResponse)
 async def get_queue(
     trust_level: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_session),
     _: None = Depends(_verify_teacher),
 ):
     """action IS NULL 항목만 반환. SLA 마감 임박 순 정렬. trust_level 필터 지원."""
     query = (
         select(TeacherQueue)
+        .join(TeacherQueue.submission)
+        .join(Submission.grading_result)
         .options(
             selectinload(TeacherQueue.submission).selectinload(Submission.problem),
             selectinload(TeacherQueue.submission).selectinload(Submission.grading_result),
         )
         .where(TeacherQueue.action.is_(None))
-        .order_by(TeacherQueue.sla_deadline.asc())
     )
+    if trust_level:
+        query = query.where(func.lower(GradingResult.trust_level) == trust_level.lower())
 
-    result = await db.execute(query)
+    total_result = await db.execute(select(func.count()).select_from(query.subquery()))
+    total = total_result.scalar() or 0
+
+    result = await db.execute(
+        query.order_by(TeacherQueue.sla_deadline.asc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
     queue_items = result.scalars().all()
 
     items = []
@@ -65,9 +77,6 @@ async def get_queue(
         sub = tq.submission
         gr = sub.grading_result
         if not gr:
-            continue
-        # trust_level 필터 적용
-        if trust_level and gr.trust_level != trust_level.lower():
             continue
         items.append(
             TeacherQueueItem(
@@ -97,7 +106,7 @@ async def get_queue(
             )
         )
 
-    return TeacherQueueResponse(queue=items, total=len(items))
+    return TeacherQueueResponse(queue=items, total=total, page=page, page_size=page_size)
 
 
 # ── 교사 액션 ────────────────────────────────────────────────

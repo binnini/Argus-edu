@@ -10,6 +10,7 @@ interface ProblemSelectorProps {
 }
 
 const PAGE_SIZE = 10
+const SCHOOL_LEVELS = ["초등학교", "중학교", "고등학교"] as const
 
 const DIFFICULTY_LABELS: Record<number, string> = {
   1: "1등급",
@@ -38,11 +39,12 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   const [searchInput, setSearchInput] = React.useState("")
   const [activeQ, setActiveQ] = React.useState("")
   const [activeDifficulty, setActiveDifficulty] = React.useState<number | undefined>(undefined)
+  const [activeSchoolLevel, setActiveSchoolLevel] = React.useState<string | undefined>(undefined)
 
-  const fetchProblems = React.useCallback((p: number, q: string, diff?: number) => {
+  const fetchProblems = React.useCallback((p: number, q: string, diff?: number, level?: string) => {
     setLoading(true)
     setError("")
-    getProblems(p, PAGE_SIZE, { q: q || undefined, difficulty: diff })
+    getProblems(p, PAGE_SIZE, { q: q || undefined, difficulty: diff, school_level: level })
       .then((data) => {
         setProblems(data.problems)
         setTotal(data.total)
@@ -52,8 +54,8 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   }, [])
 
   React.useEffect(() => {
-    fetchProblems(page, activeQ, activeDifficulty)
-  }, [page, activeQ, activeDifficulty, fetchProblems])
+    fetchProblems(page, activeQ, activeDifficulty, activeSchoolLevel)
+  }, [page, activeQ, activeDifficulty, activeSchoolLevel, fetchProblems])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -72,8 +74,13 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
     setPage(1)
   }
 
+  function handleSchoolLevelToggle(level: string) {
+    setActiveSchoolLevel(prev => prev === level ? undefined : level)
+    setPage(1)
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const hasFilter = activeQ || activeDifficulty != null
+  const hasFilter = activeQ || activeDifficulty != null || activeSchoolLevel != null
 
   return (
     <div className="space-y-4">
@@ -103,6 +110,22 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
 
         {/* 난이도 필터 칩 */}
         <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground mr-1">학교급:</span>
+          {SCHOOL_LEVELS.map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => handleSchoolLevelToggle(level)}
+              className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
+                activeSchoolLevel === level
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background hover:bg-muted text-muted-foreground"
+              }`}
+            >
+              {level}
+            </button>
+          ))}
+          <span className="text-xs text-muted-foreground mx-1">|</span>
           <span className="text-xs text-muted-foreground mr-1">난이도:</span>
           {[1, 2, 3, 4, 5].map((d) => (
             <button
@@ -121,7 +144,7 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
           {hasFilter && (
             <button
               type="button"
-              onClick={() => { handleClearSearch(); setActiveDifficulty(undefined) }}
+              onClick={() => { handleClearSearch(); setActiveDifficulty(undefined); setActiveSchoolLevel(undefined) }}
               className="text-xs px-2 py-1 text-muted-foreground hover:text-foreground flex items-center gap-0.5"
             >
               <X className="h-3 w-3" /> 필터 초기화
@@ -172,6 +195,11 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
                   <p className="text-xs text-muted-foreground mt-0.5">{p.domain}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {p.school_level && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      {p.school_level}
+                    </span>
+                  )}
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[p.difficulty] ?? "bg-muted text-muted-foreground"}`}>
                     {DIFFICULTY_LABELS[p.difficulty] ?? `난이도 ${p.difficulty}`}
                   </span>

@@ -29,6 +29,8 @@ export interface QueueItem {
 export interface TeacherQueueResponse {
   queue: QueueItem[];
   total: number;
+  page: number;
+  page_size: number;
 }
 
 export type TeacherAction = "approve" | "modify" | "reject";
@@ -88,18 +90,28 @@ function authHeaders(password: string): HeadersInit {
 export async function getTeacherQueue(
   password: string,
   trustLevel?: string,
+  page = 1,
+  pageSize = 20,
 ): Promise<TeacherQueueResponse> {
   const params = new URLSearchParams();
   if (trustLevel) params.set("trust_level", trustLevel);
+  params.set("page", String(page));
+  params.set("page_size", String(pageSize));
   const url = `/teacher/queue${params.toString() ? `?${params.toString()}` : ""}`;
   return apiFetch(url, {
     headers: authHeaders(password),
   }, "큐 조회 실패");
 }
 
-export async function getQueue(trustLevel?: string): Promise<TeacherQueueResponse> {
+export async function getQueue(
+  trustLevel?: string,
+  page = 1,
+  pageSize = 20,
+): Promise<TeacherQueueResponse> {
   const params = new URLSearchParams();
   if (trustLevel) params.set("trust_level", trustLevel);
+  params.set("page", String(page));
+  params.set("page_size", String(pageSize));
   const url = `/teacher/queue${params.toString() ? `?${params.toString()}` : ""}`;
   return apiFetch(url, { headers: teacherHeaders() }, "큐 조회 실패");
 }

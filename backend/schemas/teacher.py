@@ -33,6 +33,8 @@ class TeacherQueueItem(BaseModel):
 class TeacherQueueResponse(BaseModel):
     queue: list[TeacherQueueItem]
     total: int
+    page: int
+    page_size: int
 
 
 class TeacherActionRequest(BaseModel):

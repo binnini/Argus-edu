@@ -9,7 +9,10 @@ import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, FileQuestion, Search }
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-function getSchoolLevel(domain: string): "초등" | "중등" | "고등" | "기타" {
+function getSchoolLevel(schoolLevel: string | null | undefined, domain: string): "초등" | "중등" | "고등" | "기타" {
+  if (schoolLevel?.includes("초등")) return "초등"
+  if (schoolLevel?.includes("중")) return "중등"
+  if (schoolLevel?.includes("고")) return "고등"
   if (!domain) return "기타"
   if (domain.includes("초등") || /^[1-6]학년/.test(domain)) return "초등"
   if (domain.includes("중") || /중[1-3]/.test(domain)) return "중등"
@@ -82,7 +85,7 @@ export default function ProblemManager() {
       const q = searchText.toLowerCase()
       list = list.filter(p => p.title.toLowerCase().includes(q) || p.domain.toLowerCase().includes(q))
     }
-    if (levelFilter !== "전체") list = list.filter(p => getSchoolLevel(p.domain) === levelFilter)
+    if (levelFilter !== "전체") list = list.filter(p => getSchoolLevel(p.school_level, p.domain) === levelFilter)
     if (domainFilter !== "전체") list = list.filter(p => p.domain === domainFilter)
     if (difficultyFilter !== "전체") list = list.filter(p => p.difficulty === Number(difficultyFilter))
     switch (sortBy) {
@@ -208,8 +211,8 @@ export default function ProblemManager() {
                   <tr key={p.id} className="border-t hover:bg-muted/50">
                     <td className="px-4 py-3 font-medium">{p.title}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${LEVEL_COLORS[getSchoolLevel(p.domain)]}`}>
-                        {getSchoolLevel(p.domain)}
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${LEVEL_COLORS[getSchoolLevel(p.school_level, p.domain)]}`}>
+                        {getSchoolLevel(p.school_level, p.domain)}
                       </span>
                     </td>
                     <td className="px-4 py-3">

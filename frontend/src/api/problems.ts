@@ -18,6 +18,7 @@ export interface ProblemCreate {
   reference_solution: string;
   rubric: RubricSchema;
   domain?: string;
+  school_level?: string;
   difficulty?: number;
 }
 
@@ -29,6 +30,7 @@ export interface TeacherProblemItem {
   reference_solution: string;
   rubric: Record<string, unknown>;
   domain: string;
+  school_level?: string | null;
   difficulty: number;
   submission_count: number;
   created_at: string;
@@ -54,11 +56,13 @@ export async function getTeacherProblems(params?: {
   page?: number;
   page_size?: number;
   has_submissions?: boolean;
+  school_level?: string;
 }): Promise<TeacherProblemListResponse> {
   const query = new URLSearchParams();
   if (params?.page) query.set("page", String(params.page));
   if (params?.page_size) query.set("page_size", String(params.page_size));
   if (params?.has_submissions) query.set("has_submissions", "true");
+  if (params?.school_level) query.set("school_level", params.school_level);
   const url = `/teacher/problems${query.toString() ? `?${query.toString()}` : ""}`;
   return apiFetch(url, { headers: teacherHeaders() }, "문제 목록 조회 실패");
 }

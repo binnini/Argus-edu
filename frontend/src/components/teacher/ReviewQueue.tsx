@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { MetricCard } from "@/components/ui/metric-card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ClipboardCheck, Search } from "lucide-react"
+import { ClipboardCheck, Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type TrustFilter = "all" | "high" | "low"
+const PAGE_SIZE = 20
 
 export default function ReviewQueue() {
   const [items, setItems] = useState<QueueItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<TrustFilter>("all")
@@ -27,16 +30,18 @@ export default function ReviewQueue() {
     setError(null)
     try {
       const trustLevel = filter === "all" ? undefined : filter
-      const data = await getQueue(trustLevel)
+      const data = await getQueue(trustLevel, page, PAGE_SIZE)
       setItems(data.queue)
+      setTotal(data.total)
     } catch (e) {
       setError(e instanceof Error ? e.message : "큐 조회 실패")
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, page])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => { setPage(1) }, [filter])
 
   const problemTitles = useMemo(
     () => ["전체", ...Array.from(new Set(items.map(i => i.problem_title))).sort()],
@@ -60,6 +65,7 @@ export default function ReviewQueue() {
     }
     return list
   }, [items, searchText, problemFilter, sortBy])
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const lowCount = items.filter((i) => i.trust_level === "low").length
   const slaUrgent = items.filter((i) => {
@@ -71,7 +77,7 @@ export default function ReviewQueue() {
     <div className="space-y-6">
       {/* 통계 카드 */}
       <div className="grid grid-cols-3 gap-3">
-        <MetricCard value={items.length} label="미처리" />
+        <MetricCard value={total} label="미처리" />
         <MetricCard value={lowCount} label="신뢰도 Low" valueClassName="text-rose-600" />
         <MetricCard value={slaUrgent} label="SLA 3시간 내" valueClassName="text-amber-600" />
       </div>
@@ -160,11 +166,38 @@ export default function ReviewQueue() {
           className="min-h-60"
         />
       ) : (
-        <div className="space-y-4">
-          {filteredItems.map((item) => (
-            <ReviewCard key={item.queue_id} item={item} onActionComplete={load} />
-          ))}
-        </div>
+        <>
+          <div className="space-y-4">
+            {filteredItems.map((item) => (
+              <ReviewCard key={item.queue_id} item={item} onActionComplete={load} />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || loading}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground w-20 text-center">
+                {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || loading}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
