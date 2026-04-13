@@ -7,6 +7,8 @@ lifespan:
 """
 
 import logging
+import os
+import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -97,8 +99,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-import os
-
 _ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,http://localhost:80,http://localhost",
@@ -131,4 +131,15 @@ app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    memory_mb = None
+    try:
+        rss_kb = subprocess.check_output(
+            ["ps", "-o", "rss=", "-p", str(os.getpid())],
+            text=True,
+            timeout=1,
+        ).strip()
+        memory_mb = round(int(rss_kb) / 1024, 2) if rss_kb else None
+    except Exception:
+        memory_mb = None
+
+    return {"status": "ok", "memory_mb": memory_mb}

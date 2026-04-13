@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useStudentSubmission } from "@/hooks/useStudentSubmission"
 import { renderMath } from "@/lib/renderMath"
-import { BookOpen, ChevronLeft, ClipboardList, FileText, FolderOpen, LogOut, Pencil, Plus } from "lucide-react"
+import { BookOpen, ChevronLeft, ClipboardList, FileText, FolderOpen, LogOut, Plus } from "lucide-react"
 
 function statusBadge(status: string) {
   switch (status) {
@@ -142,40 +142,47 @@ export default function StudentPage() {
 
   function renderProblemStage() {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>문제 선택</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={student.problemTab} onValueChange={(v) => student.setProblemTab(v as "homework" | "all")}>
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="homework" className="flex-1">숙제</TabsTrigger>
-              <TabsTrigger value="all" className="flex-1">전체 문제</TabsTrigger>
-            </TabsList>
-            <TabsContent value="homework">
-              <HomeworkTab
-                homework={student.homework}
-                homeworkLoading={student.homeworkLoading}
-                setHomeworkLoading={student.setHomeworkLoading}
-                onSelectProblem={(p) => {
-                  student.setFinalAnswer("")
-                  student.setProblem(p)
-                  student.setStage("answer")
-                }}
-              />
-            </TabsContent>
-            <TabsContent value="all">
-              <ProblemSelector
-                onSelect={(p) => {
-                  student.setFinalAnswer("")
-                  student.setProblem(p)
-                  student.setStage("answer")
-                }}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        {student.submitNotice && (
+          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {student.submitNotice}
+          </div>
+        )}
+        <Card>
+          <CardHeader>
+            <CardTitle>문제 선택</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={student.problemTab} onValueChange={(v) => student.setProblemTab(v as "homework" | "all")}>
+              <TabsList className="w-full mb-4">
+                <TabsTrigger value="homework" className="flex-1">숙제</TabsTrigger>
+                <TabsTrigger value="all" className="flex-1">전체 문제</TabsTrigger>
+              </TabsList>
+              <TabsContent value="homework">
+                <HomeworkTab
+                  homework={student.homework}
+                  homeworkLoading={student.homeworkLoading}
+                  setHomeworkLoading={student.setHomeworkLoading}
+                  onSelectProblem={(p) => {
+                    student.setFinalAnswer("")
+                    student.setProblem(p)
+                    student.setStage("answer")
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="all">
+                <ProblemSelector
+                  onSelect={(p) => {
+                    student.setFinalAnswer("")
+                    student.setProblem(p)
+                    student.setStage("answer")
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
@@ -300,22 +307,7 @@ export default function StudentPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">내 답변</CardTitle>
-              {(student.selectedHistory.status === "pending" || student.selectedHistory.status === "graded") && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    student.setEditAnswer(student.selectedHistory?.student_answer ?? "")
-                    student.setStage("editing")
-                  }}
-                  className="gap-1 text-xs"
-                >
-                  <Pencil className="h-3 w-3" /> 수정하기
-                </Button>
-              )}
-            </div>
+            <CardTitle className="text-base">내 답변</CardTitle>
           </CardHeader>
           <CardContent>
             {student.selectedHistory.input_type === "image" && student.selectedHistory.image_path ? (
@@ -351,50 +343,6 @@ export default function StudentPage() {
     )
   }
 
-  function renderEditingStage() {
-    if (!student.selectedHistory) return null
-    return (
-      <div className="space-y-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => { student.setStage("detail"); student.setEditError("") }}
-          className="gap-1"
-        >
-          <ChevronLeft className="h-4 w-4" /> 상세로 돌아가기
-        </Button>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">답안 수정</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">{student.selectedHistory.problem_title}</p>
-            <Textarea
-              placeholder="수정할 답안을 입력하세요..."
-              rows={8}
-              value={student.editAnswer}
-              onChange={(e) => student.setEditAnswer(e.target.value)}
-            />
-            {student.editError && <p className="text-sm text-destructive">{student.editError}</p>}
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => { student.setStage("detail"); student.setEditError("") }}>
-                취소
-              </Button>
-              <Button
-                onClick={student.handleEditSubmit}
-                disabled={student.editSubmitting || !student.editAnswer.trim()}
-                className="flex-1"
-              >
-                {student.editSubmitting ? "제출 중..." : "수정 제출"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   function renderStage() {
     if (student.stage === "problem") return renderProblemStage()
     if (student.stage === "answer") return renderAnswerStage()
@@ -402,7 +350,6 @@ export default function StudentPage() {
     if (student.stage === "polling") return renderLoading("채점 중입니다. 잠시만 기다려주세요...")
     if (student.stage === "done") return renderDoneStage()
     if (student.stage === "detail") return renderDetailStage()
-    if (student.stage === "editing") return renderEditingStage()
     return null
   }
 

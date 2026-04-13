@@ -30,7 +30,6 @@ from schemas.submissions import (
     SubmissionRequest,
     SubmissionCreateResponse,
     SubmissionStatusResponse,
-    SubmissionUpdateRequest,
     StudentHistoryItem,
     StudentHistoryResponse,
 )
@@ -381,67 +380,6 @@ async def get_student_homework(
         )
 
     return StudentHomeworkResponse(homeworks=items)
-
-
-# ── 제출 수정 ────────────────────────────────────────────────
-
-@router.put("/submissions/{submission_id}", response_model=SubmissionCreateResponse, status_code=200)
-async def update_submission(
-    submission_id: int,
-    body: SubmissionUpdateRequest,
-    request: Request,
-    db: AsyncSession = Depends(get_session),
-):
-    """
-    채점 대기 중(pending/graded, 교사 미처리) 제출 답안 수정.
-    수정 시 기존 채점 결과 삭제 + 재채점 시작.
-    """
-    result = await db.execute(
-        select(Submission)
-        .options(
-            selectinload(Submission.grading_result),
-            selectinload(Submission.teacher_queue),
-        )
-        .where(Submission.id == submission_id)
-    )
-    submission = result.scalar_one_or_none()
-    if not submission:
-        raise HTTPException(status_code=404, detail="제출을 찾을 수 없습니다")
-
-    # 수정 가능 조건: pending 또는 graded, 교사 미처리
-    tq = submission.teacher_queue
-    if tq and tq.action is not None:
-        raise HTTPException(status_code=409, detail="이미 교사가 검토한 제출은 수정할 수 없습니다")
-    if submission.status not in ("pending", "graded", "error"):
-        raise HTTPException(status_code=409, detail="승인 또는 거부된 제출은 수정할 수 없습니다")
-
-    # 답안 업데이트
-    if body.student_answer is not None:
-        submission.student_answer = body.student_answer
-
-    # 기존 채점 결과 + 큐 항목 삭제 (재채점 위해)
-    if submission.grading_result:
-        await db.delete(submission.grading_result)
-    if tq:
-        await db.delete(tq)
-
-    # 상태 초기화
-    submission.status = "pending"
-    await db.commit()
-    await db.refresh(submission)
-
-    # 재채점 시작
-    asyncio.create_task(
-        run_grading_pipeline(submission.id, request.app.state)
-    )
-
-    logger.info(f"제출 수정 + 재채점 시작 submission_id={submission_id}")
-
-    return SubmissionCreateResponse(
-        submission_id=submission.id,
-        status="pending",
-        message="답안이 수정되었습니다. 재채점이 시작되었습니다.",
-    )
 
 
 # ── 결과 폴링 ────────────────────────────────────────────────

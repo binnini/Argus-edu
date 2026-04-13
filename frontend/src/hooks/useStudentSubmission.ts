@@ -8,7 +8,6 @@ import {
   getStudentHomework,
   submitAnswerImage,
   submitAnswerText,
-  updateSubmission,
   type Problem,
   type SubmissionStatusResponse,
   type StudentHistoryItem,
@@ -16,7 +15,7 @@ import {
 } from "@/api/submissions"
 import { clearStudentSession, getStudentSession, hasStudentSession } from "@/lib/session"
 
-export type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "done" | "detail" | "editing"
+export type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "done" | "detail"
 
 export function useStudentSubmission() {
   const savedSession = getStudentSession()
@@ -33,11 +32,9 @@ export function useStudentSubmission() {
   const [submissionId, setSubmissionId] = React.useState<number | null>(null)
   const [result, setResult] = React.useState<SubmissionStatusResponse | null>(null)
   const [submitError, setSubmitError] = React.useState("")
+  const [submitNotice, setSubmitNotice] = React.useState("")
   const [selectedHistory, setSelectedHistory] = React.useState<StudentHistoryItem | null>(null)
   const [detailResult, setDetailResult] = React.useState<SubmissionStatusResponse | null>(null)
-  const [editAnswer, setEditAnswer] = React.useState("")
-  const [editError, setEditError] = React.useState("")
-  const [editSubmitting, setEditSubmitting] = React.useState(false)
   const [problemTab, setProblemTab] = React.useState<"homework" | "all">("homework")
   const [homeworkLoading, setHomeworkLoading] = React.useState(false)
 
@@ -62,13 +59,18 @@ export function useStudentSubmission() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    if (stage !== "polling" || submissionId === null) return
+    if (submissionId === null) return
     const interval = setInterval(async () => {
       try {
         const status = await getSubmissionStatus(submissionId)
         if (status.status !== "pending") {
           setResult(status)
-          setStage("done")
+          setSubmissionId(null)
+          if (stage === "polling") {
+            setStage("done")
+          } else {
+            setSubmitNotice("채점이 완료되었습니다. 풀이 현황에서 결과를 확인하세요.")
+          }
           clearInterval(interval)
           const session = getStudentSession()
           if (session.id) loadSidebar(session.id)
@@ -83,13 +85,22 @@ export function useStudentSubmission() {
   async function handleSubmit() {
     if (!problem) return
     setSubmitError("")
+    setSubmitNotice("")
     setStage("submitting")
     try {
       const res = inputMode === "text"
         ? await submitAnswerText(problem.id, textAnswer, studentName, studentId || undefined, finalAnswer || undefined)
         : await submitImageAnswer()
       setSubmissionId(res.submission_id)
-      setStage("polling")
+      setTextAnswer("")
+      setFinalAnswer("")
+      setImageFile(null)
+      setProblem(null)
+      setSubmitNotice("제출되었습니다. 다른 문제를 풀어도 됩니다.")
+      if (studentId) {
+        loadSidebar(studentId)
+      }
+      setStage("problem")
     } catch (e: unknown) {
       setSubmitError(e instanceof Error ? e.message : "제출 실패")
       setStage("answer")
@@ -115,23 +126,6 @@ export function useStudentSubmission() {
     }
   }
 
-  async function handleEditSubmit() {
-    if (!selectedHistory || !editAnswer.trim()) return
-    setEditError("")
-    setEditSubmitting(true)
-    try {
-      await updateSubmission(selectedHistory.submission_id, editAnswer)
-      setSubmissionId(selectedHistory.submission_id)
-      setSelectedHistory(null)
-      setDetailResult(null)
-      setStage("polling")
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : "수정 실패")
-    } finally {
-      setEditSubmitting(false)
-    }
-  }
-
   function reset() {
     setProblem(null)
     setTextAnswer("")
@@ -140,6 +134,7 @@ export function useStudentSubmission() {
     setResult(null)
     setSubmissionId(null)
     setSubmitError("")
+    setSubmitNotice("")
     if (studentId) {
       loadSidebar(studentId)
     }
@@ -158,6 +153,7 @@ export function useStudentSubmission() {
     setImageFile(null)
     setResult(null)
     setSubmissionId(null)
+    setSubmitNotice("")
     setSelectedHistory(null)
     setDetailResult(null)
     setStage("info")
@@ -182,15 +178,11 @@ export function useStudentSubmission() {
     setInputMode,
     result,
     submitError,
+    submitNotice,
     selectedHistory,
     setSelectedHistory,
     detailResult,
     setDetailResult,
-    editAnswer,
-    setEditAnswer,
-    editError,
-    setEditError,
-    editSubmitting,
     problemTab,
     setProblemTab,
     homeworkLoading,
@@ -198,7 +190,6 @@ export function useStudentSubmission() {
     loadSidebar,
     handleSubmit,
     loadDetail,
-    handleEditSubmit,
     reset,
     handleLogout,
   }

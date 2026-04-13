@@ -148,17 +148,6 @@ export async function getSubmissionStatus(
   return apiFetch(`/submissions/${submissionId}`, undefined, "채점 결과 조회 실패");
 }
 
-export async function updateSubmission(
-  submissionId: number,
-  studentAnswer: string,
-): Promise<SubmissionCreateResponse> {
-  return apiFetch(`/submissions/${submissionId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ student_answer: studentAnswer }),
-  }, "수정 실패");
-}
-
 export interface HomeworkProblemStatus {
   problem_id: number;
   problem_title: string;

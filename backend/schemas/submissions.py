@@ -126,8 +126,3 @@ class StudentHistoryItem(BaseModel):
 
 class StudentHistoryResponse(BaseModel):
     submissions: list[StudentHistoryItem]
-
-
-class SubmissionUpdateRequest(BaseModel):
-    student_answer: Optional[str] = None
-    # 이미지 수정은 multipart로 별도 처리
