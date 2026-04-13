@@ -16,7 +16,7 @@ OCR 기술로 추출된 학생의 풀이 과정을 LLM이 분석하여 피드백
 - 테스트 학번 : 20240001
 ![학생 로그인 화면](./ui/student-login.png "학생 로그인 화면")
 
-- [교사 대시보드 Live URL](https://americans-fancy-aside-handheld.trycloudflare.com/student) (비밀번호 : argus)
+- [교사 대시보드 Live URL](https://americans-fancy-aside-handheld.trycloudflare.com/teacher) (비밀번호 : argus)
 ![교사 로그인 화면](./ui/teacher-login.png "교사 로그인 화면")
 
 
@@ -130,4 +130,5 @@ Argus/
 - 데이터셋: [docs/dataset.md](docs/dataset.md)
 - 로컬 환경 설정: [docs/local_setting.md](docs/local_setting.md)
 - 프론트엔드: [docs/frontend.md](docs/frontend.md)
+- LLM 프롬프트(피드백/검증): [docs/llm_feedback_hallucination_prompts.md](docs/llm_feedback_hallucination_prompts.md)
 - 작업 관리: [./TODO.md](./TODO.md)

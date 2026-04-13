@@ -147,7 +147,7 @@ durable background job 큐.
 - `problems` 1:N `submissions`
 - `submissions` 1:1 `grading_results`
 - `submissions` 1:1 `teacher_queue`
-- `submissions` 1:N `feedback_log`
+- `submissions` 1:1 `feedback_log` (현재 ORM 선언 기준)
 - `student_groups` 1:N `group_members`
 - `student_groups` 1:N `homeworks`
 - `homeworks` 1:N `homework_problems`

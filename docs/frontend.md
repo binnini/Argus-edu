@@ -54,6 +54,12 @@ Argus 프론트엔드는 React + Vite + TypeScript 기반이며 학생/교사 �
 - `GET /api/v1/prototype/problem-sample-images`
 - `GET /api/v1/prototype/sample-images/{sample_id}/content`
 
+동작 규칙:
+- 학생 문제 선택에서 `정답 샘플 있는 문제만` 필터를 사용할 수 있음
+- 샘플 탭은 문제 기준 최대 3장 표시
+- 정답 이미지가 존재하면 반드시 1장 포함
+- 정답 이미지 선택 시 `최종 답` 입력란 자동 채움
+
 ## 교사 화면
 
 메인: `frontend/src/pages/TeacherPage.tsx`

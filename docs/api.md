@@ -149,6 +149,7 @@ X-Teacher-Password: <TEACHER_PASSWORD>
 - `domain` (required)
 
 응답 항목에는 샘플이 정답 이미지인 경우 `answer_text`가 포함될 수 있습니다.
+서버는 문제 기준 최대 3개 샘플을 반환하며, 정답 이미지가 있으면 반드시 포함합니다.
 
 ### GET `/prototype/sample-images/{sample_id}/content`
 

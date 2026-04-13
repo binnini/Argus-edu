@@ -60,6 +60,6 @@ npm run dev
 
 ```bash
 # 서버 실행 후
-../.venv/bin/python -m pytest tests/test_deterministic_grading.py
-../.venv/bin/python -m pytest tests/test_integration.py
+.venv/bin/python -m pytest tests/test_deterministic_grading.py
+.venv/bin/python -m pytest tests/test_integration.py
 ```

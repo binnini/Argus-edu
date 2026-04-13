@@ -60,7 +60,8 @@ cp .env.example .env
 - `DATABASE_URL`
 - `TEACHER_PASSWORD`
 - `LLM_PROVIDER`
-- `GRADING_MODEL`
+- `GRADING_MODEL` (레거시 호환용 필수 체크, 실제 채점 경로는 deterministic)
+- `FEEDBACK_MODEL`
 - `OCR_MODEL`
 - `GOT_OCR_MODEL_PATH`
 

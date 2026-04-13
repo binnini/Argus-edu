@@ -166,3 +166,21 @@ AI-HUB 데이터라도 아래 항목을 확인한다.
 - [ ] rubric의 배점 합계 = total_score인가
 - [ ] 문제 본문의 LaTeX 수식이 올바르게 렌더링되는가
 - [ ] OCR labels.json의 ground_truth_text가 LaTeX 파싱 가능한가
+
+---
+
+## 데모 샘플 이미지셋 (학생 제출 프로토타입)
+
+학생 샘플 입력 탭은 `uploads`가 아니라 `demo/images/manifest.json` 기준으로 동작한다.
+
+- 생성 스크립트: `scripts/extract_demo_samples.py`
+- 기본 정책:
+  - 학교급(초/중/고)별 100개
+  - 도메인별 최대 3개
+  - 정답 이미지(`is_answer=true`) 메타데이터 포함
+
+예시 실행:
+
+```bash
+.venv/bin/python scripts/extract_demo_samples.py
+```
