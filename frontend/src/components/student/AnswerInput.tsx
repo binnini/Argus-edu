@@ -3,7 +3,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import CanvasInput, { CANVAS_ENABLED } from "./CanvasInput"
 import {
   fetchPrototypeSampleImageFile,
-  getPrototypeSampleImages,
   getPrototypeProblemSampleImages,
   type PrototypeSampleImageItem,
 } from "@/api/submissions"
@@ -21,7 +20,6 @@ const SAMPLE_IMAGE_ENABLED = String(import.meta.env.VITE_ENABLE_SAMPLE_IMAGE_INP
 export default function AnswerInput({ onFileReady, schoolLevel, domain }: AnswerInputProps) {
   const [preview, setPreview] = React.useState<string | null>(null)
   const [samples, setSamples] = React.useState<PrototypeSampleImageItem[]>([])
-  const [catalog, setCatalog] = React.useState<PrototypeSampleImageItem[]>([])
   const [sampleEnabledByServer, setSampleEnabledByServer] = React.useState(false)
   const [sampleLoading, setSampleLoading] = React.useState(false)
   const [sampleError, setSampleError] = React.useState("")
@@ -38,13 +36,6 @@ export default function AnswerInput({ onFileReady, schoolLevel, domain }: Answer
       .catch((e: unknown) => setSampleError(e instanceof Error ? e.message : "샘플 이미지 조회 실패"))
       .finally(() => setSampleLoading(false))
   }, [schoolLevel, domain])
-
-  React.useEffect(() => {
-    if (!SAMPLE_IMAGE_ENABLED) return
-    getPrototypeSampleImages()
-      .then((res) => setCatalog(res.samples ?? []))
-      .catch(() => setCatalog([]))
-  }, [])
 
   function handleFileChange(file: File | null) {
     if (!file) return
@@ -175,7 +166,7 @@ export default function AnswerInput({ onFileReady, schoolLevel, domain }: Answer
                       <p className="truncate text-[11px] text-muted-foreground">{sample.filename}</p>
                       {sample.is_answer && (
                         <span className="shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
-                          정답 후보
+                          정답 이미지
                         </span>
                       )}
                     </div>
@@ -184,18 +175,6 @@ export default function AnswerInput({ onFileReady, schoolLevel, domain }: Answer
               </div>
             )}
             {sampleError && <p className="text-xs text-destructive">{sampleError}</p>}
-            {catalog.length > 0 && (
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                <p className="mb-1 text-xs text-muted-foreground">샘플 제공 데이터(학교급/도메인)</p>
-                <div className="flex flex-wrap gap-1">
-                  {catalog.map((item) => (
-                    <span key={item.sample_id} className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                      {item.filename}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
             {preview && (
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
                 <p className="mb-1 text-xs text-muted-foreground">선택된 샘플</p>

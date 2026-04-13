@@ -105,13 +105,14 @@ export interface PrototypeSampleImageListResponse {
 export async function getProblems(
   page = 1,
   pageSize = 10,
-  options?: { q?: string; domain?: string; school_level?: string; difficulty?: number },
+  options?: { q?: string; domain?: string; school_level?: string; difficulty?: number; has_sample_answer?: boolean },
 ): Promise<ProblemListPagedResponse> {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (options?.q) params.set("q", options.q);
   if (options?.domain) params.set("domain", options.domain);
   if (options?.school_level) params.set("school_level", options.school_level);
   if (options?.difficulty != null) params.set("difficulty", String(options.difficulty));
+  if (options?.has_sample_answer != null) params.set("has_sample_answer", String(options.has_sample_answer));
   return apiFetch(`/problems?${params.toString()}`, undefined, "문제 목록 조회 실패");
 }
 

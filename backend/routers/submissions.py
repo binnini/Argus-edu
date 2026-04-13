@@ -18,7 +18,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy import select, func
+from sqlalchemy import select, func, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -79,6 +79,18 @@ def _load_demo_manifest() -> list[dict]:
     return samples if isinstance(samples, list) else []
 
 
+def _manifest_answer_keys() -> set[tuple[str, str]]:
+    keys: set[tuple[str, str]] = set()
+    for row in _load_demo_manifest():
+        if not bool(row.get("is_answer")):
+            continue
+        lvl = str(row.get("school_level", "")).strip()
+        dm = str(row.get("domain", "")).strip()
+        if lvl and dm:
+            keys.add((lvl, dm))
+    return keys
+
+
 # ── 문제 조회 ────────────────────────────────────────────────
 
 @router.get("/prototype/sample-images", response_model=PrototypeSampleImageListResponse)
@@ -124,8 +136,9 @@ async def list_problem_prototype_sample_images(
 ):
     """
     문제별 데모 샘플 목록:
-    - 정답 후보 1개(해당 문제의 정답 제출 이미지) 반드시 포함
-    - 나머지 후보 4개는 랜덤(우선: 해당 문제 오답 이미지)
+    - 최대 3개 반환
+    - 정답 이미지가 있으면 반드시 1개 포함
+    - 나머지는 동일 학교급/도메인 풀에서 랜덤
     """
     if not settings.prototype_sample_images_enabled:
         return PrototypeSampleImageListResponse(enabled=False, samples=[])
@@ -143,17 +156,16 @@ async def list_problem_prototype_sample_images(
         return PrototypeSampleImageListResponse(enabled=True, samples=[])
 
     answer_pool = [row for row in pool if bool(row.get("is_answer"))]
-    if not answer_pool:
-        raise HTTPException(
-            status_code=404,
-            detail="해당 학교급/도메인의 정답 샘플 이미지를 찾을 수 없습니다.",
-        )
-    answer = random.choice(answer_pool)
-    answer_id = str(answer.get("sample_id", ""))
-
-    distractors_pool = [row for row in pool if str(row.get("sample_id", "")) != answer_id]
-    random.shuffle(distractors_pool)
-    picked = [answer, *distractors_pool[:4]]
+    picked: list[dict]
+    if answer_pool:
+        answer = random.choice(answer_pool)
+        answer_id = str(answer.get("sample_id", ""))
+        distractors_pool = [row for row in pool if str(row.get("sample_id", "")) != answer_id]
+        random.shuffle(distractors_pool)
+        picked = [answer, *distractors_pool[:2]]
+    else:
+        random.shuffle(pool)
+        picked = pool[:3]
 
     samples: list[PrototypeSampleImageItem] = []
     for row in picked:
@@ -202,6 +214,7 @@ async def list_problems(
     page_size: int = Query(10, ge=1, le=100),
     domain: Optional[str] = Query(None, description="도메인 필터 (부분 일치)"),
     school_level: Optional[str] = Query(None, description="학교급 필터 (부분 일치)"),
+    has_sample_answer: Optional[bool] = Query(None, description="정답 샘플 이미지 존재 여부 필터"),
     difficulty: Optional[int] = Query(None, ge=1, le=5, description="난이도 필터 (1~5)"),
     q: Optional[str] = Query(None, description="제목/내용 키워드 검색"),
 ):
@@ -220,6 +233,13 @@ async def list_problems(
                 Problem.title.ilike(f"%{q}%"),
                 Problem.domain.ilike(f"%{q}%"),
             )
+        )
+    if has_sample_answer is True:
+        answer_keys = _manifest_answer_keys()
+        if not answer_keys:
+            return ProblemListPagedResponse(problems=[], total=0, page=page, page_size=page_size)
+        base = base.where(
+            tuple_(Problem.school_level, Problem.domain).in_(list(answer_keys))
         )
 
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))

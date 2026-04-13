@@ -42,12 +42,26 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   const [activeDifficulty, setActiveDifficulty] = React.useState<number | undefined>(undefined)
   const [activeSchoolLevel, setActiveSchoolLevel] = React.useState<string | undefined>(undefined)
   const [activeDomain, setActiveDomain] = React.useState<string | undefined>(undefined)
+  const [activeHasSampleAnswer, setActiveHasSampleAnswer] = React.useState<boolean>(false)
   const [domainOptions, setDomainOptions] = React.useState<string[]>([])
 
-  const fetchProblems = React.useCallback((p: number, q: string, diff?: number, level?: string, domain?: string) => {
+  const fetchProblems = React.useCallback((
+    p: number,
+    q: string,
+    diff?: number,
+    level?: string,
+    domain?: string,
+    hasSampleAnswer?: boolean,
+  ) => {
     setLoading(true)
     setError("")
-    getProblems(p, PAGE_SIZE, { q: q || undefined, difficulty: diff, school_level: level, domain })
+    getProblems(p, PAGE_SIZE, {
+      q: q || undefined,
+      difficulty: diff,
+      school_level: level,
+      domain,
+      has_sample_answer: hasSampleAnswer ? true : undefined,
+    })
       .then((data) => {
         setProblems(data.problems)
         setTotal(data.total)
@@ -57,8 +71,8 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   }, [])
 
   React.useEffect(() => {
-    fetchProblems(page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain)
-  }, [page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain, fetchProblems])
+    fetchProblems(page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain, activeHasSampleAnswer)
+  }, [page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain, activeHasSampleAnswer, fetchProblems])
 
   React.useEffect(() => {
     getProblemDomains(activeSchoolLevel)
@@ -90,7 +104,7 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const hasFilter = activeQ || activeDifficulty != null || activeSchoolLevel != null || activeDomain != null
+  const hasFilter = activeQ || activeDifficulty != null || activeSchoolLevel != null || activeDomain != null || activeHasSampleAnswer
 
   return (
     <div className="space-y-4">
@@ -173,6 +187,21 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
               {DIFFICULTY_LABELS[d]}
             </button>
           ))}
+          <span className="text-xs text-muted-foreground mx-1">|</span>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveHasSampleAnswer((prev) => !prev)
+              setPage(1)
+            }}
+            className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
+              activeHasSampleAnswer
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-background hover:bg-muted text-muted-foreground"
+            }`}
+          >
+            정답 샘플 있는 문제만
+          </button>
           {hasFilter && (
             <button
               type="button"
@@ -181,6 +210,7 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
                 setActiveDifficulty(undefined)
                 setActiveSchoolLevel(undefined)
                 setActiveDomain(undefined)
+                setActiveHasSampleAnswer(false)
               }}
               className="text-xs px-2 py-1 text-muted-foreground hover:text-foreground flex items-center gap-0.5"
             >
