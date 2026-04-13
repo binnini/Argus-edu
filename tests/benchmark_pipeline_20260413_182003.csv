@@ -1,0 +1,7 @@
+scenario,n_users,problem_id,submission_id,submit_latency_s,grading_latency_s,feedback_total_latency_s,e2e_feedback_latency_s,hallucination_latency_s,e2e_hallucination_latency_s,final_status,feedback_status,hallucination_status,score,max_score,memory_start_mb,memory_end_mb,feedback_pending_max,feedback_running_max,hallucination_pending_max,error
+users_3_problems_5,3,23,116,0.0096,0.0079,49.4567,49.4645,56.7564,106.2209,graded,done,done,0,2,3227.08,2109.0,2,1,2,
+users_3_problems_5,3,25,117,0.0097,0.0088,59.6605,59.6693,51.0528,110.722,graded,done,done,0,1,3227.08,2121.56,2,1,2,
+users_3_problems_5,3,17,118,0.0106,0.056,71.1912,71.2473,43.5958,114.8431,graded,done,done,0,2,3227.08,2122.06,2,1,2,
+users_2_problems_5,2,17,119,0.0102,0.0068,56.7544,56.7611,39.5036,96.2647,graded,done,done,0,2,2122.06,3310.25,2,1,1,
+users_2_problems_5,2,23,120,0.0104,0.0071,43.8525,43.8596,46.6219,90.4815,graded,done,done,0,2,2122.06,3308.83,2,1,1,
+users_1_problems_5,1,17,121,0.0104,0.0071,24.4911,24.4982,11.9455,36.4437,graded,done,done,0,2,3310.25,3801.11,1,1,0,
