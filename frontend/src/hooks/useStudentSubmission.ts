@@ -19,6 +19,7 @@ export type Stage = "info" | "problem" | "answer" | "submitting" | "polling" | "
 
 export function useStudentSubmission() {
   const savedSession = getStudentSession()
+  const initializedRef = React.useRef(false)
   const [stage, setStage] = React.useState<Stage>(() => hasStudentSession() ? "problem" : "info")
   const [history, setHistory] = React.useState<StudentHistoryItem[]>([])
   const [homework, setHomework] = React.useState<StudentHomeworkItem[]>([])
@@ -52,6 +53,8 @@ export function useStudentSubmission() {
   }, [])
 
   React.useEffect(() => {
+    if (initializedRef.current) return
+    initializedRef.current = true
     const session = getStudentSession()
     if (session.id && stage !== "info") {
       loadSidebar(session.id)

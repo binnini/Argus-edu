@@ -527,15 +527,30 @@ async def get_student_homework(
     )
     homeworks = hw_result.scalars().all()
 
-    sub_result = await db.execute(
-        select(Submission).where(Submission.student_id == student_id)
-    )
-    submissions = sub_result.scalars().all()
-
+    assigned_problem_ids = {
+        hp.problem_id
+        for hw in homeworks
+        for hp in hw.problems
+    }
     submission_map: dict[int, str] = {}
-    for sub in submissions:
-        if sub.problem_id not in submission_map:
-            submission_map[sub.problem_id] = sub.status
+    if assigned_problem_ids:
+        latest_subq = (
+            select(
+                Submission.problem_id.label("problem_id"),
+                func.max(Submission.id).label("latest_submission_id"),
+            )
+            .where(
+                Submission.student_id == student_id,
+                Submission.problem_id.in_(assigned_problem_ids),
+            )
+            .group_by(Submission.problem_id)
+            .subquery()
+        )
+        latest_rows = await db.execute(
+            select(Submission.problem_id, Submission.status)
+            .join(latest_subq, Submission.id == latest_subq.c.latest_submission_id)
+        )
+        submission_map = {problem_id: status for problem_id, status in latest_rows.all()}
 
     items = []
     for hw in homeworks:
