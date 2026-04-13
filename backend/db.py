@@ -3,7 +3,14 @@ from sqlalchemy.orm import sessionmaker
 
 from config import settings
 
-engine = create_async_engine(settings.database_url, echo=False)
+engine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    pool_size=5,       
+    max_overflow=20,
+    pool_timeout=60,      
+    pool_recycle=1800
+)
 
 AsyncSessionLocal = sessionmaker(
     bind=engine,
@@ -15,7 +22,6 @@ AsyncSessionLocal = sessionmaker(
 
 # 하위 호환 alias
 SessionLocal = AsyncSessionLocal
-
 
 async def get_session() -> AsyncSession:
     """FastAPI 의존성 주입용 비동기 DB 세션."""

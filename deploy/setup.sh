@@ -136,6 +136,13 @@ cd "$ARGUS_DIR/backend"
 DATABASE_URL="$DATABASE_URL" ../.venv/bin/alembic upgrade head
 echo "[3/9] DB 마이그레이션 완료"
 
+echo "[3b/9] school_level 데이터 추출 및 업데이트 중..."
+"$PG_BIN/psql" "$DATABASE_URL" -c "
+    UPDATE problems 
+    SET school_level = SUBSTRING(source FROM '(초등학교|중학교|고등학교)') 
+    WHERE school_level IS NULL AND source ~ '(초등학교|중학교|고등학교)';"
+echo "[3b/9] school_level 데이터 추출 완료"
+
 # 4. AI-HUB 데이터 삽입 (seed.py)
 # 운영 데이터 보호를 위해 기본값은 skip. 초기 배포 때만 RUN_SEED=1 bash deploy/setup.sh
 if [ "${RUN_SEED:-0}" = "1" ] && [ -f "$ARGUS_DIR/scripts/seed.py" ]; then

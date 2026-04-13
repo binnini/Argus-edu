@@ -19,6 +19,7 @@ CREATE TABLE problems (
     domain          VARCHAR(50) DEFAULT '수학2',
     difficulty      SMALLINT CHECK (difficulty BETWEEN 1 AND 5),
     source          VARCHAR(100),                    -- 데이터 출처 (예: 'AI-HUB_수학_v1')
+    school_level    VARCHAR(50),                     -- 문제 범위 (초등학교, 중학교, 고등학교)
     soft_deleted    BOOLEAN DEFAULT FALSE,           -- 제출이 있는 문제 삭제 시 soft delete (ADR-021)
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );

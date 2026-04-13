@@ -12,6 +12,7 @@ seed.py — data/problems/aihub_*.json 파일을 읽어 PostgreSQL DB에 삽입�
 import asyncio
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -39,6 +40,14 @@ def build_problem(data: dict) -> Problem:
     if isinstance(ref_sol, dict):
         ref_sol = json.dumps(ref_sol, ensure_ascii=False)
 
+    source_value = data.get("source", "")
+    school_level = None
+    
+    # 정규표현식으로 '초등학교', '중학교', '고등학교' 키워드 탐색
+    match = re.search(r"(초등학교|중학교|고등학교)", source_value)
+    if match:
+        school_level = match.group(1)
+
     return Problem(
         title=str(data["title"]),
         content=data["content"],
@@ -46,6 +55,7 @@ def build_problem(data: dict) -> Problem:
         reference_solution=ref_sol,
         rubric=data["rubric"],
         domain=data.get("domain", "고등학교_공통수학"),
+        school_level=school_level,
         difficulty=data.get("difficulty", 3),
         source=data.get("source"),
     )

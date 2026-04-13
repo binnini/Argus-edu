@@ -35,6 +35,7 @@ class LLMClient:
             mlx_tokenizer,
             mlx_model_path,
         )
+        self._concurrency_limit = asyncio.Semaphore(1)
         logger.info(f"LLM 클라이언트 초기화: provider={self.provider}")
 
     def _build_provider(
@@ -83,7 +84,17 @@ class LLMClient:
         temperature: float = 1.0,
     ) -> LLMResponse:
         """Run a chat completion through the configured provider."""
-        async with self._chat_lock:
+        # async with self._chat_lock:
+        #     return await self._provider.chat(
+        #         system_prompt=system_prompt,
+        #         user_prompt=user_prompt,
+        #         model=model,
+        #         max_tokens=max_tokens,
+        #         temperature=temperature,
+        #     )
+        # 큐 대기 시간 중 timeout이 발생하면 Semaphore를 획득하기 전에 취소되므로 
+        # 스레드 풀에 고아 태스크가 적재되는 것을 원천 차단합니다.
+        async with self._concurrency_limit:
             return await self._provider.chat(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,

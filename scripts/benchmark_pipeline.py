@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+from requests import RequestException
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
@@ -83,7 +84,7 @@ def elapsed_s(start: datetime | None, end: datetime | None) -> float | None:
 
 
 def get_health(base_url: str) -> dict[str, Any]:
-    resp = requests.get(f"{base_url}/health", timeout=5)
+    resp = requests.get(f"{base_url}/health", timeout=15)
     resp.raise_for_status()
     return resp.json()
 
@@ -117,7 +118,7 @@ def submit_answer(base_url: str, problem_id: int, idx: int) -> tuple[int, float]
 
 
 def get_submission(base_url: str, submission_id: int) -> dict[str, Any]:
-    resp = requests.get(f"{base_url}/api/v1/submissions/{submission_id}", timeout=10)
+    resp = requests.get(f"{base_url}/api/v1/submissions/{submission_id}", timeout=15)
     resp.raise_for_status()
     return resp.json()
 
@@ -159,6 +160,11 @@ def wait_submission(
     timeout_s: float,
 ) -> tuple[dict[str, Any], dict[str, int], str]:
     deadline = time.perf_counter() + timeout_s
+    poll_interval_s = 1.0
+    health_sample_interval_s = 3.0
+    next_health_sample_at = 0.0
+    transient_errors = 0
+    last_transient_error = ""
     backlog_max = {
         "feedback_pending": 0,
         "feedback_running": 0,
@@ -168,18 +174,26 @@ def wait_submission(
     last_data: dict[str, Any] = {}
     while time.perf_counter() < deadline:
         try:
-            health = get_health(base_url)
-            backlog_max["feedback_pending"] = max(
-                backlog_max["feedback_pending"], queue_metric(health, "feedback", "pending")
-            )
-            backlog_max["feedback_running"] = max(
-                backlog_max["feedback_running"], queue_metric(health, "feedback", "running")
-            )
-            backlog_max["hallucination_pending"] = max(
-                backlog_max["hallucination_pending"], queue_metric(health, "hallucination", "pending")
-            )
-
             last_data = get_submission(base_url, submission_id)
+
+            now = time.perf_counter()
+            if now >= next_health_sample_at:
+                try:
+                    health = get_health(base_url)
+                    backlog_max["feedback_pending"] = max(
+                        backlog_max["feedback_pending"], queue_metric(health, "feedback", "pending")
+                    )
+                    backlog_max["feedback_running"] = max(
+                        backlog_max["feedback_running"], queue_metric(health, "feedback", "running")
+                    )
+                    backlog_max["hallucination_pending"] = max(
+                        backlog_max["hallucination_pending"], queue_metric(health, "hallucination", "pending")
+                    )
+                except RequestException as exc:
+                    transient_errors += 1
+                    last_transient_error = str(exc)
+                next_health_sample_at = now + health_sample_interval_s
+
             if last_data.get("status") in TERMINAL_STATUSES and not wait_feedback and not wait_hallucination:
                 return last_data, backlog_max, ""
             if wait_feedback and last_data.get("feedback_status") == "done":
@@ -188,11 +202,20 @@ def wait_submission(
             if wait_hallucination:
                 if last_data.get("hallucination_status") in ("done", "failed"):
                     return last_data, backlog_max, ""
+        except RequestException as exc:
+            transient_errors += 1
+            last_transient_error = str(exc)
         except Exception as exc:
             return last_data, backlog_max, str(exc)
-        time.sleep(0.5)
+        time.sleep(poll_interval_s)
 
-    return last_data, backlog_max, "timeout"
+    timeout_detail = "timeout"
+    if transient_errors:
+        timeout_detail = (
+            f"timeout (transient_request_errors={transient_errors}, "
+            f"last_error={last_transient_error[:200]})"
+        )
+    return last_data, backlog_max, timeout_detail
 
 
 def run_scenario(

@@ -6,7 +6,7 @@ import logging
 import re
 from dataclasses import dataclass
 from typing import Any
-
+import json_repair
 from config import settings
 from services.deterministic_grading import AnswerVerdict
 from services.llm_client import LLMClient
@@ -20,7 +20,9 @@ FEEDBACK_REVIEW_SYSTEM_PROMPT = """\
 당신은 점수나 정오를 변경하지 않고, 학생 풀이 과정의 타당성을 검토해 피드백만 작성합니다.
 명확한 오류가 없으면 student_mistakes를 빈 배열로 반환하세요.
 없는 오류를 추측하거나 만들어내지 마세요.
-수학적으로 정확한 내용만 작성하고 JSON 형식으로만 응답하세요."""
+수학적으로 정확한 내용만 작성하고 JSON 형식으로만 응답하세요.
+JSON 응답 내의 모든 LaTeX 수식 및 역슬래시는 반드시 이중 역슬래시로 이스케이프 처리하세요.
+(예: \frac 대신 \\frac, \alpha 대신 \\alpha 사용)"""
 
 
 FEEDBACK_REVIEW_USER_TEMPLATE = """\
@@ -169,11 +171,15 @@ class FeedbackReviewService:
         if match:
             text = match.group(0)
 
+        # try:
+        #     data = json.loads(text)
+        # except json.JSONDecodeError:
+        #     text = re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", text)
+        #     data = json.loads(text)
         try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            text = re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", text)
-            data = json.loads(text)
+            data = json_repair.loads(text)
+        except Exception as e:
+            raise FeedbackReviewError(f"JSON 파싱 및 복구 실패: {e}")
 
         required = {"solution_status", "has_mistakes", "student_mistakes", "correct_approach", "key_concept"}
         missing = required - set(data)

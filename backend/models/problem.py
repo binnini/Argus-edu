@@ -16,6 +16,7 @@ class Problem(Base):
     reference_solution = Column(Text, nullable=False)
     rubric = Column(JSONB, nullable=False)
     domain = Column(String(50), default="수학2")
+    school_level = Column(String(50))
     difficulty = Column(SmallInteger)
     source = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
