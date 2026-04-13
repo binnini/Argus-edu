@@ -10,7 +10,7 @@ export interface Problem {
 }
 
 export interface FeedbackMistake {
-  step: number;
+  step: number | null;
   description: string;
 }
 
@@ -21,6 +21,8 @@ export interface FeedbackStep {
 }
 
 export interface Feedback {
+  solution_status?: string | null;
+  has_mistakes?: boolean;
   student_mistakes: FeedbackMistake[];
   correct_approach: FeedbackStep[];
   key_concept: string;
@@ -40,6 +42,8 @@ export interface SubmissionStatusResponse {
   score_visible: boolean;
   feedback: Feedback | null;    // 교사 승인 또는 feedback_visible 시 노출
   feedback_visible: boolean;    // 정답+고신뢰도면 교사 승인 전에도 노출
+  feedback_status: string | null;
+  solution_status: string | null;
   teacher_approved: boolean;
   message: string | null;
   problem_title: string | null;

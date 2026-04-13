@@ -92,6 +92,8 @@ async def get_queue(
                 hallucination_status=gr.hallucination_status,
                 hallucination_score=gr.hallucination_score,
                 hallucination_issues=gr.hallucination_issues,
+                feedback_status=gr.feedback_status,
+                solution_status=gr.solution_status,
             )
         )
 
@@ -220,6 +222,8 @@ async def get_submissions(
             ai_score=gr.ai_score if gr else None,
             final_score=final_score,
             trust_level=gr.trust_level if gr else None,
+            feedback_status=gr.feedback_status if gr else None,
+            solution_status=gr.solution_status if gr else None,
             submitted_at=sub.submitted_at,
             reviewed_at=tq.reviewed_at if tq else None,
         ))
@@ -274,6 +278,8 @@ async def get_problem_submissions(
             ai_score=gr.ai_score if gr else None,
             final_score=final_score,
             trust_level=gr.trust_level if gr else None,
+            feedback_status=gr.feedback_status if gr else None,
+            solution_status=gr.solution_status if gr else None,
             submitted_at=sub.submitted_at,
             reviewed_at=tq.reviewed_at if tq else None,
         ))

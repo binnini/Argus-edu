@@ -20,7 +20,7 @@ config.set_main_option("sqlalchemy.url", database_url)
 
 # 모델 메타데이터 임포트
 from models.base import Base
-from models import Problem, Submission, GradingResult, TeacherQueue, FeedbackLog  # noqa
+from models import Problem, Submission, GradingResult, TeacherQueue, FeedbackLog, Job  # noqa
 
 target_metadata = Base.metadata
 

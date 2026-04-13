@@ -13,6 +13,9 @@ class GradingResult(Base):
     ai_score = Column(SmallInteger, nullable=False)
     ai_feedback = Column(Text, nullable=False)
     grading_steps = Column(Text, nullable=True)
+    feedback_status = Column(String(10), nullable=False, default="pending")
+    solution_status = Column(String(40), nullable=True)
+    answer_verdict = Column(String(20), nullable=True)
     sbert_similarity = Column(Float, nullable=False)
     trust_score = Column(Float, nullable=False)
     trust_level = Column(String(10), nullable=False)  # 'high' | 'low'

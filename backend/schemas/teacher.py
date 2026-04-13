@@ -26,6 +26,8 @@ class TeacherQueueItem(BaseModel):
     hallucination_status: str = "pending"   # pending | running | done | failed
     hallucination_score: Optional[float] = None   # 높을수록 신뢰 (done 상태에서만 유효)
     hallucination_issues: Optional[str] = None    # JSON 배열 문자열
+    feedback_status: str = "pending"
+    solution_status: Optional[str] = None
 
 
 class TeacherQueueResponse(BaseModel):
@@ -75,6 +77,8 @@ class SubmissionOverviewItem(BaseModel):
     ai_score: Optional[int] = None
     final_score: Optional[int] = None
     trust_level: Optional[str] = None
+    feedback_status: Optional[str] = None
+    solution_status: Optional[str] = None
     submitted_at: datetime
     reviewed_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)

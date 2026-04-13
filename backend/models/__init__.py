@@ -5,8 +5,9 @@ from .teacher_queue import TeacherQueue
 from .feedback_log import FeedbackLog
 from .group import StudentGroup, GroupMember
 from .homework import Homework, HomeworkProblem
+from .job import Job
 
 __all__ = [
     "Problem", "Submission", "GradingResult", "TeacherQueue", "FeedbackLog",
-    "StudentGroup", "GroupMember", "Homework", "HomeworkProblem",
+    "StudentGroup", "GroupMember", "Homework", "HomeworkProblem", "Job",
 ]

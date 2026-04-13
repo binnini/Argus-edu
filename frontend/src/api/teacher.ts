@@ -19,6 +19,11 @@ export interface QueueItem {
   queue_type: "score_only" | "full_review";
   sla_deadline: string;
   queued_at: string;
+  hallucination_status?: string;
+  hallucination_score?: number | null;
+  hallucination_issues?: string | null;
+  feedback_status?: string;
+  solution_status?: string | null;
 }
 
 export interface TeacherQueueResponse {
@@ -63,6 +68,8 @@ export interface SubmissionOverviewItem {
   ai_score: number | null;
   final_score: number | null;
   trust_level: string | null;
+  feedback_status: string | null;
+  solution_status: string | null;
   submitted_at: string;
   reviewed_at: string | null;
 }

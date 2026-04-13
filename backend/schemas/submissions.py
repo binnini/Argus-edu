@@ -58,6 +58,8 @@ class FeedbackStep(BaseModel):
 
 
 class FeedbackSchema(BaseModel):
+    solution_status: Optional[str] = None
+    has_mistakes: bool = True
     student_mistakes: list[Union[FeedbackMistake, str]] = []
     correct_approach: list[Union[FeedbackStep, str]] = []
     key_concept: str = ""
@@ -103,6 +105,8 @@ class SubmissionStatusResponse(BaseModel):
     score_visible: bool
     feedback: Optional[FeedbackSchema]   # 교사 승인 또는 feedback_visible 시 노출
     feedback_visible: bool = False       # 정답+고신뢰도면 교사 승인 전에도 노출
+    feedback_status: Optional[str] = None
+    solution_status: Optional[str] = None
     teacher_approved: bool
     message: Optional[str]
     problem_title: Optional[str] = None

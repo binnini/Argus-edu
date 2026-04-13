@@ -13,9 +13,11 @@ export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
       {feedback.student_mistakes.length > 0 && (
         <AlertPanel tone="error" icon={AlertCircle} title="틀린 부분" className="space-y-2">
           <ul className="space-y-1">
-            {feedback.student_mistakes.map((m) => (
-              <li key={m.step} className="text-sm text-red-800 dark:text-red-200">
-                <span className="font-medium">단계 {m.step}:</span>{" "}
+            {feedback.student_mistakes.map((m, idx) => (
+              <li key={`${m.step ?? "mistake"}-${idx}`} className="text-sm text-red-800 dark:text-red-200">
+                {m.step !== null && m.step !== undefined && (
+                  <span className="font-medium">단계 {m.step}: </span>
+                )}
                 {renderMath(m.description)}
               </li>
             ))}

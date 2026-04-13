@@ -1,6 +1,5 @@
 """Student submission grading pipeline orchestration."""
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -12,6 +11,8 @@ from sqlalchemy.orm import selectinload
 
 from db import AsyncSessionLocal
 from models import GradingResult, Submission, TeacherQueue
+from services.deterministic_grading import judge_final_answer
+from services.job_queue import enqueue_job
 from services.trust_gate import calculate_trust
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ async def run_grading_pipeline(
     image_bytes: bytes | None = None,
     image_content_type: str | None = None,
 ) -> None:
-    """채점 + 개인화 피드백 + 신뢰도 게이트 파이프라인."""
+    """Deterministic grading pipeline; feedback runs through durable jobs."""
     try:
         pipeline_input = await _prepare_input(
             submission_id=submission_id,
@@ -40,17 +41,10 @@ async def run_grading_pipeline(
             image_bytes=image_bytes,
             image_content_type=image_content_type,
         )
-        out = await app_state.combined_service.run(
-            problem_content=pipeline_input.problem_content,
-            answer=pipeline_input.answer,
-            reference_solution=pipeline_input.reference_solution,
-            rubric=pipeline_input.rubric,
-            student_answer=pipeline_input.student_answer,
-        )
-        await _persist_output(submission_id, pipeline_input.rubric, out, app_state)
+        await _persist_deterministic_output(submission_id, pipeline_input)
         logger.info(
             f"채점 완료 submission_id={submission_id} "
-            f"score={out.total_score}"
+            f"answer={pipeline_input.answer}"
         )
     except Exception as e:
         logger.error(f"채점 파이프라인 오류 submission_id={submission_id}: {e}")
@@ -98,26 +92,42 @@ async def _prepare_input(
         )
 
 
-async def _persist_output(submission_id: int, rubric: dict[str, Any], out, app_state) -> None:
-    """Persist grading output and teacher queue entry in a short DB session."""
-    total_score = rubric.get("total_score", 1)
+async def _persist_deterministic_output(submission_id: int, pipeline_input: PipelineInput) -> None:
+    """Persist deterministic pass/fail score and enqueue feedback generation."""
+    total_score = int(pipeline_input.rubric.get("total_score", 1))
+    answer_verdict = judge_final_answer(
+        student_answer=pipeline_input.student_answer,
+        problem_answer=pipeline_input.answer,
+    )
+    ai_score = total_score if answer_verdict.is_correct else 0
     trust = calculate_trust(
-        ai_score=out.total_score,
+        ai_score=ai_score,
         total_score=total_score,
     )
 
-    ai_feedback_dict = {
-        "student_mistakes": out.student_mistakes,
-        "correct_approach": out.correct_approach,
-        "key_concept": out.key_concept,
+    placeholder_feedback = {
+        "solution_status": "pending",
+        "has_mistakes": False,
+        "student_mistakes": [],
+        "correct_approach": [],
+        "key_concept": "",
     }
+    grading_steps = [{
+        "step": 1,
+        "earned": ai_score,
+        "max": total_score,
+        "reason": answer_verdict.reason,
+    }]
 
     async with AsyncSessionLocal() as db:
         grading_record = GradingResult(
             submission_id=submission_id,
-            ai_score=out.total_score,
-            ai_feedback=json.dumps(ai_feedback_dict, ensure_ascii=False),
-            grading_steps=json.dumps(out.steps, ensure_ascii=False),
+            ai_score=ai_score,
+            ai_feedback=json.dumps(placeholder_feedback, ensure_ascii=False),
+            grading_steps=json.dumps(grading_steps, ensure_ascii=False),
+            feedback_status="pending",
+            solution_status=None,
+            answer_verdict=answer_verdict.verdict,
             sbert_similarity=0.0,   # SBERT 제거 — 컬럼 유지용 기본값
             trust_score=0.0,        # hallucination_batch 완료 후 갱신
             trust_level="low",      # hallucination_batch 완료 후 갱신
@@ -136,7 +146,7 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out, app_s
                 reviewed_at=now,
             )
             final_status = "approved"
-            logger.info(f"자동 승인 submission_id={submission_id} score={out.total_score}/{total_score}")
+            logger.info(f"자동 승인 submission_id={submission_id} score={ai_score}/{total_score}")
         else:
             # 오답·저신뢰도 → 교사 검토 대기
             queue_record = TeacherQueue(
@@ -153,19 +163,16 @@ async def _persist_output(submission_id: int, rubric: dict[str, Any], out, app_s
         submission.status = final_status
         await db.commit()
 
-    _trigger_hallucination_if_idle(app_state)
-
-
-def _trigger_hallucination_if_idle(app_state) -> None:
-    """Kick low-priority trust scoring when no grading call is active."""
-    hallucination_svc = getattr(app_state, "hallucination_svc", None)
-    llm_client = getattr(app_state, "llm_client", None)
-    if hallucination_svc is None or llm_client is None:
-        return
-    if llm_client.grading_inflight > 0:
-        return
-    asyncio.create_task(hallucination_svc.run_batch(limit=1))
-
+    await enqueue_job(
+        "feedback",
+        submission_id=submission_id,
+        payload={
+            "answer_verdict": answer_verdict.verdict,
+            "student_values": answer_verdict.student_values,
+            "answer_values": answer_verdict.answer_values,
+            "verdict_reason": answer_verdict.reason,
+        },
+    )
 
 async def _mark_submission_error(submission_id: int) -> None:
     """Mark a submission as errored without raising secondary failures."""

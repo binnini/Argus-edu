@@ -6,20 +6,22 @@ lifespan:
   - GradingService, FeedbackService, OCRService 인스턴스도 app.state에 보관
 """
 
+import asyncio
 import logging
 import os
 import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from config import settings
 from services.grading_feedback import CombinedGradingFeedbackService
+from services.feedback_generation import FeedbackReviewService
 from services.hallucination_batch import HallucinationBatchService
+from services.job_queue import JobWorker, queue_counts
 from services.llm_client import LLMClient
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
@@ -41,6 +43,7 @@ async def lifespan(app: FastAPI):
     from models.base import Base
     import models.group  # noqa: F401 — 테이블 등록
     import models.homework  # noqa: F401 — 테이블 등록
+    import models.job  # noqa: F401 — 테이블 등록
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("DB 테이블 동기화 완료")
@@ -65,31 +68,26 @@ async def lifespan(app: FastAPI):
 
     app.state.llm_client = llm_client
     app.state.combined_service = CombinedGradingFeedbackService(llm_client=llm_client)
+    app.state.feedback_review_service = FeedbackReviewService(llm_client=llm_client)
     app.state.ocr_service = OCRService()
 
-    # 배치 할루시네이션 검증 스케줄러 (ADR-026)
     hallucination_svc = HallucinationBatchService(llm_client=llm_client)
     app.state.hallucination_svc = hallucination_svc
 
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(
-        hallucination_svc.run_batch,
-        trigger="interval",
-        seconds=settings.hallucination_batch_interval_seconds,
-        id="hallucination_batch",
-        max_instances=1,        # 이전 배치가 끝나기 전에 중복 실행 방지
-        misfire_grace_time=60,
-    )
-    scheduler.start()
-    app.state.scheduler = scheduler
-    logger.info(
-        f"할루시네이션 배치 스케줄러 시작: {settings.hallucination_batch_interval_seconds}s 간격"
-    )
+    job_worker = JobWorker(app.state)
+    app.state.job_worker = job_worker
+    app.state.job_worker_task = asyncio.create_task(job_worker.run())
+    logger.info("durable job worker 시작")
     logger.info("서비스 인스턴스 초기화 완료. 서버 준비됨.")
 
     yield
 
-    scheduler.shutdown(wait=False)
+    job_worker.stop()
+    app.state.job_worker_task.cancel()
+    try:
+        await app.state.job_worker_task
+    except asyncio.CancelledError:
+        pass
     logger.info("서버 종료.")
 
 
@@ -142,4 +140,9 @@ async def health():
     except Exception:
         memory_mb = None
 
-    return {"status": "ok", "memory_mb": memory_mb}
+    try:
+        queues = await queue_counts()
+    except Exception:
+        queues = {}
+
+    return {"status": "ok", "memory_mb": memory_mb, "queues": queues}

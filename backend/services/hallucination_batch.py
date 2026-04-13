@@ -81,6 +81,41 @@ class HallucinationBatchService:
         async with self._run_lock:
             return await self._run_batch_locked(limit=limit)
 
+    async def run_one(self, grading_result_id: int) -> int:
+        """Verify one specific grading result."""
+        if self._run_lock.locked():
+            logger.info("할루시네이션 배치가 이미 실행 중 → 단건 검증 건너뜀")
+            return 0
+
+        async with self._run_lock:
+            async with SessionLocal() as db:
+                stmt = (
+                    select(GradingResult, Submission, Problem)
+                    .join(Submission, Submission.id == GradingResult.submission_id)
+                    .join(Problem, Problem.id == Submission.problem_id)
+                    .where(
+                        GradingResult.id == grading_result_id,
+                        GradingResult.hallucination_status == "pending",
+                    )
+                )
+                rows = await db.execute(stmt)
+                items = list(rows.tuples())
+                if not items:
+                    return 0
+                gr = items[0][0]
+                gr.hallucination_status = "running"
+                await db.commit()
+
+            try:
+                verdicts = await self._call_llm(items)
+            except Exception as e:
+                logger.error(f"할루시네이션 LLM 단건 호출 실패: {e}")
+                await self._mark_failed([grading_result_id])
+                return 0
+
+            await self._apply_verdicts([grading_result_id], verdicts)
+            return 1
+
     async def _run_batch_locked(self, limit: int | None = None) -> int:
         """Run one hallucination batch while protected by the service lock."""
         # 채점 우선 처리: grading_inflight > 0 이면 이번 배치를 스킵하고 다음 인터벌에 재시도

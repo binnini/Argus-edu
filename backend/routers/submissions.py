@@ -417,6 +417,8 @@ async def get_submission_status(
             score_visible=False,
             feedback=None,
             feedback_visible=False,
+            feedback_status=None,
+            solution_status=None,
             teacher_approved=False,
             message=message,
             problem_title=submission.problem.title if submission.problem else None,
@@ -431,6 +433,7 @@ async def get_submission_status(
     from services.trust_gate import TrustResult
     from datetime import timedelta
     total_score = submission.problem.rubric.get("total_score", 0) if submission.problem else 0
+    feedback_done = gr.feedback_status == "done"
     is_high = gr.trust_level == "high"
     is_auto_approved = tq is not None and tq.action == "approve" and tq.reviewed_at is not None and tq.teacher_score is None
     trust = TrustResult(
@@ -438,7 +441,7 @@ async def get_submission_status(
         trust_level=gr.trust_level,
         queue_type=tq.queue_type if tq else "score_only",
         score_visible=True,
-        feedback_visible=is_auto_approved or is_high,
+        feedback_visible=feedback_done and (is_auto_approved or is_high),
         auto_approve=is_auto_approved,
         sla_deadline=tq.sla_deadline if tq else datetime.now(timezone.utc) + timedelta(hours=24),
     )
@@ -447,7 +450,7 @@ async def get_submission_status(
 
     # ai_feedback: JSON 문자열 → dict
     ai_feedback_dict = None
-    if gr.ai_feedback:
+    if feedback_done and gr.ai_feedback:
         try:
             ai_feedback_dict = json.loads(gr.ai_feedback)
         except (json.JSONDecodeError, TypeError):
@@ -482,6 +485,8 @@ async def get_submission_status(
         score_visible=resp_data["score_visible"],
         feedback=resp_data["feedback"],
         feedback_visible=resp_data["feedback_visible"],
+        feedback_status=gr.feedback_status,
+        solution_status=gr.solution_status,
         teacher_approved=resp_data["teacher_approved"],
         message=message,
         problem_title=submission.problem.title if submission.problem else None,
