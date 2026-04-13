@@ -70,6 +70,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
   const feedback = parseFeedback(item.ai_feedback)
   const isDeadlineSoon = new Date(item.sla_deadline).getTime() - Date.now() < 3_600_000 * 3
   const imageUrl = item.image_path ? `${apiOrigin()}/${item.image_path}` : null
+  const isReviewed = !!item.action
 
   return (
     <Card className="w-full overflow-hidden">
@@ -84,6 +85,11 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5 shrink-0">
+            {isReviewed && (
+              <Badge variant="secondary">
+                처리 완료: {item.action === "approve" ? "승인" : item.action === "modify" ? "수정" : "거부"}
+              </Badge>
+            )}
             <Badge variant={item.trust_level === "high" ? "success" : "destructive"}>
               신뢰도 {item.trust_level === "high" ? "High" : "Low"}{" "}
               <span className="ml-1 opacity-70">{item.trust_score.toFixed(2)}</span>
@@ -276,35 +282,43 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         {/* 액션 버튼 */}
-        <div className="grid grid-cols-2 gap-2 border-t border-gray-200 pt-4 sm:grid-cols-[1fr_auto_auto]">
-          <Button
-            variant="default"
-            size="sm"
-            className="col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 sm:col-span-1 sm:min-w-44"
-            onClick={() => handleAction("approve")}
-            disabled={submitting}
-          >
-            승인하기
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-300 px-5 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-zinc-900"
-            onClick={() => handleAction("modify")}
-            disabled={submitting || (showModify && (!teacherScore.trim() || !teacherFeedback.trim()))}
-          >
-            {showModify ? "수정 제출" : "수정"}
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="px-5"
-            onClick={() => handleAction("reject")}
-            disabled={submitting}
-          >
-            거부
-          </Button>
-        </div>
+        {!isReviewed ? (
+          <div className="grid grid-cols-2 gap-2 border-t border-gray-200 pt-4 sm:grid-cols-[1fr_auto_auto]">
+            <Button
+              variant="default"
+              size="sm"
+              className="col-span-2 bg-primary text-primary-foreground hover:bg-primary/90 sm:col-span-1 sm:min-w-44"
+              onClick={() => handleAction("approve")}
+              disabled={submitting}
+            >
+              승인하기
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-gray-300 px-5 text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-zinc-900"
+              onClick={() => handleAction("modify")}
+              disabled={submitting || (showModify && (!teacherScore.trim() || !teacherFeedback.trim()))}
+            >
+              {showModify ? "수정 제출" : "수정"}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="px-5"
+              onClick={() => handleAction("reject")}
+              disabled={submitting}
+            >
+              거부
+            </Button>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-muted-foreground">
+            {item.reviewed_at
+              ? `검토 완료: ${new Date(item.reviewed_at).toLocaleString("ko-KR")}`
+              : "검토 완료"}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type TrustFilter = "all" | "high" | "low"
+type ReviewStatusFilter = "pending" | "approved" | "modify" | "reject" | "reviewed" | "all"
 const PAGE_SIZE = 20
 
 export default function ReviewQueue() {
@@ -21,8 +22,9 @@ export default function ReviewQueue() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<TrustFilter>("all")
+  const [reviewStatus, setReviewStatus] = useState<ReviewStatusFilter>("pending")
   const [searchText, setSearchText] = useState("")
-  const [sortBy, setSortBy] = useState<"sla" | "student" | "problem">("sla")
+  const [sortBy, setSortBy] = useState<"sla" | "latest">("sla")
   const [problemFilter, setProblemFilter] = useState<string>("전체")
 
   const load = useCallback(async () => {
@@ -30,7 +32,7 @@ export default function ReviewQueue() {
     setError(null)
     try {
       const trustLevel = filter === "all" ? undefined : filter
-      const data = await getQueue(trustLevel, page, PAGE_SIZE)
+      const data = await getQueue(trustLevel, reviewStatus, sortBy, page, PAGE_SIZE)
       setItems(data.queue)
       setTotal(data.total)
     } catch (e) {
@@ -38,10 +40,10 @@ export default function ReviewQueue() {
     } finally {
       setLoading(false)
     }
-  }, [filter, page])
+  }, [filter, reviewStatus, sortBy, page])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { setPage(1) }, [filter])
+  useEffect(() => { setPage(1) }, [filter, reviewStatus, sortBy])
 
   const problemTitles = useMemo(
     () => ["전체", ...Array.from(new Set(items.map(i => i.problem_title))).sort()],
@@ -58,13 +60,8 @@ export default function ReviewQueue() {
       )
     }
     if (problemFilter !== "전체") list = list.filter(i => i.problem_title === problemFilter)
-    switch (sortBy) {
-      case "sla": list.sort((a, b) => new Date(a.sla_deadline).getTime() - new Date(b.sla_deadline).getTime()); break
-      case "student": list.sort((a, b) => a.student_name.localeCompare(b.student_name, "ko")); break
-      case "problem": list.sort((a, b) => a.problem_title.localeCompare(b.problem_title, "ko")); break
-    }
     return list
-  }, [items, searchText, problemFilter, sortBy])
+  }, [items, searchText, problemFilter])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const lowCount = items.filter((i) => i.trust_level === "low").length
@@ -129,14 +126,26 @@ export default function ReviewQueue() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as "sla" | "student" | "problem")}>
+        <Select value={reviewStatus} onValueChange={(v) => setReviewStatus(v as ReviewStatusFilter)}>
+          <SelectTrigger className="w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">미처리</SelectItem>
+            <SelectItem value="approved">승인 완료</SelectItem>
+            <SelectItem value="modify">수정 완료</SelectItem>
+            <SelectItem value="reject">거부 완료</SelectItem>
+            <SelectItem value="reviewed">처리 완료</SelectItem>
+            <SelectItem value="all">전체</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as "sla" | "latest")}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="sla">SLA 임박순</SelectItem>
-            <SelectItem value="student">학생명순</SelectItem>
-            <SelectItem value="problem">문제명순</SelectItem>
+            <SelectItem value="latest">최신순</SelectItem>
           </SelectContent>
         </Select>
         {(searchText || problemFilter !== "전체") && (

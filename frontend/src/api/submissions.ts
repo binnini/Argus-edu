@@ -54,6 +54,7 @@ export interface SubmissionStatusResponse {
   message: string | null;
   problem_title: string | null;
   problem_content: string | null;
+  ocr_raw_text?: string | null;
 }
 
 export interface ProblemListPagedResponse {

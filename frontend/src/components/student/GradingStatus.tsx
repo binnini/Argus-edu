@@ -24,6 +24,8 @@ function ScoreBadge({ score, maxScore }: { score: number; maxScore: number | nul
 }
 
 export default function GradingStatus({ result }: GradingStatusProps) {
+  const hideMistakes = (result.score ?? 0) > 0 || result.solution_status === "correct_solution"
+
   if (result.status === "pending" || result.status === "error") {
     return (
       <div className="space-y-3">
@@ -53,7 +55,7 @@ export default function GradingStatus({ result }: GradingStatusProps) {
           )}
           <Badge variant="default">교사 승인 완료</Badge>
         </div>
-        <FeedbackPanel feedback={result.feedback} />
+        <FeedbackPanel feedback={result.feedback} hideMistakes={hideMistakes} />
       </div>
     )
   }
@@ -72,7 +74,7 @@ export default function GradingStatus({ result }: GradingStatusProps) {
                 AI 피드백을 미리 확인할 수 있습니다. 교사 검토 후 최종 확정됩니다.
               </p>
             </div>
-            <FeedbackPanel feedback={result.feedback} />
+            <FeedbackPanel feedback={result.feedback} hideMistakes={hideMistakes} />
           </div>
         )
       }
@@ -106,7 +108,7 @@ export default function GradingStatus({ result }: GradingStatusProps) {
           <ScoreBadge score={result.score} maxScore={result.max_score} />
         )}
         {result.feedback ? (
-          <FeedbackPanel feedback={result.feedback} />
+          <FeedbackPanel feedback={result.feedback} hideMistakes={hideMistakes} />
         ) : (
           <p className="text-sm text-muted-foreground">피드백을 불러오는 중입니다.</p>
         )}

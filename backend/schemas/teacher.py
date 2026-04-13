@@ -28,6 +28,8 @@ class TeacherQueueItem(BaseModel):
     hallucination_issues: Optional[str] = None    # JSON 배열 문자열
     feedback_status: str = "pending"
     solution_status: Optional[str] = None
+    action: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
 
 
 class TeacherQueueResponse(BaseModel):

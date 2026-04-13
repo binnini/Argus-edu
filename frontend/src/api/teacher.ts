@@ -24,6 +24,8 @@ export interface QueueItem {
   hallucination_issues?: string | null;
   feedback_status?: string;
   solution_status?: string | null;
+  action?: "approve" | "modify" | "reject" | null;
+  reviewed_at?: string | null;
 }
 
 export interface TeacherQueueResponse {
@@ -90,11 +92,15 @@ function authHeaders(password: string): HeadersInit {
 export async function getTeacherQueue(
   password: string,
   trustLevel?: string,
+  reviewStatus = "pending",
+  sort: "sla" | "latest" = "sla",
   page = 1,
   pageSize = 20,
 ): Promise<TeacherQueueResponse> {
   const params = new URLSearchParams();
   if (trustLevel) params.set("trust_level", trustLevel);
+  if (reviewStatus) params.set("review_status", reviewStatus);
+  params.set("sort", sort);
   params.set("page", String(page));
   params.set("page_size", String(pageSize));
   const url = `/teacher/queue${params.toString() ? `?${params.toString()}` : ""}`;
@@ -105,11 +111,15 @@ export async function getTeacherQueue(
 
 export async function getQueue(
   trustLevel?: string,
+  reviewStatus = "pending",
+  sort: "sla" | "latest" = "sla",
   page = 1,
   pageSize = 20,
 ): Promise<TeacherQueueResponse> {
   const params = new URLSearchParams();
   if (trustLevel) params.set("trust_level", trustLevel);
+  if (reviewStatus) params.set("review_status", reviewStatus);
+  params.set("sort", sort);
   params.set("page", String(page));
   params.set("page_size", String(pageSize));
   const url = `/teacher/queue${params.toString() ? `?${params.toString()}` : ""}`;

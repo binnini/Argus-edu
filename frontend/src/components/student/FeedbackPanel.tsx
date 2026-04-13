@@ -5,12 +5,13 @@ import { AlertCircle, CheckCircle2, Lightbulb } from "lucide-react"
 
 interface FeedbackPanelProps {
   feedback: Feedback
+  hideMistakes?: boolean
 }
 
-export default function FeedbackPanel({ feedback }: FeedbackPanelProps) {
+export default function FeedbackPanel({ feedback, hideMistakes = false }: FeedbackPanelProps) {
   return (
     <div className="space-y-4 mt-4">
-      {feedback.student_mistakes.length > 0 && (
+      {!hideMistakes && feedback.student_mistakes.length > 0 && (
         <AlertPanel tone="error" icon={AlertCircle} title="틀린 부분" className="space-y-2">
           <ul className="space-y-1">
             {feedback.student_mistakes.map((m, idx) => (

@@ -43,12 +43,17 @@ def _verify_teacher(x_teacher_password: str = Header(default="")):
 @router.get("/queue", response_model=TeacherQueueResponse)
 async def get_queue(
     trust_level: Optional[str] = None,
+    review_status: str = Query(
+        "pending",
+        description="pending|approved|modify|reject|reviewed|all",
+    ),
+    sort: str = Query("sla", description="sla|latest"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_session),
     _: None = Depends(_verify_teacher),
 ):
-    """action IS NULL 항목만 반환. SLA 마감 임박 순 정렬. trust_level 필터 지원."""
+    """교사 검토 큐 조회. 처리 상태/정렬/신뢰도 필터 지원."""
     query = (
         select(TeacherQueue)
         .join(TeacherQueue.submission)
@@ -57,19 +62,35 @@ async def get_queue(
             selectinload(TeacherQueue.submission).selectinload(Submission.problem),
             selectinload(TeacherQueue.submission).selectinload(Submission.grading_result),
         )
-        .where(TeacherQueue.action.is_(None))
     )
+    normalized_status = (review_status or "pending").lower().strip()
+    if normalized_status == "pending":
+        query = query.where(TeacherQueue.action.is_(None))
+    elif normalized_status == "approved":
+        query = query.where(TeacherQueue.action == "approve")
+    elif normalized_status == "modify":
+        query = query.where(TeacherQueue.action == "modify")
+    elif normalized_status == "reject":
+        query = query.where(TeacherQueue.action == "reject")
+    elif normalized_status == "reviewed":
+        query = query.where(TeacherQueue.action.is_not(None))
+    elif normalized_status != "all":
+        raise HTTPException(status_code=400, detail="review_status 값이 올바르지 않습니다")
+
     if trust_level:
         query = query.where(func.lower(GradingResult.trust_level) == trust_level.lower())
 
     total_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = total_result.scalar() or 0
 
-    result = await db.execute(
-        query.order_by(TeacherQueue.sla_deadline.asc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
+    if sort == "latest":
+        ordered = query.order_by(func.coalesce(TeacherQueue.reviewed_at, TeacherQueue.queued_at).desc())
+    elif sort == "sla":
+        ordered = query.order_by(TeacherQueue.sla_deadline.asc(), TeacherQueue.queued_at.asc())
+    else:
+        raise HTTPException(status_code=400, detail="sort 값이 올바르지 않습니다")
+
+    result = await db.execute(ordered.offset((page - 1) * page_size).limit(page_size))
     queue_items = result.scalars().all()
 
     items = []
@@ -103,6 +124,8 @@ async def get_queue(
                 hallucination_issues=gr.hallucination_issues,
                 feedback_status=gr.feedback_status,
                 solution_status=gr.solution_status,
+                action=tq.action,
+                reviewed_at=tq.reviewed_at,
             )
         )
 

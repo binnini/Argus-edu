@@ -309,13 +309,23 @@ export default function StudentPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base">내 답변</CardTitle>
           </CardHeader>
-          <CardContent>
-            {student.selectedHistory.input_type === "image" && student.selectedHistory.image_path ? (
-              <img
-                src={`${apiOrigin()}/${student.selectedHistory.image_path}`}
-                alt="제출 이미지"
-                className="max-w-full max-h-[400px] rounded-lg border object-contain"
-              />
+          <CardContent className="space-y-3">
+            {(student.selectedHistory.input_type === "image" || student.selectedHistory.input_type === "canvas") && student.selectedHistory.image_path ? (
+              <>
+                <img
+                  src={`${apiOrigin()}/${student.selectedHistory.image_path}`}
+                  alt="제출 이미지"
+                  className="max-w-full max-h-[400px] rounded-lg border object-contain"
+                />
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">OCR 결과</p>
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm leading-relaxed whitespace-pre-wrap">
+                    {student.detailResult?.ocr_raw_text
+                      ? renderMath(student.detailResult.ocr_raw_text)
+                      : "OCR 결과가 아직 없습니다."}
+                  </div>
+                </div>
+              </>
             ) : (
               <div className="text-sm leading-relaxed whitespace-pre-wrap">
                 {student.selectedHistory.student_answer ?? "—"}
