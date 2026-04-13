@@ -63,6 +63,10 @@ export interface ProblemListPagedResponse {
   page_size: number;
 }
 
+export interface ProblemDomainListResponse {
+  domains: string[];
+}
+
 export interface StudentHistoryItem {
   submission_id: number;
   problem_title: string;
@@ -91,6 +95,13 @@ export async function getProblems(
   if (options?.school_level) params.set("school_level", options.school_level);
   if (options?.difficulty != null) params.set("difficulty", String(options.difficulty));
   return apiFetch(`/problems?${params.toString()}`, undefined, "문제 목록 조회 실패");
+}
+
+export async function getProblemDomains(schoolLevel?: string): Promise<ProblemDomainListResponse> {
+  const params = new URLSearchParams();
+  if (schoolLevel) params.set("school_level", schoolLevel);
+  const query = params.toString();
+  return apiFetch(`/problems/domains${query ? `?${query}` : ""}`, undefined, "도메인 목록 조회 실패");
 }
 
 export async function getStudentHistory(studentId: string): Promise<StudentHistoryResponse> {

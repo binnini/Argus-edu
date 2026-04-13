@@ -25,7 +25,13 @@ from db import get_session
 from models import Problem, Submission, GradingResult, TeacherQueue
 from models.group import GroupMember
 from models.homework import Homework, HomeworkProblem
-from schemas.problems import ProblemListResponse, ProblemSummary, ProblemDetail, ProblemListPagedResponse
+from schemas.problems import (
+    ProblemListResponse,
+    ProblemSummary,
+    ProblemDetail,
+    ProblemListPagedResponse,
+    ProblemDomainListResponse,
+)
 from schemas.submissions import (
     SubmissionRequest,
     SubmissionCreateResponse,
@@ -109,6 +115,24 @@ async def list_problems(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get("/problems/domains", response_model=ProblemDomainListResponse)
+async def list_problem_domains(
+    db: AsyncSession = Depends(get_session),
+    school_level: Optional[str] = Query(None, description="학교급 필터 (부분 일치)"),
+):
+    stmt = select(Problem.domain).where(
+        Problem.soft_deleted.is_(False),
+        Problem.domain.is_not(None),
+        Problem.domain != "",
+    )
+    if school_level:
+        stmt = stmt.where(Problem.school_level.ilike(f"%{school_level}%"))
+
+    result = await db.execute(stmt.distinct().order_by(Problem.domain.asc()))
+    domains = [d for d in result.scalars().all() if d]
+    return ProblemDomainListResponse(domains=domains)
 
 
 @router.get("/problems/{problem_id}", response_model=ProblemDetail)

@@ -38,6 +38,10 @@ class ProblemListPagedResponse(BaseModel):
     page_size: int
 
 
+class ProblemDomainListResponse(BaseModel):
+    domains: list[str]
+
+
 # ── 교사용 스키마 ─────────────────────────────────────────────
 
 class RubricStep(BaseModel):

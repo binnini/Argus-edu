@@ -1,8 +1,9 @@
 import * as React from "react"
-import { getProblems, type Problem } from "@/api/submissions"
+import { getProblemDomains, getProblems, type Problem } from "@/api/submissions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, ChevronRight, FileQuestion, Search, X } from "lucide-react"
 
 interface ProblemSelectorProps {
@@ -40,11 +41,13 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   const [activeQ, setActiveQ] = React.useState("")
   const [activeDifficulty, setActiveDifficulty] = React.useState<number | undefined>(undefined)
   const [activeSchoolLevel, setActiveSchoolLevel] = React.useState<string | undefined>(undefined)
+  const [activeDomain, setActiveDomain] = React.useState<string | undefined>(undefined)
+  const [domainOptions, setDomainOptions] = React.useState<string[]>([])
 
-  const fetchProblems = React.useCallback((p: number, q: string, diff?: number, level?: string) => {
+  const fetchProblems = React.useCallback((p: number, q: string, diff?: number, level?: string, domain?: string) => {
     setLoading(true)
     setError("")
-    getProblems(p, PAGE_SIZE, { q: q || undefined, difficulty: diff, school_level: level })
+    getProblems(p, PAGE_SIZE, { q: q || undefined, difficulty: diff, school_level: level, domain })
       .then((data) => {
         setProblems(data.problems)
         setTotal(data.total)
@@ -54,8 +57,14 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
   }, [])
 
   React.useEffect(() => {
-    fetchProblems(page, activeQ, activeDifficulty, activeSchoolLevel)
-  }, [page, activeQ, activeDifficulty, activeSchoolLevel, fetchProblems])
+    fetchProblems(page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain)
+  }, [page, activeQ, activeDifficulty, activeSchoolLevel, activeDomain, fetchProblems])
+
+  React.useEffect(() => {
+    getProblemDomains(activeSchoolLevel)
+      .then((data) => setDomainOptions(data.domains))
+      .catch(() => setDomainOptions([]))
+  }, [activeSchoolLevel])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -76,11 +85,12 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
 
   function handleSchoolLevelToggle(level: string) {
     setActiveSchoolLevel(prev => prev === level ? undefined : level)
+    setActiveDomain(undefined)
     setPage(1)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const hasFilter = activeQ || activeDifficulty != null || activeSchoolLevel != null
+  const hasFilter = activeQ || activeDifficulty != null || activeSchoolLevel != null || activeDomain != null
 
   return (
     <div className="space-y-4">
@@ -126,6 +136,28 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
             </button>
           ))}
           <span className="text-xs text-muted-foreground mx-1">|</span>
+          <span className="text-xs text-muted-foreground mr-1">도메인:</span>
+          <Select
+            value={activeDomain ?? "all"}
+            onValueChange={(v) => {
+              setActiveDomain(v === "all" ? undefined : v)
+              setPage(1)
+            }}
+            disabled={!activeSchoolLevel}
+          >
+            <SelectTrigger className="h-7 w-44 text-xs">
+              <SelectValue placeholder={activeSchoolLevel ? "도메인 선택" : "학교급 먼저 선택"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체</SelectItem>
+              {domainOptions.map((domain) => (
+                <SelectItem key={domain} value={domain}>
+                  {domain}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-xs text-muted-foreground mx-1">|</span>
           <span className="text-xs text-muted-foreground mr-1">난이도:</span>
           {[1, 2, 3, 4, 5].map((d) => (
             <button
@@ -144,7 +176,12 @@ export default function ProblemSelector({ onSelect }: ProblemSelectorProps) {
           {hasFilter && (
             <button
               type="button"
-              onClick={() => { handleClearSearch(); setActiveDifficulty(undefined); setActiveSchoolLevel(undefined) }}
+              onClick={() => {
+                handleClearSearch()
+                setActiveDifficulty(undefined)
+                setActiveSchoolLevel(undefined)
+                setActiveDomain(undefined)
+              }}
               className="text-xs px-2 py-1 text-muted-foreground hover:text-foreground flex items-center gap-0.5"
             >
               <X className="h-3 w-3" /> 필터 초기화
