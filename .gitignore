@@ -38,12 +38,13 @@ data/ocr_samples/images/
 data/ocr_samples/dataset/
 
 # OCR 학습 출력물 (모델 가중치, 체크포인트, 로그)
-ocr_training/output/
+# ocr_training/output/
 ocr_training/data
 *.safetensors
 *.bin
 *.tiktoken
 .aider*
+*.zip
 
 # 업로드 이미지 (런타임 생성, 재현 가능)
 backend/uploads/
