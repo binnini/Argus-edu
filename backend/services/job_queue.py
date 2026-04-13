@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
+from config import settings
 from db import AsyncSessionLocal
 from models import GradingResult, Job, Submission
 from services.deterministic_grading import AnswerVerdict
@@ -53,6 +54,9 @@ class JobWorker:
 
     async def run(self) -> None:
         logger.info("job worker started id=%s", self._worker_id)
+        recovered = await recover_running_jobs(only_stale=False)
+        if recovered:
+            logger.warning("recovered %d running jobs from previous worker state", recovered)
         while not self._stop.is_set():
             try:
                 job = await self._claim_next_job()
@@ -72,14 +76,11 @@ class JobWorker:
     async def _claim_next_job(self) -> Job | None:
         now = datetime.now(timezone.utc)
         async with AsyncSessionLocal() as db:
-            stale_before = now - timedelta(minutes=10)
-            stale_result = await db.execute(
-                select(Job).where(Job.status == "running", Job.locked_at < stale_before)
+            await _recover_running_jobs_in_session(
+                db,
+                stale_before=now - timedelta(seconds=settings.job_stale_after_seconds),
+                only_stale=True,
             )
-            for stale in stale_result.scalars():
-                stale.status = "pending" if stale.attempts < stale.max_attempts else "failed"
-                stale.locked_at = None
-                stale.locked_by = None
 
             stmt = (
                 select(Job)
@@ -131,6 +132,7 @@ class JobWorker:
                 raise ValueError(f"grading_result missing submission_id={submission.id}")
 
             gr.feedback_status = "running"
+            gr.feedback_completed_at = None
             await db.commit()
 
             answer_verdict = AnswerVerdict(
@@ -165,6 +167,7 @@ class JobWorker:
             gr.ai_feedback = json.dumps(feedback.to_feedback_dict(), ensure_ascii=False)
             gr.solution_status = feedback.solution_status
             gr.feedback_status = "done"
+            gr.feedback_completed_at = datetime.now(timezone.utc)
             gr.hallucination_status = "pending"
             await db.commit()
 
@@ -181,9 +184,11 @@ class JobWorker:
         if hallucination_svc is None:
             raise RuntimeError("hallucination service is not configured")
         if grading_result_id is not None and hasattr(hallucination_svc, "run_one"):
-            await hallucination_svc.run_one(int(grading_result_id))
+            processed = await hallucination_svc.run_one(int(grading_result_id))
         else:
-            await hallucination_svc.run_batch(limit=1)
+            processed = await hallucination_svc.run_batch(limit=1)
+        if processed < 1:
+            raise RuntimeError("hallucination job did not update any grading result")
 
     async def _mark_done(self, job_id: int) -> None:
         async with AsyncSessionLocal() as db:
@@ -222,6 +227,7 @@ class JobWorker:
         gr = result.scalar_one_or_none()
         if gr:
             gr.feedback_status = "failed"
+            gr.feedback_completed_at = None
 
 
 async def queue_counts() -> dict[str, dict[str, int]]:
@@ -233,3 +239,46 @@ async def queue_counts() -> dict[str, dict[str, int]]:
         for job_type, status, count in result.all():
             counts.setdefault(job_type, {})[status] = int(count)
         return counts
+
+
+async def recover_running_jobs(only_stale: bool = True) -> int:
+    async with AsyncSessionLocal() as db:
+        stale_before = datetime.now(timezone.utc) - timedelta(seconds=settings.job_stale_after_seconds)
+        recovered = await _recover_running_jobs_in_session(
+            db,
+            stale_before=stale_before,
+            only_stale=only_stale,
+        )
+        await db.commit()
+        return recovered
+
+
+async def _recover_running_jobs_in_session(db, stale_before: datetime, only_stale: bool) -> int:
+    stmt = select(Job).where(Job.status == "running")
+    if only_stale:
+        stmt = stmt.where(Job.locked_at < stale_before)
+
+    rows = await db.execute(stmt)
+    recovered = 0
+    for job in rows.scalars():
+        job.status = "pending" if job.attempts < job.max_attempts else "failed"
+        job.locked_at = None
+        job.locked_by = None
+        recovered += 1
+
+        result = await db.execute(
+            select(GradingResult)
+            .join(Submission, Submission.id == GradingResult.submission_id)
+            .where(Submission.id == job.submission_id)
+        )
+        gr = result.scalar_one_or_none()
+        if gr is None:
+            continue
+        if job.job_type == "feedback":
+            gr.feedback_status = "pending" if job.status == "pending" else "failed"
+            if job.status != "done":
+                gr.feedback_completed_at = None
+        elif job.job_type == "hallucination":
+            gr.hallucination_status = "pending" if job.status == "pending" else "failed"
+
+    return recovered

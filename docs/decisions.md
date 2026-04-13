@@ -743,6 +743,72 @@ einops, tiktoken, accelerate, verovio
 
 ---
 
+### ADR-028 Deterministic Grading + Durable Feedback Queue
+**날짜**: 2026-04-13  
+**가역성**: 🟡 준가역 (DB 마이그레이션 필요)  
+**대체/수정**: ADR-023의 학생 답안 재제출 기능 철회, ADR-026의 APScheduler 기반 할루시네이션 배치 흐름을 durable job 흐름으로 흡수
+
+**결정**: 부분점수 기반 LLM 채점을 제거하고, 최종 답 deterministic 비교로 정답/오답을 즉시 확정한다. 개인화 피드백과 할루시네이션 검증은 PostgreSQL 기반 durable priority queue의 비동기 job으로 처리한다.
+
+**신규 파이프라인**:
+```
+학생 제출
+→ OCR 필요 시 OCR
+→ deterministic final-answer grading
+→ GradingResult 즉시 저장
+→ feedback job 생성
+→ 학생은 다른 작업 진행 가능
+→ Python JobWorker가 feedback LLM 1회 호출
+→ feedback_status=done, hallucination job 생성
+→ 낮은 우선순위로 hallucination 검증
+```
+
+**정책 변경**:
+- 학생 답안은 제출 후 수정할 수 없다. `PUT /submissions/{id}` 학생 재제출 경로는 제거한다.
+- 부분점수는 MVP 범위에서 제거한다. 점수는 `total_score` 또는 `0`만 저장한다.
+- Grading Latency 목표는 **1초 이하**로 설정한다. 기존 20초 목표는 LLM 채점 제거 전 기준이므로 폐기한다.
+- Feedback Latency 목표는 feedback job 생성부터 `feedback_status=done`까지 **30초 이하**로 둔다. 단, 동시 제출에서는 queue wait과 service time을 분리해 측정한다.
+
+**DB-backed queue 설계**:
+- Redis는 MVP 단계에서 도입하지 않는다.
+- `jobs` 단일 테이블에 `job_type`, `priority`, `status`, `attempts`, `run_after`, `locked_at`, `locked_by`, `payload`를 저장한다.
+- worker는 `FOR UPDATE SKIP LOCKED`로 pending job을 claim한다.
+- 우선순위:
+  - `feedback`: 50
+  - `hallucination`: 90
+- stale running job은 일정 시간 후 pending 또는 failed로 복구한다.
+
+**Feedback LLM 역할**:
+- LLM은 점수나 정오 판정을 변경하지 않는다.
+- 시스템이 확정한 `final_answer_verdict`와 학생 풀이를 바탕으로 피드백만 생성한다.
+- 응답 스키마:
+```
+{
+  "solution_status": "correct_solution | correct_answer_wrong_process | wrong_answer | uncertain",
+  "has_mistakes": true,
+  "student_mistakes": [],
+  "correct_approach": [],
+  "key_concept": "..."
+}
+```
+- 정답과 풀이 과정이 모두 맞으면 `has_mistakes=false`, `student_mistakes=[]`로 반환한다. UI는 `student_mistakes`가 비어 있으면 "틀린 부분" 섹션을 표시하지 않는다.
+
+**측정 기준**:
+- `grading_latency`: 제출 시작 → deterministic grading result 저장/조회 가능 상태
+- `feedback_queue_latency`: feedback job 생성 → running
+- `feedback_service_latency`: feedback job running → done
+- `feedback_total_latency`: feedback job 생성 → done
+- `e2e_feedback_latency`: 제출 시작 → feedback done
+- `RAM RSS`: `/health.memory_mb`
+- queue backlog: `/health.queues`
+
+**트레이드오프**:
+- 부분점수 자동 채점은 포기하지만, 학생 UI가 이미 정답/오답 중심이므로 제품 복잡도를 줄인다.
+- 최종 답이 맞았지만 풀이 과정이 틀린 경우는 feedback LLM이 `correct_answer_wrong_process`로 표시한다.
+- feedback worker 1개에서는 동시 제출 시 feedback total latency가 queue backlog에 비례한다. 벤치마크 후 worker concurrency 조정 여부를 판단한다.
+
+---
+
 ## 변경 이력
 
 | ADR | 날짜 | 변경 내용 |
@@ -767,3 +833,4 @@ einops, tiktoken, accelerate, verovio
 | ADR-025 | 2026-04-12 | 로컬 채점 LLM 모델 선정 (gemma4:e4b, 30-문제 벤치마크 기반) |
 | ADR-026 | 2026-04-12 | 할루시네이션 검증 전략 변경 (HHEM+다중샘플링 → LLM 배치 비동기) |
 | ADR-027 | 2026-04-12 | GOT-OCR conda 환경 분리 (transformers 버전 충돌 — argus-gotocr 서브프로세스) |
+| ADR-028 | 2026-04-13 | Deterministic grading + PostgreSQL durable feedback queue 도입, Grading Latency 목표 1초로 변경 |

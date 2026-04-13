@@ -36,6 +36,7 @@ export interface SubmissionCreateResponse {
 
 export interface SubmissionStatusResponse {
   submission_id: number;
+  submitted_at: string | null;
   status: string;
   score: number | null;
   max_score: number | null;     // 문제 만점 (부분 정답 판별용)
@@ -43,7 +44,11 @@ export interface SubmissionStatusResponse {
   feedback: Feedback | null;    // 교사 승인 또는 feedback_visible 시 노출
   feedback_visible: boolean;    // 정답+고신뢰도면 교사 승인 전에도 노출
   feedback_status: string | null;
+  graded_at: string | null;
+  feedback_completed_at: string | null;
   solution_status: string | null;
+  hallucination_status: string | null;
+  hallucination_completed_at: string | null;
   teacher_approved: boolean;
   message: string | null;
   problem_title: string | null;

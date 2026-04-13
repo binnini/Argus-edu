@@ -411,6 +411,7 @@ async def get_submission_status(
         pending_max = submission.problem.rubric.get("total_score") if submission.problem else None
         return SubmissionStatusResponse(
             submission_id=submission_id,
+            submitted_at=submission.submitted_at,
             status=submission.status,
             score=None,
             max_score=pending_max,
@@ -418,7 +419,11 @@ async def get_submission_status(
             feedback=None,
             feedback_visible=False,
             feedback_status=None,
+            graded_at=None,
+            feedback_completed_at=None,
             solution_status=None,
+            hallucination_status=None,
+            hallucination_completed_at=None,
             teacher_approved=False,
             message=message,
             problem_title=submission.problem.title if submission.problem else None,
@@ -479,6 +484,7 @@ async def get_submission_status(
 
     return SubmissionStatusResponse(
         submission_id=submission_id,
+        submitted_at=submission.submitted_at,
         status=submission.status,
         score=resp_data["score"],
         max_score=total_score if total_score > 0 else None,
@@ -486,7 +492,11 @@ async def get_submission_status(
         feedback=resp_data["feedback"],
         feedback_visible=resp_data["feedback_visible"],
         feedback_status=gr.feedback_status,
+        graded_at=gr.graded_at,
+        feedback_completed_at=gr.feedback_completed_at,
         solution_status=gr.solution_status,
+        hallucination_status=gr.hallucination_status,
+        hallucination_completed_at=gr.hallucination_checked_at,
         teacher_approved=resp_data["teacher_approved"],
         message=message,
         problem_title=submission.problem.title if submission.problem else None,

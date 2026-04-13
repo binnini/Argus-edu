@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # gemma4:26b 풀이 설명 프롬프트 실측 ~2분 → 300초로 여유 확보
     llm_timeout_seconds: float = 300.0
 
+    # Durable job lock 복구 기준 (초)
+    job_stale_after_seconds: int = 600
+
     # SLA (시간 단위)
     sla_high_risk_hours: int = 12
     sla_normal_hours: int = 24

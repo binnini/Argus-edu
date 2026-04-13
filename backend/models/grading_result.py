@@ -20,6 +20,7 @@ class GradingResult(Base):
     trust_score = Column(Float, nullable=False)
     trust_level = Column(String(10), nullable=False)  # 'high' | 'low'
     graded_at = Column(DateTime(timezone=True), server_default=func.now())
+    feedback_completed_at = Column(DateTime(timezone=True), nullable=True)
 
     # 배치 LLM 할루시네이션 검증 (ADR-026)
     # hallucination_status: 'pending' → 'running' → 'done' | 'failed'

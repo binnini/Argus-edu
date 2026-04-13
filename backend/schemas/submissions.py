@@ -99,6 +99,7 @@ class FeedbackSchema(BaseModel):
 
 class SubmissionStatusResponse(BaseModel):
     submission_id: int
+    submitted_at: Optional[datetime] = None
     status: str
     score: Optional[int]
     max_score: Optional[int] = None      # 문제 만점 (부분 정답 판별용)
@@ -106,7 +107,11 @@ class SubmissionStatusResponse(BaseModel):
     feedback: Optional[FeedbackSchema]   # 교사 승인 또는 feedback_visible 시 노출
     feedback_visible: bool = False       # 정답+고신뢰도면 교사 승인 전에도 노출
     feedback_status: Optional[str] = None
+    graded_at: Optional[datetime] = None
+    feedback_completed_at: Optional[datetime] = None
     solution_status: Optional[str] = None
+    hallucination_status: Optional[str] = None
+    hallucination_completed_at: Optional[datetime] = None
     teacher_approved: bool
     message: Optional[str]
     problem_title: Optional[str] = None
