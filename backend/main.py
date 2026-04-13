@@ -45,6 +45,7 @@ async def lifespan(app: FastAPI):
     import models.group  # noqa: F401 — 테이블 등록
     import models.homework  # noqa: F401 — 테이블 등록
     import models.job  # noqa: F401 — 테이블 등록
+    import models.student  # noqa: F401 — 테이블 등록
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("DB 테이블 동기화 완료")

@@ -2,6 +2,19 @@
 
 Argus 학생/교사 화면 주요 흐름을 정리한 이미지 모음입니다.
 
+## 사용법 (간단)
+
+1. 로컬 서버 실행
+   - 백엔드: `http://localhost:8000`
+   - 프론트: `http://localhost:5173`
+2. 학생 화면 확인: `http://localhost:5173/student`
+3. 교사 화면 확인: `http://localhost:5173/teacher`
+4. 캡처 이미지는 이 `ui/` 폴더 파일명과 README 섹션 순서에 맞춰 참조
+
+참고:
+- 교사 화면은 `TEACHER_PASSWORD` 값으로 로그인합니다.
+- 라이브 데모 URL은 루트 `README.md`의 Live Domain 섹션을 참고하세요.
+
 ## 학생 화면
 
 ### 1) 로그인/학생 정보 입력

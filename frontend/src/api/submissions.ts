@@ -173,6 +173,36 @@ export async function verifyStudent(
   return apiFetch(`/students/verify?${params.toString()}`, undefined, "인증 확인 실패");
 }
 
+export async function signupStudent(
+  studentId: string,
+  studentName: string,
+  password: string,
+): Promise<{ valid: boolean; message: string; student_id?: string | null; student_name?: string | null }> {
+  return apiFetch("/students/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      student_id: studentId,
+      student_name: studentName,
+      password,
+    }),
+  }, "학생 회원가입 실패");
+}
+
+export async function loginStudent(
+  studentId: string,
+  password: string,
+): Promise<{ valid: boolean; message: string; student_id?: string | null; student_name?: string | null }> {
+  return apiFetch("/students/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      student_id: studentId,
+      password,
+    }),
+  }, "학생 로그인 실패");
+}
+
 export async function submitAnswerText(
   problemId: number,
   studentAnswer: string,

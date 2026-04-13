@@ -127,6 +127,33 @@ X-Teacher-Password: <TEACHER_PASSWORD>
 - `student_id` (required)
 - `student_name` (required)
 
+### POST `/students/signup`
+
+학생 회원가입.
+
+요청 본문:
+
+```json
+{
+  "student_id": "20260001",
+  "student_name": "홍길동",
+  "password": "abcd1234"
+}
+```
+
+### POST `/students/login`
+
+학생 로그인.
+
+요청 본문:
+
+```json
+{
+  "student_id": "20260001",
+  "password": "abcd1234"
+}
+```
+
 ## 프로토타입 샘플 이미지 API
 
 `PROTOTYPE_SAMPLE_IMAGES_ENABLED=true`일 때 사용.

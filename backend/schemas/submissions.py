@@ -152,3 +152,21 @@ class PrototypeSampleImageItem(BaseModel):
 class PrototypeSampleImageListResponse(BaseModel):
     enabled: bool
     samples: list[PrototypeSampleImageItem]
+
+
+class StudentSignupRequest(BaseModel):
+    student_id: str
+    student_name: str
+    password: str
+
+
+class StudentLoginRequest(BaseModel):
+    student_id: str
+    password: str
+
+
+class StudentAuthResponse(BaseModel):
+    valid: bool
+    message: str = ""
+    student_id: Optional[str] = None
+    student_name: Optional[str] = None

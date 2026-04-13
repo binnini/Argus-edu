@@ -118,7 +118,8 @@ Argus/
 
 ## UI
 
-[ui/README.md](./ui/README.md) 참조
+- 화면별 스크린샷과 확인 절차는 [ui/README.md](./ui/README.md) 참고
+- 로컬 확인 경로: `/student`, `/teacher`
 
 ## 문서 인덱스
 

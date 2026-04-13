@@ -128,6 +128,17 @@ durable background job 큐.
 - `job_type`: `feedback | hallucination`
 - `status`: `pending | running | done | failed`
 
+### `students`
+
+학생 계정 테이블.
+
+주요 컬럼:
+- `id` (PK)
+- `student_id` (varchar(20), unique, index)
+- `student_name` (varchar(50), not null)
+- `password_hash` (varchar(255), not null)
+- `created_at` (timestamptz)
+
 ## 그룹/숙제 테이블
 
 ### `student_groups`
@@ -151,9 +162,11 @@ durable background job 큐.
 - `student_groups` 1:N `group_members`
 - `student_groups` 1:N `homeworks`
 - `homeworks` 1:N `homework_problems`
+- `students` (인증용 독립 테이블)
 
 ## 최신 마이그레이션
 
 - `0007_jobs_feedback_status.py`: `jobs`, `feedback_status`, `solution_status`, `answer_verdict`
 - `0008_add_feedback_completed_at.py`: `feedback_completed_at`
 - `0009_add_school_level_to_problems.py` (revision id: `c5e995d403f6`): `problems.school_level`
+- `0010_add_students_table.py`: `students` 테이블 추가

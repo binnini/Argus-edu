@@ -24,7 +24,7 @@ from sqlalchemy.orm import selectinload
 
 from config import settings
 from db import get_session
-from models import Problem, Submission, GradingResult, TeacherQueue
+from models import Problem, Submission, GradingResult, TeacherQueue, Student
 from models.group import GroupMember
 from models.homework import Homework, HomeworkProblem
 from schemas.problems import (
@@ -42,10 +42,14 @@ from schemas.submissions import (
     StudentHistoryResponse,
     PrototypeSampleImageItem,
     PrototypeSampleImageListResponse,
+    StudentSignupRequest,
+    StudentLoginRequest,
+    StudentAuthResponse,
 )
 from schemas.homeworks import StudentHomeworkResponse, StudentHomeworkItem, HomeworkProblemStatus
 from services.pipeline import run_grading_pipeline
 from services.trust_gate import get_submission_response
+from services.student_auth import hash_password, verify_password
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["submissions"])
@@ -430,6 +434,65 @@ async def create_submission_image(
 
 
 # ── 학생 본인 확인 ────────────────────────────────────────────
+
+@router.post("/students/signup", response_model=StudentAuthResponse)
+async def signup_student(
+    body: StudentSignupRequest,
+    db: AsyncSession = Depends(get_session),
+):
+    student_id = body.student_id.strip()
+    student_name = body.student_name.strip()
+    password = body.password.strip()
+
+    if not student_id:
+        raise HTTPException(status_code=400, detail="학번을 입력해주세요.")
+    if not student_name:
+        raise HTTPException(status_code=400, detail="이름을 입력해주세요.")
+    if len(password) < 4:
+        raise HTTPException(status_code=400, detail="비밀번호는 4자 이상이어야 합니다.")
+
+    exists = await db.execute(select(Student).where(Student.student_id == student_id))
+    if exists.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="이미 가입된 학번입니다.")
+
+    student = Student(
+        student_id=student_id,
+        student_name=student_name,
+        password_hash=hash_password(password),
+    )
+    db.add(student)
+    await db.commit()
+
+    return StudentAuthResponse(
+        valid=True,
+        message="회원가입이 완료되었습니다.",
+        student_id=student_id,
+        student_name=student_name,
+    )
+
+
+@router.post("/students/login", response_model=StudentAuthResponse)
+async def login_student(
+    body: StudentLoginRequest,
+    db: AsyncSession = Depends(get_session),
+):
+    student_id = body.student_id.strip()
+    password = body.password.strip()
+    if not student_id or not password:
+        raise HTTPException(status_code=400, detail="학번과 비밀번호를 입력해주세요.")
+
+    result = await db.execute(select(Student).where(Student.student_id == student_id))
+    student = result.scalar_one_or_none()
+    if not student or not verify_password(password, student.password_hash):
+        raise HTTPException(status_code=401, detail="학번 또는 비밀번호가 올바르지 않습니다.")
+
+    return StudentAuthResponse(
+        valid=True,
+        message="",
+        student_id=student.student_id,
+        student_name=student.student_name,
+    )
+
 
 @router.get("/students/verify")
 async def verify_student(
