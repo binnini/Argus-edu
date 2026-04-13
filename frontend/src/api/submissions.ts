@@ -51,6 +51,7 @@ export interface SubmissionStatusResponse {
   hallucination_status: string | null;
   hallucination_completed_at: string | null;
   teacher_approved: boolean;
+  auto_approved?: boolean;
   message: string | null;
   problem_title: string | null;
   problem_content: string | null;
@@ -79,6 +80,9 @@ export interface StudentHistoryItem {
   submitted_at: string;
   image_path: string | null;
   student_answer: string | null;
+  feedback_status?: string | null;
+  hallucination_status?: string | null;
+  auto_approved?: boolean;
 }
 
 export interface StudentHistoryResponse {

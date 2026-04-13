@@ -30,6 +30,7 @@ class TeacherQueueItem(BaseModel):
     solution_status: Optional[str] = None
     action: Optional[str] = None
     reviewed_at: Optional[datetime] = None
+    auto_approved: bool = False
 
 
 class TeacherQueueResponse(BaseModel):

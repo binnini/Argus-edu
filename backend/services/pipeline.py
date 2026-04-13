@@ -3,7 +3,6 @@
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select
@@ -135,26 +134,13 @@ async def _persist_deterministic_output(submission_id: int, pipeline_input: Pipe
         )
         db.add(grading_record)
 
-        now = datetime.now(timezone.utc)
-        if trust.auto_approve:
-            # 만점·고신뢰도 → 자동 승인: 큐에 action='approve' 사전 설정
-            queue_record = TeacherQueue(
-                submission_id=submission_id,
-                queue_type=trust.queue_type,
-                sla_deadline=trust.sla_deadline,
-                action="approve",
-                reviewed_at=now,
-            )
-            final_status = "approved"
-            logger.info(f"자동 승인 submission_id={submission_id} score={ai_score}/{total_score}")
-        else:
-            # 오답·저신뢰도 → 교사 검토 대기
-            queue_record = TeacherQueue(
-                submission_id=submission_id,
-                queue_type=trust.queue_type,
-                sla_deadline=trust.sla_deadline,
-            )
-            final_status = "graded"
+        # 자동 승인은 하지 않는다. 교사 검토 전까지는 graded 상태 유지.
+        queue_record = TeacherQueue(
+            submission_id=submission_id,
+            queue_type=trust.queue_type,
+            sla_deadline=trust.sla_deadline,
+        )
+        final_status = "graded"
 
         db.add(queue_record)
 

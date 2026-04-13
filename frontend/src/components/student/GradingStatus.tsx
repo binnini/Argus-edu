@@ -25,6 +25,16 @@ function ScoreBadge({ score, maxScore }: { score: number; maxScore: number | nul
 
 export default function GradingStatus({ result }: GradingStatusProps) {
   const hideMistakes = (result.score ?? 0) > 0 || result.solution_status === "correct_solution"
+  const feedbackStage =
+    result.feedback_status === "running" ? "AI 피드백 생성 중" :
+    result.feedback_status === "pending" ? "AI 피드백 대기" :
+    result.feedback_status === "failed" ? "AI 피드백 실패" :
+    result.feedback_status === "done" ? "AI 피드백 완료" : null
+  const hallucinationStage =
+    result.hallucination_status === "running" ? "신뢰도 판정 중" :
+    result.hallucination_status === "pending" ? "신뢰도 판정 대기" :
+    result.hallucination_status === "failed" ? "신뢰도 판정 실패" :
+    result.hallucination_status === "done" ? "신뢰도 판정 완료" : null
 
   if (result.status === "pending" || result.status === "error") {
     return (
@@ -81,6 +91,10 @@ export default function GradingStatus({ result }: GradingStatusProps) {
       // 오답·저신뢰도 → 점수만 표시, 피드백 차단
       return (
         <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {feedbackStage && <Badge variant="secondary">{feedbackStage}</Badge>}
+            {hallucinationStage && <Badge variant="secondary">{hallucinationStage}</Badge>}
+          </div>
           <div className="flex items-center gap-3">
             <ScoreBadge score={result.score} maxScore={result.max_score} />
           </div>
@@ -104,6 +118,9 @@ export default function GradingStatus({ result }: GradingStatusProps) {
   if (result.status === "approved") {
     return (
       <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="success">{result.auto_approved ? "자동 승인 완료" : "승인 완료"}</Badge>
+        </div>
         {result.score !== null && (
           <ScoreBadge score={result.score} maxScore={result.max_score} />
         )}

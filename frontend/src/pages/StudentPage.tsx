@@ -19,11 +19,34 @@ import { BookOpen, ChevronLeft, ClipboardList, FileText, FolderOpen, LogOut, Plu
 
 function statusBadge(status: string) {
   switch (status) {
+    case "auto_approved": return <Badge variant="success">자동 승인</Badge>
     case "approved": return <Badge variant="success">승인</Badge>
     case "graded": return <Badge variant="warning">검토 대기</Badge>
     case "rejected": return <Badge variant="destructive">거부</Badge>
     default: return <Badge variant="secondary">채점 중</Badge>
   }
+}
+
+function stageLabel(item: StudentHistoryItem): string {
+  if (item.feedback_status === "running" || item.feedback_status === "pending") {
+    return "AI 피드백 생성 중"
+  }
+  if (item.hallucination_status === "running" || item.hallucination_status === "pending") {
+    return "신뢰도 판정 중"
+  }
+  if (item.status === "auto_approved" || item.auto_approved) {
+    return "자동 승인 완료"
+  }
+  if (item.status === "approved") {
+    return "교사 승인 완료"
+  }
+  if (item.status === "graded") {
+    return "검토 대기"
+  }
+  if (item.status === "rejected") {
+    return "검토 반려"
+  }
+  return "채점 중"
 }
 
 function formatDueDate(due: string | null): { text: string; overdue: boolean } | null {
@@ -121,6 +144,7 @@ function Sidebar({
                   <span className="truncate font-medium text-gray-900 dark:text-gray-50">{item.problem_title}</span>
                   {statusBadge(item.status)}
                 </div>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{stageLabel(item)}</p>
               </button>
             ))}
           </div>

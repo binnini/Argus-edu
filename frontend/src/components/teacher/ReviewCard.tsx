@@ -87,7 +87,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
           <div className="flex flex-wrap gap-1.5 shrink-0">
             {isReviewed && (
               <Badge variant="secondary">
-                처리 완료: {item.action === "approve" ? "승인" : item.action === "modify" ? "수정" : "거부"}
+                처리 완료: {item.auto_approved ? "자동 승인" : item.action === "approve" ? "승인" : item.action === "modify" ? "수정" : "거부"}
               </Badge>
             )}
             <Badge variant={item.trust_level === "high" ? "success" : "destructive"}>
@@ -99,7 +99,7 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
             </Badge>
           </div>
         </div>
-        <div className="mt-3 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-4">
+          <div className="mt-3 grid gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2 text-xs dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-4">
           <div className={`rounded-md border px-2.5 py-2 font-semibold ${scoreTone(item.ai_score)}`}>
             AI {item.ai_score}점
           </div>
@@ -109,14 +109,20 @@ export default function ReviewCard({ item, onActionComplete }: ReviewCardProps) 
               {item.trust_level === "high" ? "High" : "Low"}
             </span>
           </div>
-          <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
-            {item.queue_type === "score_only" ? "점수 검토" : "전체 검토"}
+            <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
+              {item.queue_type === "score_only" ? "점수 검토" : "전체 검토"}
+            </div>
+            <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
+              피드백: {item.feedback_status === "running" ? "생성 중" : item.feedback_status === "pending" ? "대기" : item.feedback_status === "done" ? "완료" : item.feedback_status === "failed" ? "실패" : "—"}
+            </div>
+            <div className="rounded-md border border-gray-200 bg-white px-2.5 py-2 dark:border-zinc-800 dark:bg-card">
+              신뢰도: {item.hallucination_status === "running" ? "판정 중" : item.hallucination_status === "pending" ? "대기" : item.hallucination_status === "done" ? "완료" : item.hallucination_status === "failed" ? "실패" : "—"}
+            </div>
+            <div className={`flex items-center gap-1 rounded-md border px-2.5 py-2 ${isDeadlineSoon ? "border-rose-200 bg-rose-50 font-semibold text-rose-600 dark:border-rose-800 dark:bg-rose-950/30" : "border-gray-200 bg-white text-muted-foreground dark:border-zinc-800 dark:bg-card"}`}>
+              <Clock className="h-3 w-3" />
+              SLA {formatDeadline(item.sla_deadline)}
+            </div>
           </div>
-          <div className={`flex items-center gap-1 rounded-md border px-2.5 py-2 ${isDeadlineSoon ? "border-rose-200 bg-rose-50 font-semibold text-rose-600 dark:border-rose-800 dark:bg-rose-950/30" : "border-gray-200 bg-white text-muted-foreground dark:border-zinc-800 dark:bg-card"}`}>
-            <Clock className="h-3 w-3" />
-            SLA {formatDeadline(item.sla_deadline)}
-          </div>
-        </div>
       </CardHeader>
 
       <CardContent className="space-y-4 pt-4">

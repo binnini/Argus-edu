@@ -1,4 +1,4 @@
-import { apiFetch, apiFetchVoid, teacherHeaders } from "@/api/client";
+import { apiFetch, apiFetchVoid, apiOrigin, teacherHeaders } from "@/api/client";
 
 export interface QueueItem {
   queue_id: number;
@@ -26,6 +26,7 @@ export interface QueueItem {
   solution_status?: string | null;
   action?: "approve" | "modify" | "reject" | null;
   reviewed_at?: string | null;
+  auto_approved?: boolean;
 }
 
 export interface TeacherQueueResponse {
@@ -33,6 +34,10 @@ export interface TeacherQueueResponse {
   total: number;
   page: number;
   page_size: number;
+}
+
+export interface QueueHealthResponse {
+  queues: Record<string, Record<string, number>>;
 }
 
 export type TeacherAction = "approve" | "modify" | "reject";
@@ -124,6 +129,16 @@ export async function getQueue(
   params.set("page_size", String(pageSize));
   const url = `/teacher/queue${params.toString() ? `?${params.toString()}` : ""}`;
   return apiFetch(url, { headers: teacherHeaders() }, "큐 조회 실패");
+}
+
+export async function getQueueHealth(): Promise<QueueHealthResponse> {
+  const res = await fetch(`${apiOrigin()}/api/v1/teacher/queue/health`, {
+    headers: teacherHeaders(false),
+  });
+  if (!res.ok) {
+    throw new Error("작업 큐 현황 조회 실패");
+  }
+  return res.json() as Promise<QueueHealthResponse>;
 }
 
 export async function submitTeacherAction(

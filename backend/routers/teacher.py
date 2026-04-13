@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from config import settings
 from db import get_session
 from models import Submission, GradingResult, TeacherQueue, FeedbackLog
+from services.job_queue import queue_counts
 from schemas.teacher import (
     TeacherQueueResponse,
     TeacherQueueItem,
@@ -30,6 +31,7 @@ from schemas.teacher import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/teacher", tags=["teacher"])
+AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
 
 
 def _verify_teacher(x_teacher_password: str = Header(default="")):
@@ -99,6 +101,7 @@ async def get_queue(
         gr = sub.grading_result
         if not gr:
             continue
+        auto_approved = tq.action == "approve" and tq.teacher_feedback == AUTO_APPROVE_MARKER
         items.append(
             TeacherQueueItem(
                 queue_id=tq.id,
@@ -126,10 +129,19 @@ async def get_queue(
                 solution_status=gr.solution_status,
                 action=tq.action,
                 reviewed_at=tq.reviewed_at,
+                auto_approved=auto_approved,
             )
         )
 
     return TeacherQueueResponse(queue=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/queue/health")
+async def get_queue_health(
+    _: None = Depends(_verify_teacher),
+):
+    queues = await queue_counts()
+    return {"queues": queues}
 
 
 # ── 교사 액션 ────────────────────────────────────────────────

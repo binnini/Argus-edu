@@ -113,6 +113,7 @@ class SubmissionStatusResponse(BaseModel):
     hallucination_status: Optional[str] = None
     hallucination_completed_at: Optional[datetime] = None
     teacher_approved: bool
+    auto_approved: bool = False
     message: Optional[str]
     problem_title: Optional[str] = None
     problem_content: Optional[str] = None
@@ -131,6 +132,9 @@ class StudentHistoryItem(BaseModel):
     submitted_at: datetime
     image_path: Optional[str] = None
     student_answer: Optional[str] = None
+    feedback_status: Optional[str] = None
+    hallucination_status: Optional[str] = None
+    auto_approved: bool = False
 
 
 class StudentHistoryResponse(BaseModel):

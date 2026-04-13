@@ -29,12 +29,14 @@ from db import SessionLocal
 from models.grading_result import GradingResult
 from models.submission import Submission
 from models.problem import Problem
+from models.teacher_queue import TeacherQueue
 from services.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 8          # LLM context에 한 번에 넣을 최대 건수
 MAX_TOKENS = 1024       # 배치 검증 응답은 짧음
+AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
 
 HALLUCINATION_SYSTEM_PROMPT = """\
 당신은 수학 교육 AI 피드백 품질 검증 전문가입니다.
@@ -263,6 +265,23 @@ class HallucinationBatchService:
                 gr.hallucination_issues = json.dumps(issues, ensure_ascii=False) if issues else None
                 gr.hallucination_status = "done"
                 gr.hallucination_checked_at = now
+
+                if gr.trust_level == "high":
+                    sub_result = await db.execute(
+                        select(Submission).where(Submission.id == gr.submission_id)
+                    )
+                    sub = sub_result.scalar_one_or_none()
+                    if sub and sub.status != "approved":
+                        sub.status = "approved"
+
+                    queue_result = await db.execute(
+                        select(TeacherQueue).where(TeacherQueue.submission_id == gr.submission_id)
+                    )
+                    tq = queue_result.scalar_one_or_none()
+                    if tq and tq.action is None:
+                        tq.action = "approve"
+                        tq.reviewed_at = now
+                        tq.teacher_feedback = AUTO_APPROVE_MARKER
 
             await db.commit()
 

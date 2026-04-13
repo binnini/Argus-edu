@@ -48,6 +48,7 @@ router = APIRouter(prefix="/api/v1", tags=["submissions"])
 
 UPLOAD_DIR = Path(settings.upload_dir)
 LOAD_TEST_ANSWER_MARKER = "(제출 #"
+AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
 
 
 def _should_autograde_text(student_name: str, student_answer: str) -> bool:
@@ -316,9 +317,12 @@ async def list_student_submissions(
     for sub, prob, gr, tq in rows:
         final_score = None
         status_label = sub.status
+        auto_approved = bool(
+            tq and tq.action == "approve" and tq.teacher_feedback == AUTO_APPROVE_MARKER
+        )
         if tq and tq.action in ("approve", "modify"):
             final_score = tq.teacher_score if tq.action == "modify" else (gr.ai_score if gr else None)
-            status_label = "approved"
+            status_label = "auto_approved" if auto_approved else "approved"
         elif gr:
             final_score = gr.ai_score
 
@@ -333,6 +337,9 @@ async def list_student_submissions(
             submitted_at=sub.submitted_at,
             image_path=sub.image_path,
             student_answer=sub.student_answer,
+            feedback_status=gr.feedback_status if gr else None,
+            hallucination_status=gr.hallucination_status if gr else None,
+            auto_approved=auto_approved,
         ))
 
     return StudentHistoryResponse(submissions=items)
@@ -469,18 +476,20 @@ async def get_submission_status(
     total_score = submission.problem.rubric.get("total_score", 0) if submission.problem else 0
     feedback_done = gr.feedback_status == "done"
     is_high = gr.trust_level == "high"
-    is_auto_approved = tq is not None and tq.action == "approve" and tq.reviewed_at is not None and tq.teacher_score is None
     trust = TrustResult(
         trust_score=gr.trust_score,
         trust_level=gr.trust_level,
         queue_type=tq.queue_type if tq else "score_only",
         score_visible=True,
-        feedback_visible=feedback_done and (is_auto_approved or is_high),
-        auto_approve=is_auto_approved,
+        feedback_visible=feedback_done and is_high,
+        auto_approve=False,
         sla_deadline=tq.sla_deadline if tq else datetime.now(timezone.utc) + timedelta(hours=24),
     )
 
-    teacher_action = tq.action if tq else None
+    is_auto_approved = bool(
+        tq and tq.action == "approve" and tq.teacher_feedback == AUTO_APPROVE_MARKER
+    )
+    teacher_action = tq.action if tq and not is_auto_approved else None
 
     # ai_feedback: JSON 문자열 → dict
     ai_feedback_dict = None
@@ -500,12 +509,16 @@ async def get_submission_status(
     )
 
     if is_auto_approved:
-        message = None  # 자동 승인 — 별도 안내 없이 결과 표시
+        message = "신뢰도 검증이 완료되어 자동 승인되었습니다."
     elif teacher_action is None:
         if resp_data.get("feedback_visible"):
             message = "AI 피드백을 확인할 수 있습니다. 교사 검토 후 최종 확정됩니다."
         else:
-            message = "오답입니다. 교사 검토 후 상세 피드백을 확인할 수 있습니다."
+            message = (
+                "교사 검토 후 상세 피드백을 확인할 수 있습니다."
+                if (resp_data.get("score") or 0) > 0
+                else "오답입니다. 교사 검토 후 상세 피드백을 확인할 수 있습니다."
+            )
     elif teacher_action == "reject":
         message = "채점이 반려되었습니다. 교사에게 문의해주세요."
     else:
@@ -527,6 +540,7 @@ async def get_submission_status(
         hallucination_status=gr.hallucination_status,
         hallucination_completed_at=gr.hallucination_checked_at,
         teacher_approved=resp_data["teacher_approved"],
+        auto_approved=is_auto_approved,
         message=message,
         problem_title=submission.problem.title if submission.problem else None,
         problem_content=submission.problem.content if submission.problem else None,
