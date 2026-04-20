@@ -1,11 +1,11 @@
 """Thin wrapper around configured LLM provider implementations."""
 
 import asyncio
+import inspect
 import logging
 from contextlib import asynccontextmanager
 
 from config import settings
-from services.mlx_model_path import resolve_mlx_model_path
 from services.providers import AnthropicProvider, MLXProvider, OllamaProvider
 from services.providers.base import LLMProvider, LLMResponse
 
@@ -16,8 +16,8 @@ class LLMClient:
     """
     Anthropic / Ollama / MLX 통합 클라이언트.
 
-    provider는 settings.llm_provider로 결정한다. MLX provider 사용 시
-    main.py lifespan에서 로드한 model/tokenizer를 주입해야 한다.
+    provider는 settings.llm_provider로 결정한다.
+    MLX provider는 첫 요청 시 모델을 지연 로딩한다.
     """
 
     def __init__(
@@ -49,16 +49,11 @@ class LLMClient:
         if self.provider == "ollama":
             return OllamaProvider()
         if self.provider == "mlx":
-            if mlx_model is None or mlx_tokenizer is None:
-                raise ValueError(
-                    "LLM_PROVIDER=mlx 일 때 mlx_model과 mlx_tokenizer를 주입해야 합니다. "
-                    "main.py lifespan에서 mlx_lm.load() 후 LLMClient(mlx_model=...) 형태로 생성하세요."
-                )
-            active_model_path = resolve_mlx_model_path(
-                mlx_model_path or settings.mlx_feedback_model_path or settings.mlx_model_path
+            return MLXProvider(
+                mlx_model=mlx_model,
+                mlx_tokenizer=mlx_tokenizer,
+                model_path=mlx_model_path,
             )
-            logger.info(f"MLX 클라이언트 준비 완료: model_path={active_model_path}")
-            return MLXProvider(mlx_model, mlx_tokenizer, active_model_path)
         raise ValueError(f"지원하지 않는 LLM_PROVIDER: {self.provider}")
 
     @property
@@ -102,6 +97,15 @@ class LLMClient:
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
+
+    async def close(self) -> None:
+        """Provider가 종료 훅을 제공하면 호출한다."""
+        close_fn = getattr(self._provider, "close", None)
+        if close_fn is None:
+            return
+        maybe_awaitable = close_fn()
+        if inspect.isawaitable(maybe_awaitable):
+            await maybe_awaitable
 
 
 __all__ = ["LLMClient", "LLMResponse"]

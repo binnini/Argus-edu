@@ -23,7 +23,6 @@ from services.feedback_generation import FeedbackReviewService
 from services.hallucination_batch import HallucinationBatchService
 from services.job_queue import JobWorker, queue_counts
 from services.llm_client import LLMClient
-from services.mlx_model_path import resolve_mlx_model_path
 from services.ocr import OCRService
 from routers import submissions, teacher, feedback, problems
 from routers import groups
@@ -37,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("ML 모델 로딩 시작...")
+    logger.info("서비스 초기화 시작...")
 
     # DB 테이블 자동 생성 (개발용)
     from db import engine
@@ -51,24 +50,8 @@ async def lifespan(app: FastAPI):
     logger.info("DB 테이블 동기화 완료")
 
     # LLM 클라이언트 초기화
-    # MLX provider: 무거운 모델을 lifespan에서 1회만 로드
-    if settings.llm_provider == "mlx":
-        initial_mlx_model_path = resolve_mlx_model_path(
-            settings.mlx_feedback_model_path or settings.mlx_model_path
-        )
-        logger.info(f"MLX 모델 로딩 시작: {initial_mlx_model_path}")
-        from mlx_lm import load as mlx_load
-        mlx_model, mlx_tokenizer = mlx_load(initial_mlx_model_path)
-        app.state.mlx_model = mlx_model
-        app.state.mlx_tokenizer = mlx_tokenizer
-        llm_client = LLMClient(
-            mlx_model=mlx_model,
-            mlx_tokenizer=mlx_tokenizer,
-            mlx_model_path=initial_mlx_model_path,
-        )
-        logger.info("MLX 모델 로딩 완료")
-    else:
-        llm_client = LLMClient()
+    # MLX provider는 첫 요청 시 모델을 지연 로딩한다.
+    llm_client = LLMClient()
 
     app.state.llm_client = llm_client
     app.state.combined_service = CombinedGradingFeedbackService(llm_client=llm_client)
@@ -92,6 +75,14 @@ async def lifespan(app: FastAPI):
         await app.state.job_worker_task
     except asyncio.CancelledError:
         pass
+    try:
+        await app.state.llm_client.close()
+    except Exception:
+        logger.exception("LLM 클라이언트 종료 중 오류")
+    try:
+        await app.state.ocr_service.close()
+    except Exception:
+        logger.exception("OCR 서비스 종료 중 오류")
     logger.info("서버 종료.")
 
 
@@ -134,20 +125,54 @@ app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 
 @app.get("/health")
 async def health():
-    memory_mb = None
+    main_memory_mb = None
+    children_memory_mb = None
+    total_memory_mb = None
+    child_processes = 0
+
     try:
+        pid = os.getpid()
         rss_kb = subprocess.check_output(
             ["ps", "-o", "rss=", "-p", str(os.getpid())],
             text=True,
             timeout=1,
         ).strip()
-        memory_mb = round(int(rss_kb) / 1024, 2) if rss_kb else None
+        main_memory_mb = round(int(rss_kb) / 1024, 2) if rss_kb else None
+
+        rows = subprocess.check_output(
+            ["ps", "-axo", "pid=,ppid=,rss=,comm="],
+            text=True,
+            timeout=1,
+        ).splitlines()
+        child_rss_kb = 0
+        for row in rows:
+            parts = row.strip().split()
+            if len(parts) < 4:
+                continue
+            pid_text, ppid_text, rss_text, comm = parts[0], parts[1], parts[2], parts[3]
+            if int(ppid_text) == pid and comm != "ps" and int(pid_text) != pid:
+                child_processes += 1
+                child_rss_kb += int(rss_text)
+        children_memory_mb = round(child_rss_kb / 1024, 2)
+        if main_memory_mb is not None:
+            total_memory_mb = round(main_memory_mb + children_memory_mb, 2)
     except Exception:
-        memory_mb = None
+        main_memory_mb = None
+        children_memory_mb = None
+        total_memory_mb = None
+        child_processes = 0
 
     try:
         queues = await queue_counts()
     except Exception:
         queues = {}
 
-    return {"status": "ok", "memory_mb": memory_mb, "queues": queues}
+    return {
+        "status": "ok",
+        # Backward compatibility: keep previous field name for main process RSS.
+        "memory_mb": main_memory_mb,
+        "memory_children_mb": children_memory_mb,
+        "memory_total_mb": total_memory_mb,
+        "child_processes": child_processes,
+        "queues": queues,
+    }

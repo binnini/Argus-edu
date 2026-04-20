@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     mlx_feedback_model_path: str = ""
     mlx_hallucination_model_path: str = ""
     mlx_max_tokens: int = 4096  # thinking 비활성화 시에도 수식 풀이 여유 확보
+    # MLX 워커 유휴 종료 시간(초). 0이면 종료 비활성화.
+    mlx_idle_shutdown_seconds: int = 900
 
     # AI 모델 — 절대 하드코딩 금지, 환경변수에서 로드
     # 현재 운영 경로는 FEEDBACK_MODEL + HALLUCINATION_MODEL 사용
@@ -40,6 +42,8 @@ class Settings(BaseSettings):
     got_ocr_worker_python: str = (
         "/opt/homebrew/Caskroom/miniconda/base/envs/argus-gotocr/bin/python"
     )
+    # GOT-OCR 워커 유휴 종료 시간(초). 0이면 종료 비활성화.
+    got_ocr_idle_shutdown_seconds: int = 600
     # Mathpix API 인증 (mathpix 사용 시)
     mathpix_app_id: str = ""
     mathpix_app_key: str = ""

@@ -12,13 +12,14 @@ import asyncio
 import json
 import logging
 import random
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy import select, func, tuple_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -60,6 +61,9 @@ AUTO_APPROVE_MARKER = "__AUTO_APPROVED_BY_HALLUCINATION__"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEMO_IMAGES_ROOT = PROJECT_ROOT / "demo" / "images"
 DEMO_MANIFEST_PATH = DEMO_IMAGES_ROOT / "manifest.json"
+# 문제 키 포맷은 데이터셋에 따라 자리수가 조금 다를 수 있어 범위를 허용한다.
+# 예) 25915_84592, 25927_136177
+PROBLEM_KEY_RE = re.compile(r"(?<!\d)\d{4,6}_\d{4,6}(?!\d)")
 
 
 def _should_autograde_text(student_name: str, student_answer: str) -> bool:
@@ -83,16 +87,22 @@ def _load_demo_manifest() -> list[dict]:
     return samples if isinstance(samples, list) else []
 
 
-def _manifest_answer_keys() -> set[tuple[str, str]]:
-    keys: set[tuple[str, str]] = set()
+def _manifest_answer_problem_keys() -> set[str]:
+    keys: set[str] = set()
     for row in _load_demo_manifest():
         if not bool(row.get("is_answer")):
             continue
-        lvl = str(row.get("school_level", "")).strip()
-        dm = str(row.get("domain", "")).strip()
-        if lvl and dm:
-            keys.add((lvl, dm))
+        key = _extract_problem_key(str(row.get("filename", "")))
+        if key:
+            keys.add(key)
     return keys
+
+
+def _extract_problem_key(text: str | None) -> str | None:
+    if not text:
+        return None
+    m = PROBLEM_KEY_RE.search(text)
+    return m.group(0) if m else None
 
 
 # ── 문제 조회 ────────────────────────────────────────────────
@@ -150,36 +160,76 @@ async def list_problem_prototype_sample_images(
         return PrototypeSampleImageListResponse(enabled=False, samples=[])
 
     problem_answer: Optional[str] = None
+    target_problem_key: Optional[str] = None
     if problem_id is not None:
         problem = await db.get(Problem, problem_id)
         if problem:
             school_level = problem.school_level or school_level
             domain = problem.domain or domain
             problem_answer = problem.answer
+            target_problem_key = _extract_problem_key(problem.title)
+
+    all_samples = _load_demo_manifest()
 
     pool = [
-        row for row in _load_demo_manifest()
+        row for row in all_samples
         if row.get("school_level") == school_level and row.get("domain") == domain
     ]
     if not pool:
         pool = [
-            row for row in _load_demo_manifest()
+            row for row in all_samples
             if row.get("school_level") == school_level
         ]
     if not pool:
         return PrototypeSampleImageListResponse(enabled=True, samples=[])
 
-    answer_pool = [row for row in pool if bool(row.get("is_answer"))]
     picked: list[dict]
-    if answer_pool:
-        answer = random.choice(answer_pool)
-        answer_id = str(answer.get("sample_id", ""))
-        distractors_pool = [row for row in pool if str(row.get("sample_id", "")) != answer_id]
-        random.shuffle(distractors_pool)
-        picked = [answer, *distractors_pool[:2]]
+    if target_problem_key:
+        # 문제 키가 매칭되는 정답 이미지만 "정답 이미지"로 노출한다.
+        # 정답 이미지는 전체 manifest에서 찾고, distractor는 선택된 pool에서 고른다.
+        exact_answer_pool = [
+            row for row in all_samples
+            if bool(row.get("is_answer"))
+            and _extract_problem_key(str(row.get("filename", ""))) == target_problem_key
+        ]
+        non_answer_pool = [row for row in pool if not bool(row.get("is_answer"))]
+        random.shuffle(non_answer_pool)
+        if exact_answer_pool:
+            answer = random.choice(exact_answer_pool)
+            picked = [answer, *non_answer_pool[:2]]
+        else:
+            # 정답 샘플이 없으면 오답 샘플을 최대 3개까지 채워서 반환한다.
+            if len(non_answer_pool) < 3:
+                # 1차 보강: 동일 학교급 전체 오답
+                extra_school = [
+                    row for row in all_samples
+                    if not bool(row.get("is_answer"))
+                    and row.get("school_level") == school_level
+                    and str(row.get("sample_id", "")) not in {str(x.get("sample_id", "")) for x in non_answer_pool}
+                ]
+                random.shuffle(extra_school)
+                non_answer_pool.extend(extra_school)
+            if len(non_answer_pool) < 3:
+                # 2차 보강: 전체 오답
+                extra_all = [
+                    row for row in all_samples
+                    if not bool(row.get("is_answer"))
+                    and str(row.get("sample_id", "")) not in {str(x.get("sample_id", "")) for x in non_answer_pool}
+                ]
+                random.shuffle(extra_all)
+                non_answer_pool.extend(extra_all)
+            picked = non_answer_pool[:3]
     else:
-        random.shuffle(pool)
-        picked = pool[:3]
+        answer_pool = [row for row in pool if bool(row.get("is_answer"))]
+        if answer_pool:
+            answer = random.choice(answer_pool)
+            answer_id = str(answer.get("sample_id", ""))
+            distractors_pool = [row for row in pool if str(row.get("sample_id", "")) != answer_id]
+            random.shuffle(distractors_pool)
+            picked = [answer, *distractors_pool[:2]]
+        else:
+            random.shuffle(pool)
+            picked = pool[:3]
 
     samples: list[PrototypeSampleImageItem] = []
     for row in picked:
@@ -250,12 +300,17 @@ async def list_problems(
             )
         )
     if has_sample_answer is True:
-        answer_keys = _manifest_answer_keys()
-        if not answer_keys:
+        answer_problem_keys = _manifest_answer_problem_keys()
+        if not answer_problem_keys:
             return ProblemListPagedResponse(problems=[], total=0, page=page, page_size=page_size)
-        base = base.where(
-            tuple_(Problem.school_level, Problem.domain).in_(list(answer_keys))
-        )
+        candidate_rows = await db.execute(base.with_only_columns(Problem.id, Problem.title))
+        matched_ids = [
+            pid for pid, title in candidate_rows.all()
+            if (_extract_problem_key(title) in answer_problem_keys)
+        ]
+        if not matched_ids:
+            return ProblemListPagedResponse(problems=[], total=0, page=page, page_size=page_size)
+        base = base.where(Problem.id.in_(matched_ids))
 
     total_result = await db.execute(select(func.count()).select_from(base.subquery()))
     total = total_result.scalar() or 0

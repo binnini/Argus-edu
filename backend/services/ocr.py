@@ -1,5 +1,6 @@
 """OCR service factory and common OCR error type."""
 
+import inspect
 import logging
 from typing import Protocol
 
@@ -65,3 +66,14 @@ class OCRService:
             raise OCRError("OCR 결과가 비어 있습니다. 이미지를 다시 확인해주세요.")
 
         return result.strip()
+
+    async def close(self) -> None:
+        """엔진이 종료 훅을 제공하면 호출한다."""
+        if self._engine is None:
+            return
+        close_fn = getattr(self._engine, "close", None)
+        if close_fn is None:
+            return
+        maybe_awaitable = close_fn()
+        if inspect.isawaitable(maybe_awaitable):
+            await maybe_awaitable

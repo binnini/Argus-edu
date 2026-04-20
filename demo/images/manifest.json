@@ -1,2411 +1,2712 @@
 {
-  "generated_at": "2026-04-13T19:52:56.500121",
+  "generated_at": "2026-04-14T01:20:45.802168",
   "source": {
-    "source_dir": "/Users/yebin/workSpace/Argus/data/AI_HUB/3.개방데이터/1.데이터/Validation/01.원천데이터",
-    "label_dir": "/Users/yebin/workSpace/Argus/data/AI_HUB/3.개방데이터/1.데이터/Validation/02.라벨링데이터",
+    "source_dir": "/Users/yebin/workSpace/Argus/data/AI_HUB/3.개방데이터/1.데이터/Training/01.원천데이터",
+    "label_dir": "/Users/yebin/workSpace/Argus/data/AI_HUB/3.개방데이터/1.데이터/Training/02.라벨링데이터",
     "per_school": 100,
     "per_domain": 3,
-    "seed": 20260413
+    "seed": 20260413,
+    "db_problem_keys_file": "/Users/yebin/workSpace/Argus/data/demo/db_problem_keys.txt"
   },
   "samples": [
     {
-      "sample_id": "51d9eba81c68364b",
-      "school_level": "초등학교",
-      "domain": "받아올림이 있는 분모가 다른 대분수의 덧셈, 자연수끼리 분수끼리 덧셈, 대분수를 가분수로 계산",
-      "filename": "P5_1_05_16067_92522_16_O.jpeg",
-      "relative_path": "초등학교/받아올림이_있는_분모가_다른_대분수의_덧셈,_자연수끼리_분수끼리_덧셈,_대분수를_가분수로_계산/51d9eba81c68364b_P5_1_05_16067_92522_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "6ceb20cba0bfa2a2",
-      "school_level": "초등학교",
-      "domain": "1cm보다 작은 단위",
-      "filename": "P3_1_05_25963_163104_10_O.jpeg",
-      "relative_path": "초등학교/1cm보다_작은_단위/6ceb20cba0bfa2a2_P3_1_05_25963_163104_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "d18a07ae12fac7a4",
-      "school_level": "초등학교",
-      "domain": "정육면체의 활용",
-      "filename": "P5_2_05_33711_131544_16_X.jpeg",
-      "relative_path": "초등학교/정육면체의_활용/d18a07ae12fac7a4_P5_2_05_33711_131544_16_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "4217b0122d28da7e",
-      "school_level": "초등학교",
-      "domain": "평행선 사이의 거리의 활용",
-      "filename": "P4_2_04_40208_157265_13_O.jpeg",
-      "relative_path": "초등학교/평행선_사이의_거리의_활용/4217b0122d28da7e_P4_2_04_40208_157265_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "cdec303f7317b00c",
-      "school_level": "초등학교",
-      "domain": "대응 관계를 식으로 나타내기",
-      "filename": "P5_1_03_34501_137659_10_O.jpeg",
-      "relative_path": "초등학교/대응_관계를_식으로_나타내기/cdec303f7317b00c_P5_1_03_34501_137659_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "88d207840fd6c7de",
-      "school_level": "초등학교",
-      "domain": "원으로 만든 도형의 둘레 구하기",
-      "filename": "P6_2_05_18974_36667_8_O.jpeg",
-      "relative_path": "초등학교/원으로_만든_도형의_둘레_구하기/88d207840fd6c7de_P6_2_05_18974_36667_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "26eb5d0221d838a2",
-      "school_level": "초등학교",
-      "domain": "직각과 직각삼각형",
-      "filename": "P3_1_02_34285_135703_7_X.jpeg",
-      "relative_path": "초등학교/직각과_직각삼각형/26eb5d0221d838a2_P3_1_02_34285_135703_7_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "34405b2dc95b8ace",
-      "school_level": "초등학교",
-      "domain": "약수와 배수",
-      "filename": "P5_1_02_34426_137245_16_O.jpeg",
-      "relative_path": "초등학교/약수와_배수/34405b2dc95b8ace_P5_1_02_34426_137245_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fa366dfe1726d5f6",
-      "school_level": "초등학교",
-      "domain": "전체에서 부분의 넓이를 빼서 색칠한 부분의 넓이 구하기",
-      "filename": "P6_2_05_19099_38093_7_O.jpeg",
-      "relative_path": "초등학교/전체에서_부분의_넓이를_빼서_색칠한_부분의_넓이_구하기/fa366dfe1726d5f6_P6_2_05_19099_38093_7_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c622738dde7939e0",
-      "school_level": "초등학교",
-      "domain": "백분율 구하는 방법 알아보기",
-      "filename": "P6_1_04_18645_36014_13_X.jpeg",
-      "relative_path": "초등학교/백분율_구하는_방법_알아보기/c622738dde7939e0_P6_1_04_18645_36014_13_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "50005efd0eefcca2",
-      "school_level": "초등학교",
-      "domain": "원의 성질",
-      "filename": "P3_2_03_39052_153969_8_O.jpeg",
-      "relative_path": "초등학교/원의_성질/50005efd0eefcca2_P3_2_03_39052_153969_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "019739d21e33c0f4",
-      "school_level": "초등학교",
-      "domain": "돌리기",
-      "filename": "P4_1_04_26416_136364_16_O.jpeg",
-      "relative_path": "초등학교/돌리기/019739d21e33c0f4_P4_1_04_26416_136364_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "106eecd9ad1aae61",
-      "school_level": "초등학교",
-      "domain": "(자연수)÷(소수)의 활용",
-      "filename": "P6_2_02_33915_132869_4_O.jpeg",
-      "relative_path": "초등학교/(자연수)÷(소수)의_활용/106eecd9ad1aae61_P6_2_02_33915_132869_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "4fa23b4e6009a5ca",
-      "school_level": "초등학교",
-      "domain": "초과와 미만",
-      "filename": "P5_2_01_33482_129972_2_O.jpeg",
-      "relative_path": "초등학교/초과와_미만/4fa23b4e6009a5ca_P5_2_01_33482_129972_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "48ff76a2a33f3849",
-      "school_level": "초등학교",
-      "domain": "받아내림이 없는 세 자리 수의 뺄셈을 어림하여 구하기",
-      "filename": "P3_1_01_21186_50114_12_X.jpeg",
-      "relative_path": "초등학교/받아내림이_없는_세_자리_수의_뺄셈을_어림하여_구하기/48ff76a2a33f3849_P3_1_01_21186_50114_12_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "9f65613e3e94e130",
-      "school_level": "초등학교",
-      "domain": "배수 알아보기",
-      "filename": "P5_1_02_15638_27511_15_O.jpeg",
-      "relative_path": "초등학교/배수_알아보기/9f65613e3e94e130_P5_1_02_15638_27511_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "d13cf9e261b482d9",
-      "school_level": "초등학교",
-      "domain": "부분과 전체의 크기 알아보기",
-      "filename": "P3_1_06_23290_64164_2_O.jpeg",
-      "relative_path": "초등학교/부분과_전체의_크기_알아보기/d13cf9e261b482d9_P3_1_06_23290_64164_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "5dc50afe7beabf76",
-      "school_level": "초등학교",
-      "domain": "두 분모의 최소공배수를 공통분모로 하여 통분하기",
-      "filename": "P5_1_04_42527_166023_10_X.jpeg",
-      "relative_path": "초등학교/두_분모의_최소공배수를_공통분모로_하여_통분하기/5dc50afe7beabf76_P5_1_04_42527_166023_10_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "334737ab3de77f97",
-      "school_level": "초등학교",
-      "domain": "약분 알아보기",
-      "filename": "P5_1_04_15842_27935_19_O.jpeg",
-      "relative_path": "초등학교/약분_알아보기/334737ab3de77f97_P5_1_04_15842_27935_19_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "4d499ccea5271633",
-      "school_level": "초등학교",
-      "domain": "길이에 대한 분수만큼은 얼마인지 알아보기",
-      "filename": "P3_2_04_39216_154293_10_O.jpeg",
-      "relative_path": "초등학교/길이에_대한_분수만큼은_얼마인지_알아보기/4d499ccea5271633_P3_2_04_39216_154293_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8ea9a01101b161f4",
-      "school_level": "초등학교",
-      "domain": "대분수를 가분수로, 가분수를 대분수로 나타내기",
-      "filename": "P3_2_04_24096_82146_7_X.jpeg",
-      "relative_path": "초등학교/대분수를_가분수로,_가분수를_대분수로_나타내기/8ea9a01101b161f4_P3_2_04_24096_82146_7_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "479f8f81cfe427f4",
-      "school_level": "초등학교",
-      "domain": "자연수의 나눗셈을 이용한 (소수)÷(소수)의 활용",
-      "filename": "P6_2_02_40901_159234_11_O.jpeg",
-      "relative_path": "초등학교/자연수의_나눗셈을_이용한_(소수)÷(소수)의_활용/479f8f81cfe427f4_P6_2_02_40901_159234_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3fb347ed57a0eb95",
-      "school_level": "초등학교",
-      "domain": "수의 범위를 활용하여 문제 해결하기",
-      "filename": "P5_2_01_40244_157064_8_O.jpeg",
-      "relative_path": "초등학교/수의_범위를_활용하여_문제_해결하기/3fb347ed57a0eb95_P5_2_01_40244_157064_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "96fa844418ea59df",
-      "school_level": "초등학교",
-      "domain": "1분보다 작은 단위",
-      "filename": "P3_1_05_25976_162300_16_O.jpeg",
-      "relative_path": "초등학교/1분보다_작은_단위/96fa844418ea59df_P3_1_05_25976_162300_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8665fdf5c7233500",
-      "school_level": "초등학교",
-      "domain": "십만, 백만, 천만",
-      "filename": "P4_1_01_26122_159988_11_O.jpeg",
-      "relative_path": "초등학교/십만,_백만,_천만/8665fdf5c7233500_P4_1_01_26122_159988_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "01642b62fd6efb25",
-      "school_level": "초등학교",
-      "domain": "수의 범위를 활용하여 문제 해결하기",
-      "filename": "P5_2_01_40244_157063_6_X.jpeg",
-      "relative_path": "초등학교/수의_범위를_활용하여_문제_해결하기/01642b62fd6efb25_P5_2_01_40244_157063_6_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "a3fe9b27934d1b85",
-      "school_level": "초등학교",
-      "domain": "부분은 전체의 얼마인지 알아보기",
-      "filename": "P3_2_04_39201_154055_8_O.jpeg",
-      "relative_path": "초등학교/부분은_전체의_얼마인지_알아보기/a3fe9b27934d1b85_P3_2_04_39201_154055_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "4419af1ad6100f4d",
-      "school_level": "초등학교",
-      "domain": "정다각형의 활용",
-      "filename": "P4_2_06_24987_76282_10_O.jpeg",
-      "relative_path": "초등학교/정다각형의_활용/4419af1ad6100f4d_P4_2_06_24987_76282_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "000f1469286f8349",
-      "school_level": "초등학교",
-      "domain": "각도의 합과 차",
-      "filename": "P4_1_02_26199_161589_20_O.jpeg",
-      "relative_path": "초등학교/각도의_합과_차/000f1469286f8349_P4_1_02_26199_161589_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c599127511f662b5",
-      "school_level": "초등학교",
-      "domain": "덧셈과 뺄셈이 섞여 있는 식의 계산",
-      "filename": "P5_1_01_26621_87487_11_O.jpeg",
-      "relative_path": "초등학교/덧셈과_뺄셈이_섞여_있는_식의_계산/c599127511f662b5_P5_1_01_26621_87487_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7a352ec182fc3f5e",
-      "school_level": "초등학교",
-      "domain": "수직",
-      "filename": "P4_2_04_33251_128675_16_O.jpeg",
-      "relative_path": "초등학교/수직/7a352ec182fc3f5e_P4_2_04_33251_128675_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "85706d6b03f574f1",
-      "school_level": "초등학교",
-      "domain": "선대칭도형의 성질 알아보기",
-      "filename": "P5_2_03_40485_157968_16_X.jpeg",
-      "relative_path": "초등학교/선대칭도형의_성질_알아보기/85706d6b03f574f1_P5_2_03_40485_157968_16_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "3f39b2fe00ed08f4",
-      "school_level": "초등학교",
-      "domain": "원기둥의 활용",
-      "filename": "P6_2_06_34071_133617_13_O.jpeg",
-      "relative_path": "초등학교/원기둥의_활용/3f39b2fe00ed08f4_P6_2_06_34071_133617_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "2ddfdc398e59d024",
-      "school_level": "초등학교",
-      "domain": "여러 가지 분수의 곱셈",
-      "filename": "P5_2_02_33590_130890_8_O.jpeg",
-      "relative_path": "초등학교/여러_가지_분수의_곱셈/2ddfdc398e59d024_P5_2_02_33590_130890_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c2de531d744e9529",
-      "school_level": "초등학교",
-      "domain": "똑같이 나누기",
-      "filename": "P3_1_06_25998_136502_8_X.jpeg",
-      "relative_path": "초등학교/똑같이_나누기/c2de531d744e9529_P3_1_06_25998_136502_8_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "0faa23e541f5f181",
-      "school_level": "초등학교",
-      "domain": "소수의 크기 비교 활용",
-      "filename": "P3_1_06_34372_137060_15_O.jpeg",
-      "relative_path": "초등학교/소수의_크기_비교_활용/0faa23e541f5f181_P3_1_06_34372_137060_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "9e3c8992ee7ae6c7",
-      "school_level": "초등학교",
-      "domain": "자릿수가 다른 (소수)÷(소수)의 계산",
-      "filename": "P6_2_02_30134_108457_13_O.jpeg",
-      "relative_path": "초등학교/자릿수가_다른_(소수)÷(소수)의_계산/9e3c8992ee7ae6c7_P6_2_02_30134_108457_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "98c1a360a8fb5bf5",
-      "school_level": "초등학교",
-      "domain": "천만 단위까지 수 알기",
-      "filename": "P4_1_01_41253_160490_17_X.jpeg",
-      "relative_path": "초등학교/천만_단위까지_수_알기/98c1a360a8fb5bf5_P4_1_01_41253_160490_17_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "f85c12f74b3b2d5b",
-      "school_level": "초등학교",
-      "domain": "직육면체의 겉넓이의 활용",
-      "filename": "P6_1_06_42796_166738_19_O.jpeg",
-      "relative_path": "초등학교/직육면체의_겉넓이의_활용/f85c12f74b3b2d5b_P6_1_06_42796_166738_19_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8834f4ca34424395",
-      "school_level": "초등학교",
-      "domain": "분수와 소수의 크기 비교",
-      "filename": "P5_1_04_34542_166156_11_O.jpeg",
-      "relative_path": "초등학교/분수와_소수의_크기_비교/8834f4ca34424395_P5_1_04_34542_166156_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0633c26ec427cf0f",
-      "school_level": "초등학교",
-      "domain": "마름모의 성질 활용",
-      "filename": "P4_2_04_24887_75873_10_O.jpeg",
-      "relative_path": "초등학교/마름모의_성질_활용/0633c26ec427cf0f_P4_2_04_24887_75873_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "f0718b53f9d89055",
-      "school_level": "초등학교",
-      "domain": "분모가 같은 (분수)÷(분수)의 활용",
-      "filename": "P6_2_01_19801_41463_4_O.jpeg",
-      "relative_path": "초등학교/분모가_같은_(분수)÷(분수)의_활용/f0718b53f9d89055_P6_2_01_19801_41463_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "1b26a657bd89b7a4",
-      "school_level": "초등학교",
-      "domain": "각의 크기에 따라 분류하기",
-      "filename": "P4_1_02_26179_160932_4_O.jpeg",
-      "relative_path": "초등학교/각의_크기에_따라_분류하기/1b26a657bd89b7a4_P4_1_02_26179_160932_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3a596670df96ac89",
-      "school_level": "초등학교",
-      "domain": "각의 활용",
-      "filename": "P4_1_02_41363_160655_8_O.jpeg",
-      "relative_path": "초등학교/각의_활용/3a596670df96ac89_P4_1_02_41363_160655_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8b2b044dc35b91dc",
-      "school_level": "초등학교",
-      "domain": "약분과 기약분수",
-      "filename": "P5_1_04_34537_137837_15_O.jpeg",
-      "relative_path": "초등학교/약분과_기약분수/8b2b044dc35b91dc_P5_1_04_34537_137837_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "500fab73411952c1",
-      "school_level": "초등학교",
-      "domain": "두 분모의 곱을 공통분모로 하여 통분하기",
-      "filename": "P5_1_04_15906_28067_7_O.jpeg",
-      "relative_path": "초등학교/두_분모의_곱을_공통분모로_하여_통분하기/500fab73411952c1_P5_1_04_15906_28067_7_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "ca38fa6aedc7cafb",
-      "school_level": "초등학교",
-      "domain": "약분 알아보기",
-      "filename": "P5_1_04_15842_39249_3_O.jpeg",
-      "relative_path": "초등학교/약분_알아보기/ca38fa6aedc7cafb_P5_1_04_15842_39249_3_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "2b7c5a923f3517ca",
-      "school_level": "초등학교",
-      "domain": "십만, 백만, 천만",
-      "filename": "P4_1_01_26128_134987_1_O.jpeg",
-      "relative_path": "초등학교/십만,_백만,_천만/2b7c5a923f3517ca_P4_1_01_26128_134987_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "9d3d4e75d883ad26",
-      "school_level": "초등학교",
-      "domain": "분모가 같은 분수의 크기 비교",
-      "filename": "P3_1_06_22126_55455_6_O.jpeg",
-      "relative_path": "초등학교/분모가_같은_분수의_크기_비교/9d3d4e75d883ad26_P3_1_06_22126_55455_6_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "a4bd2723f4cb46eb",
-      "school_level": "초등학교",
-      "domain": "공약수와 최대공약수",
-      "filename": "P5_1_02_34488_137487_14_O.jpeg",
-      "relative_path": "초등학교/공약수와_최대공약수/a4bd2723f4cb46eb_P5_1_02_34488_137487_14_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "af87ace9ec813d3d",
-      "school_level": "초등학교",
-      "domain": "원으로 만든 도형의 둘레 구하기",
-      "filename": "P6_2_05_18974_36669_16_X.jpeg",
-      "relative_path": "초등학교/원으로_만든_도형의_둘레_구하기/af87ace9ec813d3d_P6_2_05_18974_36669_16_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "761a1f65b288047a",
-      "school_level": "초등학교",
-      "domain": "올림, 버림, 반올림을 활용한 문제 해결",
-      "filename": "P5_2_01_40250_157142_8_O.jpeg",
-      "relative_path": "초등학교/올림,_버림,_반올림을_활용한_문제_해결/761a1f65b288047a_P5_2_01_40250_157142_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "547436c56083b57c",
-      "school_level": "초등학교",
-      "domain": "받아내림이 없는 세 자리 수의 뺄셈을 어림하여 구하기",
-      "filename": "P3_1_01_21187_50121_4_X.jpeg",
-      "relative_path": "초등학교/받아내림이_없는_세_자리_수의_뺄셈을_어림하여_구하기/547436c56083b57c_P3_1_01_21187_50121_4_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "13ca43a6df80064e",
-      "school_level": "초등학교",
-      "domain": "공배수와 최소공배수",
-      "filename": "P5_1_02_15714_27753_3_O.jpeg",
-      "relative_path": "초등학교/공배수와_최소공배수/13ca43a6df80064e_P5_1_02_15714_27753_3_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0cc74343064e3b8d",
-      "school_level": "초등학교",
-      "domain": "각기둥",
-      "filename": "P6_1_02_34731_139187_4_O.jpeg",
-      "relative_path": "초등학교/각기둥/0cc74343064e3b8d_P6_1_02_34731_139187_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c5cc56cb8e768862",
-      "school_level": "초등학교",
-      "domain": "각 자리에서 나누어떨어지지 않는 (소수) ÷ (자연수)",
-      "filename": "P6_1_03_27355_91157_9_O.jpeg",
-      "relative_path": "초등학교/각_자리에서_나누어떨어지지_않는_(소수)_÷_(자연수)/c5cc56cb8e768862_P6_1_03_27355_91157_9_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "1af157440e2964e9",
-      "school_level": "초등학교",
-      "domain": "원의 넓이의 활용",
-      "filename": "P6_2_05_19088_38149_1_O.jpeg",
-      "relative_path": "초등학교/원의_넓이의_활용/1af157440e2964e9_P6_2_05_19088_38149_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "e5088b1a760d3035",
-      "school_level": "초등학교",
-      "domain": "소수 한 자리 수의 덧셈의 활용",
-      "filename": "P4_2_03_40078_156674_14_O.jpeg",
-      "relative_path": "초등학교/소수_한_자리_수의_덧셈의_활용/e5088b1a760d3035_P4_2_03_40078_156674_14_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0fc7f5755102dc93",
-      "school_level": "초등학교",
-      "domain": "자연수의 나눗셈을 이용한 (소수)÷(소수)의 활용",
-      "filename": "P6_2_02_40901_159234_6_O.jpeg",
-      "relative_path": "초등학교/자연수의_나눗셈을_이용한_(소수)÷(소수)의_활용/0fc7f5755102dc93_P6_2_02_40901_159234_6_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "388633c0b82659bc",
-      "school_level": "초등학교",
-      "domain": "받아내림이 없는 분모가 다른 대분수의 밸셈, 자연수끼리 분수끼리 덧셈, 대분수를 가분수로 계산",
-      "filename": "P5_1_05_34581_138439_4_O.jpeg",
-      "relative_path": "초등학교/받아내림이_없는_분모가_다른_대분수의_밸셈,_자연수끼리_분수끼리_덧셈,_대분수를_가분수로_계산/388633c0b82659bc_P5_1_05_34581_138439_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "6d4e0fc1eb9431b8",
-      "school_level": "초등학교",
-      "domain": "밀기와 뒤집기의 활용",
-      "filename": "P4_1_04_41769_162268_1_O.jpeg",
-      "relative_path": "초등학교/밀기와_뒤집기의_활용/6d4e0fc1eb9431b8_P4_1_04_41769_162268_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "34c255f83a829d8e",
-      "school_level": "초등학교",
-      "domain": "약분 알아보기",
-      "filename": "P5_1_04_15855_28097_20_O.jpeg",
-      "relative_path": "초등학교/약분_알아보기/34c255f83a829d8e_P5_1_04_15855_28097_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "323526beeee6151b",
-      "school_level": "초등학교",
-      "domain": "각기둥",
-      "filename": "P6_1_02_34732_164537_11_O.jpeg",
-      "relative_path": "초등학교/각기둥/323526beeee6151b_P6_1_02_34732_164537_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c8fb45ffd0845974",
-      "school_level": "초등학교",
-      "domain": "모양 채우기",
-      "filename": "P4_2_06_40449_158046_14_O.jpeg",
-      "relative_path": "초등학교/모양_채우기/c8fb45ffd0845974_P4_2_06_40449_158046_14_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "85ef1b2be9d5fb97",
-      "school_level": "초등학교",
-      "domain": "(소수)×(자연수)의 활용",
-      "filename": "P5_2_04_33690_131336_15_X.jpeg",
-      "relative_path": "초등학교/(소수)×(자연수)의_활용/85ef1b2be9d5fb97_P5_2_04_33690_131336_15_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "15519b56457990a1",
-      "school_level": "초등학교",
-      "domain": "평행선 사이의 거리의 활용",
-      "filename": "P4_2_04_40208_157265_15_O.jpeg",
-      "relative_path": "초등학교/평행선_사이의_거리의_활용/15519b56457990a1_P4_2_04_40208_157265_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "528e6796aa092ba4",
-      "school_level": "초등학교",
-      "domain": "진분수, 가분수, 자연수 알아보기",
-      "filename": "P3_2_04_24053_70458_10_O.jpeg",
-      "relative_path": "초등학교/진분수,_가분수,_자연수_알아보기/528e6796aa092ba4_P3_2_04_24053_70458_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "86f5777bb4181ad3",
-      "school_level": "초등학교",
-      "domain": "나누어 주고 남는 양 활용",
-      "filename": "P6_2_02_30385_111123_15_O.jpeg",
-      "relative_path": "초등학교/나누어_주고_남는_양_활용/86f5777bb4181ad3_P6_2_02_30385_111123_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8c6f808925087c7e",
-      "school_level": "초등학교",
-      "domain": "그림그래프의 활용",
-      "filename": "P6_1_05_34952_166281_18_O.jpeg",
-      "relative_path": "초등학교/그림그래프의_활용/8c6f808925087c7e_P6_1_05_34952_166281_18_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "84db88206cad745e",
-      "school_level": "초등학교",
-      "domain": "(대분수) ÷ (자연수)의 활용",
-      "filename": "P6_1_01_27242_92240_10_O.jpeg",
-      "relative_path": "초등학교/(대분수)_÷_(자연수)의_활용/84db88206cad745e_P6_1_01_27242_92240_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "4c0f40f730da7a8f",
-      "school_level": "초등학교",
-      "domain": "최대공약수와 최소공배수의 활용",
-      "filename": "P5_1_02_15761_28262_4_O.jpeg",
-      "relative_path": "초등학교/최대공약수와_최소공배수의_활용/4c0f40f730da7a8f_P5_1_02_15761_28262_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7b729fe0f4e46f63",
-      "school_level": "초등학교",
-      "domain": "억 단위 수의 활용",
-      "filename": "P4_1_01_22510_59558_1_O.jpeg",
-      "relative_path": "초등학교/억_단위_수의_활용/7b729fe0f4e46f63_P4_1_01_22510_59558_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fe9c1708df5d13b1",
-      "school_level": "초등학교",
-      "domain": "나눗셈식으로 나타내기",
-      "filename": "P3_1_03_25927_136176_20_O.jpeg",
-      "relative_path": "초등학교/나눗셈식으로_나타내기/fe9c1708df5d13b1_P3_1_03_25927_136176_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8cbf932c071cdb98",
-      "school_level": "초등학교",
-      "domain": "초과와 미만",
-      "filename": "P5_2_01_33482_129972_20_O.jpeg",
-      "relative_path": "초등학교/초과와_미만/8cbf932c071cdb98_P5_2_01_33482_129972_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "46c44ce3e98fab99",
-      "school_level": "초등학교",
-      "domain": "표를 보고 내용 알아보기",
-      "filename": "P3_2_06_24317_72503_1_O.jpeg",
-      "relative_path": "초등학교/표를_보고_내용_알아보기/46c44ce3e98fab99_P3_2_06_24317_72503_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "bb52186ab0491136",
-      "school_level": "초등학교",
-      "domain": "선대칭도형의 성질의 활용",
-      "filename": "P5_2_03_17302_32435_8_O.jpeg",
-      "relative_path": "초등학교/선대칭도형의_성질의_활용/bb52186ab0491136_P5_2_03_17302_32435_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7c7c29d8aea73715",
-      "school_level": "초등학교",
-      "domain": "직사각형과 정사각형의 성질 활용",
-      "filename": "P4_2_04_33264_129331_20_X.jpeg",
-      "relative_path": "초등학교/직사각형과_정사각형의_성질_활용/7c7c29d8aea73715_P4_2_04_33264_129331_20_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "c3457815e1ec3205",
+      "sample_id": "8cf8a24f0432a9fe",
       "school_level": "초등학교",
       "domain": "모양 채우기의 활용",
-      "filename": "P4_2_06_33368_129797_16_O.jpeg",
-      "relative_path": "초등학교/모양_채우기의_활용/c3457815e1ec3205_P4_2_06_33368_129797_16_O.jpeg",
+      "filename": "P4_2_06_33368_129800_18_O.jpeg",
+      "problem_key": "33368_129800",
+      "relative_path": "초등학교/모양_채우기의_활용/8cf8a24f0432a9fe_P4_2_06_33368_129800_18_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ec0cad649fa42503",
+      "sample_id": "de7ba847e8538d55",
       "school_level": "초등학교",
-      "domain": "각 자리에서 나누어떨어지지 않는 (소수) ÷ (자연수)",
-      "filename": "P6_1_03_27355_91157_8_O.jpeg",
-      "relative_path": "초등학교/각_자리에서_나누어떨어지지_않는_(소수)_÷_(자연수)/ec0cad649fa42503_P6_1_03_27355_91157_8_O.jpeg",
+      "domain": "(진분수)-(진분수), 1-(진분수)",
+      "filename": "P4_2_01_24414_72965_2_O.jpeg",
+      "problem_key": "24414_72965",
+      "relative_path": "초등학교/(진분수)-(진분수),_1-(진분수)/de7ba847e8538d55_P4_2_01_24414_72965_2_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "da4a45041a36675d",
+      "sample_id": "175ef1b880421990",
       "school_level": "초등학교",
-      "domain": "분모가 다른 (분수)÷(분수)의 활용",
-      "filename": "P6_2_01_33891_132459_7_X.jpeg",
-      "relative_path": "초등학교/분모가_다른_(분수)÷(분수)의_활용/da4a45041a36675d_P6_2_01_33891_132459_7_X.jpeg",
+      "domain": "밀기와 뒤집기",
+      "filename": "P4_1_04_26406_162549_18_O.jpeg",
+      "problem_key": "26406_162549",
+      "relative_path": "초등학교/밀기와_뒤집기/175ef1b880421990_P4_1_04_26406_162549_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "240f145f9ccfe843",
+      "school_level": "초등학교",
+      "domain": "여러 가지 분수의 곱셈",
+      "filename": "P5_2_02_29774_107764_13_X.jpeg",
+      "problem_key": "29774_107764",
+      "relative_path": "초등학교/여러_가지_분수의_곱셈/240f145f9ccfe843_P5_2_02_29774_107764_13_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "3eeb6814d10a7da5",
+      "sample_id": "85cb25a6f02fc71a",
       "school_level": "초등학교",
-      "domain": "십의 자리에서 올림이 있는 (몇십몇) × (몇)",
-      "filename": "P3_1_04_41705_162117_10_X.jpeg",
-      "relative_path": "초등학교/십의_자리에서_올림이_있는_(몇십몇)_×_(몇)/3eeb6814d10a7da5_P3_1_04_41705_162117_10_X.jpeg",
+      "domain": "받아내림이 있는 세 자리 수의 뺄셈",
+      "filename": "P3_1_01_25833_135168_4_O.jpeg",
+      "problem_key": "25833_135168",
+      "relative_path": "초등학교/받아내림이_있는_세_자리_수의_뺄셈/85cb25a6f02fc71a_P3_1_01_25833_135168_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "fc5563e8b112671d",
+      "school_level": "초등학교",
+      "domain": "(자연수)×(분수)",
+      "filename": "P5_2_02_33587_130867_16_O.jpeg",
+      "problem_key": "33587_130867",
+      "relative_path": "초등학교/(자연수)×(분수)/fc5563e8b112671d_P5_2_02_33587_130867_16_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ec1d1859b71f0ed4",
+      "school_level": "초등학교",
+      "domain": "(자연수) ÷ (자연수)의 몫을 분수로 나타내기",
+      "filename": "P6_1_01_34715_138980_14_O.jpeg",
+      "problem_key": "34715_138980",
+      "relative_path": "초등학교/(자연수)_÷_(자연수)의_몫을_분수로_나타내기/ec1d1859b71f0ed4_P6_1_01_34715_138980_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "cbbf5bf67e8c24ac",
+      "school_level": "초등학교",
+      "domain": "직각삼각형 알아보기",
+      "filename": "P3_1_02_41402_160895_17_O.jpeg",
+      "problem_key": "41402_160895",
+      "relative_path": "초등학교/직각삼각형_알아보기/cbbf5bf67e8c24ac_P3_1_02_41402_160895_17_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "559fb443ed7cc0c2",
+      "school_level": "초등학교",
+      "domain": "구의 활용",
+      "filename": "P6_2_06_41075_159830_15_X.jpeg",
+      "problem_key": "41075_159830",
+      "relative_path": "초등학교/구의_활용/559fb443ed7cc0c2_P6_2_06_41075_159830_15_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "9543b936237ee3f9",
+      "sample_id": "327706e728fff94d",
       "school_level": "초등학교",
-      "domain": "덧셈, 뺄셈, 나눗셈이 섞여 있는 식의 계산",
-      "filename": "P5_1_01_26824_89791_18_X.jpeg",
-      "relative_path": "초등학교/덧셈,_뺄셈,_나눗셈이_섞여_있는_식의_계산/9543b936237ee3f9_P5_1_01_26824_89791_18_X.jpeg",
+      "domain": "1보다 작은 소수끼리의 곱셈의 활용",
+      "filename": "P5_2_04_30698_110989_20_O.jpeg",
+      "problem_key": "30698_110989",
+      "relative_path": "초등학교/1보다_작은_소수끼리의_곱셈의_활용/327706e728fff94d_P5_2_04_30698_110989_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "23ebb6a3d084c166",
+      "school_level": "초등학교",
+      "domain": "분수의 크기 비교하기",
+      "filename": "P3_1_06_26102_163516_3_O.jpeg",
+      "problem_key": "26102_163516",
+      "relative_path": "초등학교/분수의_크기_비교하기/23ebb6a3d084c166_P3_1_06_26102_163516_3_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "4c5e5253c5b9dd5e",
+      "school_level": "초등학교",
+      "domain": "직육면체의 겉넓이의 활용",
+      "filename": "P6_1_06_19238_37970_13_X.jpeg",
+      "problem_key": "19238_37970",
+      "relative_path": "초등학교/직육면체의_겉넓이의_활용/4c5e5253c5b9dd5e_P6_1_06_19238_37970_13_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "0b935dc9c0604ae4",
+      "sample_id": "c4ecbda80976c956",
       "school_level": "초등학교",
-      "domain": "대분수의 곱셈",
-      "filename": "P5_2_02_40467_157861_2_O.jpeg",
-      "relative_path": "초등학교/대분수의_곱셈/0b935dc9c0604ae4_P5_2_02_40467_157861_2_O.jpeg",
+      "domain": "이등변삼각형의 성질",
+      "filename": "P4_2_02_22801_73631_2_X.jpeg",
+      "problem_key": "22801_73631",
+      "relative_path": "초등학교/이등변삼각형의_성질/c4ecbda80976c956_P4_2_02_22801_73631_2_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "b7e309cab1016f7a",
+      "school_level": "초등학교",
+      "domain": "분수의 크기 비교하기",
+      "filename": "P3_1_06_26103_163518_10_X.jpeg",
+      "problem_key": "26103_163518",
+      "relative_path": "초등학교/분수의_크기_비교하기/b7e309cab1016f7a_P3_1_06_26103_163518_10_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "1757eb4a8b889c9a",
+      "school_level": "초등학교",
+      "domain": "분모가 같은 가분수와 대분수의 크기 비교 _ 가분수를 대분수로",
+      "filename": "P3_2_04_24215_82141_14_O.jpeg",
+      "problem_key": "24215_82141",
+      "relative_path": "초등학교/분모가_같은_가분수와_대분수의_크기_비교___가분수를_대분수로/1757eb4a8b889c9a_P3_2_04_24215_82141_14_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "eeaee71a11a16909",
+      "sample_id": "a438cd200922dee9",
       "school_level": "초등학교",
-      "domain": "직각 알아보기",
-      "filename": "P3_1_02_23246_64070_15_O.jpeg",
-      "relative_path": "초등학교/직각_알아보기/eeaee71a11a16909_P3_1_02_23246_64070_15_O.jpeg",
+      "domain": "곱셈과 나눗셈의 관계",
+      "filename": "P3_1_03_25910_135631_15_O.jpeg",
+      "problem_key": "25910_135631",
+      "relative_path": "초등학교/곱셈과_나눗셈의_관계/a438cd200922dee9_P3_1_03_25910_135631_15_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "d8f253120fd4f4a8",
+      "sample_id": "1797d1c299dd77a2",
       "school_level": "초등학교",
-      "domain": "대응 관계를 식으로 나타내기",
-      "filename": "P5_1_03_34504_137645_14_O.jpeg",
-      "relative_path": "초등학교/대응_관계를_식으로_나타내기/d8f253120fd4f4a8_P5_1_03_34504_137645_14_O.jpeg",
+      "domain": "소수 두 자리 수의 덧셈의 활용",
+      "filename": "P4_2_03_40170_156794_4_O.jpeg",
+      "problem_key": "40170_156794",
+      "relative_path": "초등학교/소수_두_자리_수의_덧셈의_활용/1797d1c299dd77a2_P4_2_03_40170_156794_4_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "2f1dfc523d7f6996",
+      "sample_id": "582244f00014b349",
       "school_level": "초등학교",
-      "domain": "직각 알아보기",
-      "filename": "P3_1_02_23246_64070_8_O.jpeg",
-      "relative_path": "초등학교/직각_알아보기/2f1dfc523d7f6996_P3_1_02_23246_64070_8_O.jpeg",
+      "domain": "(대분수)X(자연수)에서 대분수를 가분수로 바꾸어 계산하기",
+      "filename": "P5_2_02_16217_38235_1_X.jpeg",
+      "problem_key": "16217_38235",
+      "relative_path": "초등학교/(대분수)X(자연수)에서_대분수를_가분수로_바꾸어_계산하기/582244f00014b349_P5_2_02_16217_38235_1_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "993db0d6e777d723",
+      "school_level": "초등학교",
+      "domain": "각의 크기에 따라 분류하기",
+      "filename": "P4_1_02_26187_161023_4_O.jpeg",
+      "problem_key": "26187_161023",
+      "relative_path": "초등학교/각의_크기에_따라_분류하기/993db0d6e777d723_P4_1_02_26187_161023_4_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ebc7c11de798e650",
+      "sample_id": "5c73695cde1ac357",
       "school_level": "초등학교",
-      "domain": "내림이 있는 (몇십)÷(몇) 알아보기",
-      "filename": "P3_2_02_38858_153650_20_O.jpeg",
-      "relative_path": "초등학교/내림이_있는_(몇십)÷(몇)_알아보기/ebc7c11de798e650_P3_2_02_38858_153650_20_O.jpeg",
+      "domain": "억",
+      "filename": "P4_1_01_34228_159983_12_O.jpeg",
+      "problem_key": "34228_159983",
+      "relative_path": "초등학교/억/5c73695cde1ac357_P4_1_01_34228_159983_12_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "faa2c1198febfd5e",
+      "sample_id": "802645d93c8908d2",
       "school_level": "초등학교",
-      "domain": "소수 한 자리 수의 덧셈의 활용",
-      "filename": "P4_2_03_24664_74933_3_O.jpeg",
-      "relative_path": "초등학교/소수_한_자리_수의_덧셈의_활용/faa2c1198febfd5e_P4_2_03_24664_74933_3_O.jpeg",
+      "domain": "올림 알아보기",
+      "filename": "P5_2_01_40245_157128_7_X.jpeg",
+      "problem_key": "40245_157128",
+      "relative_path": "초등학교/올림_알아보기/802645d93c8908d2_P5_2_01_40245_157128_7_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "529573b329dd65a9",
+      "school_level": "초등학교",
+      "domain": "똑같이 나누기",
+      "filename": "P3_1_03_41488_161088_11_X.jpeg",
+      "problem_key": "41488_161088",
+      "relative_path": "초등학교/똑같이_나누기/529573b329dd65a9_P3_1_03_41488_161088_11_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "dd363a5ad5d0894f",
+      "school_level": "초등학교",
+      "domain": "비례식의 성질 활용",
+      "filename": "P6_2_04_33966_133541_20_O.jpeg",
+      "problem_key": "33966_133541",
+      "relative_path": "초등학교/비례식의_성질_활용/dd363a5ad5d0894f_P6_2_04_33966_133541_20_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "75a7f2468403106f",
+      "sample_id": "992490ac97ebb7b0",
       "school_level": "초등학교",
-      "domain": "비율이 사용되는 경우 알아보기",
-      "filename": "P6_1_04_42577_166243_18_O.jpeg",
-      "relative_path": "초등학교/비율이_사용되는_경우_알아보기/75a7f2468403106f_P6_1_04_42577_166243_18_O.jpeg",
+      "domain": "1보다 작은 소수 알아보기",
+      "filename": "P3_1_06_22214_57362_15_O.jpeg",
+      "problem_key": "22214_57362",
+      "relative_path": "초등학교/1보다_작은_소수_알아보기/992490ac97ebb7b0_P3_1_06_22214_57362_15_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "a00208195fbec48c",
+      "sample_id": "8d390c5015450f07",
       "school_level": "초등학교",
-      "domain": "(진분수)+(진분수)",
-      "filename": "P4_2_01_24360_72685_2_O.jpeg",
-      "relative_path": "초등학교/(진분수)+(진분수)/a00208195fbec48c_P4_2_01_24360_72685_2_O.jpeg",
+      "domain": "대응 관계",
+      "filename": "P5_1_03_34499_137358_5_X.jpeg",
+      "problem_key": "34499_137358",
+      "relative_path": "초등학교/대응_관계/8d390c5015450f07_P5_1_03_34499_137358_5_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "aae23e8f15803073",
+      "school_level": "초등학교",
+      "domain": "표를 보고 내용 알아보기",
+      "filename": "P3_2_06_24317_72504_1_O.jpeg",
+      "problem_key": "24317_72504",
+      "relative_path": "초등학교/표를_보고_내용_알아보기/aae23e8f15803073_P3_2_06_24317_72504_1_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ba3d0a3cf4639637",
+      "sample_id": "ae5fd9540c10e2e8",
+      "school_level": "초등학교",
+      "domain": "꺾은선그래프를 보고 내용 알아보기",
+      "filename": "P4_2_05_33351_129197_7_X.jpeg",
+      "problem_key": "33351_129197",
+      "relative_path": "초등학교/꺾은선그래프를_보고_내용_알아보기/ae5fd9540c10e2e8_P4_2_05_33351_129197_7_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "0dcab2a9658b579b",
+      "school_level": "초등학교",
+      "domain": "비 알아보기",
+      "filename": "P6_1_04_18597_36792_14_O.jpeg",
+      "problem_key": "18597_36792",
+      "relative_path": "초등학교/비_알아보기/0dcab2a9658b579b_P6_1_04_18597_36792_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e9a2f68ee0613ed0",
+      "school_level": "초등학교",
+      "domain": "(몇십몇)x(몇십몇) 알아보기",
+      "filename": "P3_2_01_32598_125968_14_X.jpeg",
+      "problem_key": "32598_125968",
+      "relative_path": "초등학교/(몇십몇)x(몇십몇)_알아보기/e9a2f68ee0613ed0_P3_2_01_32598_125968_14_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "52acf9c125720393",
+      "school_level": "초등학교",
+      "domain": "내림이 있고 나머지가 있는 (몇십몇)÷(몇) 알아보기",
+      "filename": "P3_2_02_23797_68916_10_O.jpeg",
+      "problem_key": "23797_68916",
+      "relative_path": "초등학교/내림이_있고_나머지가_있는_(몇십몇)÷(몇)_알아보기/52acf9c125720393_P3_2_02_23797_68916_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d7e6aa377f19efc2",
+      "school_level": "초등학교",
+      "domain": "십의 자리, 백의 자리에서 올림이 있는 (세 자리 수)×(한 자리 수)",
+      "filename": "P3_2_01_23565_66929_2_X.jpeg",
+      "problem_key": "23565_66929",
+      "relative_path": "초등학교/십의_자리,_백의_자리에서_올림이_있는_(세_자리_수)×(한_자리_수)/d7e6aa377f19efc2_P3_2_01_23565_66929_2_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "2844fe8e7c7c7784",
+      "school_level": "초등학교",
+      "domain": "(분수)×(자연수)",
+      "filename": "P5_2_02_16230_28881_15_O.jpeg",
+      "problem_key": "16230_28881",
+      "relative_path": "초등학교/(분수)×(자연수)/2844fe8e7c7c7784_P5_2_02_16230_28881_15_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5314b9fc18405fab",
+      "school_level": "초등학교",
+      "domain": "들이의 덧셈과 뺄셈",
+      "filename": "P3_2_05_32945_126587_16_O.jpeg",
+      "problem_key": "32945_126587",
+      "relative_path": "초등학교/들이의_덧셈과_뺄셈/5314b9fc18405fab_P3_2_05_32945_126587_16_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "82d67f04fc6a639b",
+      "school_level": "초등학교",
+      "domain": "소수 한 자리 수의 뺄셈",
+      "filename": "P4_2_03_24745_75230_1_O.jpeg",
+      "problem_key": "24745_75230",
+      "relative_path": "초등학교/소수_한_자리_수의_뺄셈/82d67f04fc6a639b_P4_2_03_24745_75230_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "151fa01958ea65af",
+      "school_level": "초등학교",
+      "domain": "지름을 알 때 원주 구하기",
+      "filename": "P6_2_05_18969_36638_17_X.jpeg",
+      "problem_key": "18969_36638",
+      "relative_path": "초등학교/지름을_알_때_원주_구하기/151fa01958ea65af_P6_2_05_18969_36638_17_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "319847d2956d5935",
+      "school_level": "초등학교",
+      "domain": "비례배분의 활용",
+      "filename": "P6_2_04_33972_133576_12_O.jpeg",
+      "problem_key": "33972_133576",
+      "relative_path": "초등학교/비례배분의_활용/319847d2956d5935_P6_2_04_33972_133576_12_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "365df4dead5940f7",
+      "school_level": "초등학교",
+      "domain": "올림 없는 (세 자리 수)x(한 자리 수) 알아보기",
+      "filename": "P3_2_01_23542_67361_11_O.jpeg",
+      "problem_key": "23542_67361",
+      "relative_path": "초등학교/올림_없는_(세_자리_수)x(한_자리_수)_알아보기/365df4dead5940f7_P3_2_01_23542_67361_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d977da534b711f1c",
+      "school_level": "초등학교",
+      "domain": "배수 알아보기",
+      "filename": "P5_1_02_15627_97094_7_X.jpeg",
+      "problem_key": "15627_97094",
+      "relative_path": "초등학교/배수_알아보기/d977da534b711f1c_P5_1_02_15627_97094_7_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "38758c7db6fec703",
+      "school_level": "초등학교",
+      "domain": "받아내림이 없는 세 자리 수의 뺄셈",
+      "filename": "P3_1_01_23226_63742_1_O.jpeg",
+      "problem_key": "23226_63742",
+      "relative_path": "초등학교/받아내림이_없는_세_자리_수의_뺄셈/38758c7db6fec703_P3_1_01_23226_63742_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "22851621b54bad81",
       "school_level": "초등학교",
       "domain": "모양 만들기",
-      "filename": "P4_2_06_25029_76659_5_O.jpeg",
-      "relative_path": "초등학교/모양_만들기/ba3d0a3cf4639637_P4_2_06_25029_76659_5_O.jpeg",
+      "filename": "P4_2_06_25039_76717_1_O.jpeg",
+      "problem_key": "25039_76717",
+      "relative_path": "초등학교/모양_만들기/22851621b54bad81_P4_2_06_25039_76717_1_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "d0de9c8f78045c1e",
+      "sample_id": "c7562851159243ea",
+      "school_level": "초등학교",
+      "domain": "전체에서 부분의 넓이를 빼서 색칠한 부분의 넓이 구하기",
+      "filename": "P6_2_05_31133_114261_12_X.jpeg",
+      "problem_key": "31133_114261",
+      "relative_path": "초등학교/전체에서_부분의_넓이를_빼서_색칠한_부분의_넓이_구하기/c7562851159243ea_P6_2_05_31133_114261_12_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "0a4e26e71924eb04",
+      "school_level": "초등학교",
+      "domain": "내림이 있는 (몇십)÷(몇) 알아보기",
+      "filename": "P3_2_02_32603_126030_6_X.jpeg",
+      "problem_key": "32603_126030",
+      "relative_path": "초등학교/내림이_있는_(몇십)÷(몇)_알아보기/0a4e26e71924eb04_P3_2_02_32603_126030_6_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "936dff81c07d5128",
       "school_level": "초등학교",
       "domain": "몫의 소수 첫째 자리에 0이 있는 (소수) ÷ (자연수)",
-      "filename": "P6_1_03_27518_90937_12_O.jpeg",
-      "relative_path": "초등학교/몫의_소수_첫째_자리에_0이_있는_(소수)_÷_(자연수)/d0de9c8f78045c1e_P6_1_03_27518_90937_12_O.jpeg",
+      "filename": "P6_1_03_34860_139870_4_O.jpeg",
+      "problem_key": "34860_139870",
+      "relative_path": "초등학교/몫의_소수_첫째_자리에_0이_있는_(소수)_÷_(자연수)/936dff81c07d5128_P6_1_03_34860_139870_4_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "e02d5dfc80f0b2be",
+      "sample_id": "dca133a1d9462766",
       "school_level": "초등학교",
-      "domain": "전개도를 이용하여 직육면체의 겉넓이 구하기",
-      "filename": "P6_1_06_19189_98288_14_O.jpeg",
-      "relative_path": "초등학교/전개도를_이용하여_직육면체의_겉넓이_구하기/e02d5dfc80f0b2be_P6_1_06_19189_98288_14_O.jpeg",
+      "domain": "1보다 작은 소수 알아보기",
+      "filename": "P3_1_06_22214_57360_9_O.jpeg",
+      "problem_key": "22214_57360",
+      "relative_path": "초등학교/1보다_작은_소수_알아보기/dca133a1d9462766_P3_1_06_22214_57360_9_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "8f39b2dcca24e745",
+      "sample_id": "a84576c81621c7a2",
       "school_level": "초등학교",
-      "domain": "띠그래프 해석하기",
-      "filename": "P6_1_05_42725_166619_17_X.jpeg",
-      "relative_path": "초등학교/띠그래프_해석하기/8f39b2dcca24e745_P6_1_05_42725_166619_17_X.jpeg",
+      "domain": "전개도를 이용하여 정육면체의 겉넓이 구하기",
+      "filename": "P6_1_06_19175_37248_18_O.jpeg",
+      "problem_key": "19175_37248",
+      "relative_path": "초등학교/전개도를_이용하여_정육면체의_겉넓이_구하기/a84576c81621c7a2_P6_1_06_19175_37248_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e83f1dbf4c733ebf",
+      "school_level": "초등학교",
+      "domain": "크기가 같은 분수",
+      "filename": "P5_1_04_34534_137881_2_O.jpeg",
+      "problem_key": "34534_137881",
+      "relative_path": "초등학교/크기가_같은_분수/e83f1dbf4c733ebf_P5_1_04_34534_137881_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f5b528ab3289b51a",
+      "school_level": "초등학교",
+      "domain": "일이 일어날 가능성을 말과 수로 표현하기",
+      "filename": "P5_2_06_40749_158456_7_O.jpeg",
+      "problem_key": "40749_158456",
+      "relative_path": "초등학교/일이_일어날_가능성을_말과_수로_표현하기/f5b528ab3289b51a_P5_2_06_40749_158456_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "48233d5e1815784e",
+      "school_level": "초등학교",
+      "domain": "선대칭도형의 성질의 활용",
+      "filename": "P5_2_03_17304_33218_18_O.jpeg",
+      "problem_key": "17304_33218",
+      "relative_path": "초등학교/선대칭도형의_성질의_활용/48233d5e1815784e_P5_2_03_17304_33218_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "81edd6b74fd1bcd1",
+      "school_level": "초등학교",
+      "domain": "수직",
+      "filename": "P4_2_04_40199_157258_11_X.jpeg",
+      "problem_key": "40199_157258",
+      "relative_path": "초등학교/수직/81edd6b74fd1bcd1_P4_2_04_40199_157258_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "971c8705aab0c1d8",
+      "sample_id": "52037b0ce2974bad",
       "school_level": "초등학교",
-      "domain": "(몇십) × (몇)",
-      "filename": "P3_1_04_34335_136047_14_O.jpeg",
-      "relative_path": "초등학교/(몇십)_×_(몇)/971c8705aab0c1d8_P3_1_04_34335_136047_14_O.jpeg",
+      "domain": "일의 자리에서 올림이 있는 (몇십몇) × (몇)",
+      "filename": "P3_1_04_25948_136152_20_O.jpeg",
+      "problem_key": "25948_136152",
+      "relative_path": "초등학교/일의_자리에서_올림이_있는_(몇십몇)_×_(몇)/52037b0ce2974bad_P3_1_04_25948_136152_20_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ad41131dc68392de",
+      "sample_id": "46eaa62ae91cfce3",
       "school_level": "초등학교",
-      "domain": "점대칭도형의 성질의 활용",
-      "filename": "P5_2_03_40498_158222_14_O.jpeg",
-      "relative_path": "초등학교/점대칭도형의_성질의_활용/ad41131dc68392de_P5_2_03_40498_158222_14_O.jpeg",
+      "domain": "1÷(자연수)를 이용하여 1보다 큰 (자연수)÷(자연수)의 몫을 분수로 나타내기",
+      "filename": "P6_1_01_27082_96928_4_O.jpeg",
+      "problem_key": "27082_96928",
+      "relative_path": "초등학교/1÷(자연수)를_이용하여_1보다_큰_(자연수)÷(자연수)의_몫을_분수로_나타내기/46eaa62ae91cfce3_P6_1_01_27082_96928_4_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "e33f9ebc5d0c23c4",
+      "sample_id": "8002b1b6ecd2e2f2",
       "school_level": "초등학교",
-      "domain": "띠그래프의 활용",
-      "filename": "P6_1_05_28145_96628_4_X.jpeg",
-      "relative_path": "초등학교/띠그래프의_활용/e33f9ebc5d0c23c4_P6_1_05_28145_96628_4_X.jpeg",
+      "domain": "받아올림이 없는 세 자리 수의 덧셈을 어림하여 구하기",
+      "filename": "P3_1_01_21116_49501_10_X.jpeg",
+      "problem_key": "21116_49501",
+      "relative_path": "초등학교/받아올림이_없는_세_자리_수의_덧셈을_어림하여_구하기/8002b1b6ecd2e2f2_P3_1_01_21116_49501_10_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "28016b956c680bd0",
+      "sample_id": "55c15993674b5609",
+      "school_level": "초등학교",
+      "domain": "(대분수)÷(분수)를 분수의 곱셈으로 바꾸어 계산하기",
+      "filename": "P6_2_01_18238_35124_19_O.jpeg",
+      "problem_key": "18238_35124",
+      "relative_path": "초등학교/(대분수)÷(분수)를_분수의_곱셈으로_바꾸어_계산하기/55c15993674b5609_P6_2_01_18238_35124_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ac0c7c5be2131858",
+      "school_level": "초등학교",
+      "domain": "나누어 주고 남는 양 활용",
+      "filename": "P6_2_02_40921_159300_18_O.jpeg",
+      "problem_key": "40921_159300",
+      "relative_path": "초등학교/나누어_주고_남는_양_활용/ac0c7c5be2131858_P6_2_02_40921_159300_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "3f1f2121981c6708",
+      "school_level": "초등학교",
+      "domain": "받아올림이 있는 분모가 다른 대분수의 덧셈, 자연수끼리 분수끼리 덧셈, 대분수를 가분수로 계산",
+      "filename": "P5_1_05_19715_41119_12_O.jpeg",
+      "problem_key": "19715_41119",
+      "relative_path": "초등학교/받아올림이_있는_분모가_다른_대분수의_덧셈,_자연수끼리_분수끼리_덧셈,_대분수를_가분수로_계산/3f1f2121981c6708_P5_1_05_19715_41119_12_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "255530a8ee6c4068",
+      "school_level": "초등학교",
+      "domain": "0.1의 개수를 이용하여 소수의 크기 비교하기",
+      "filename": "P3_1_06_42055_163667_12_O.jpeg",
+      "problem_key": "42055_163667",
+      "relative_path": "초등학교/0.1의_개수를_이용하여_소수의_크기_비교하기/255530a8ee6c4068_P3_1_06_42055_163667_12_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "101e545910c28999",
+      "school_level": "초등학교",
+      "domain": "원주의 활용",
+      "filename": "P6_2_05_19080_38058_8_O.jpeg",
+      "problem_key": "19080_38058",
+      "relative_path": "초등학교/원주의_활용/101e545910c28999_P6_2_05_19080_38058_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "9ae33fc68102825c",
+      "school_level": "초등학교",
+      "domain": "소수점 아래 0을 내려 계산해야 하는 (소수) ÷ (자연수)",
+      "filename": "P6_1_03_27490_97383_3_O.jpeg",
+      "problem_key": "27490_97383",
+      "relative_path": "초등학교/소수점_아래_0을_내려_계산해야_하는_(소수)_÷_(자연수)/9ae33fc68102825c_P6_1_03_27490_97383_3_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "40c83815c365cc30",
+      "school_level": "초등학교",
+      "domain": "(소수)×(자연수)의 활용",
+      "filename": "P5_2_04_17119_111358_14_O.jpeg",
+      "problem_key": "17119_111358",
+      "relative_path": "초등학교/(소수)×(자연수)의_활용/40c83815c365cc30_P5_2_04_17119_111358_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "614ae4059ed8f3dd",
+      "school_level": "초등학교",
+      "domain": "계산이 맞는지 확인하기",
+      "filename": "P3_2_02_32688_126122_5_O.jpeg",
+      "problem_key": "32688_126122",
+      "relative_path": "초등학교/계산이_맞는지_확인하기/614ae4059ed8f3dd_P3_2_02_32688_126122_5_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f16f9a1e3c2cc80c",
+      "school_level": "초등학교",
+      "domain": "삼각형과 사각형의 각의 크기의 합",
+      "filename": "P4_1_02_22762_61882_8_O.jpeg",
+      "problem_key": "22762_61882",
+      "relative_path": "초등학교/삼각형과_사각형의_각의_크기의_합/f16f9a1e3c2cc80c_P4_1_02_22762_61882_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "2e64942859cb3c25",
+      "school_level": "초등학교",
+      "domain": "(자연수)÷(소수 두 자리 수)_세로셈",
+      "filename": "P6_2_02_40916_159288_9_O.jpeg",
+      "problem_key": "40916_159288",
+      "relative_path": "초등학교/(자연수)÷(소수_두_자리_수)_세로셈/2e64942859cb3c25_P6_2_02_40916_159288_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d2a627f9f35943f4",
+      "school_level": "초등학교",
+      "domain": "몫이 1보다 작은 (자연수)÷(자연수)",
+      "filename": "P6_1_01_42161_164199_18_O.jpeg",
+      "problem_key": "42161_164199",
+      "relative_path": "초등학교/몫이_1보다_작은_(자연수)÷(자연수)/d2a627f9f35943f4_P6_1_01_42161_164199_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1341c6fa852c832f",
+      "school_level": "초등학교",
+      "domain": "두 분모의 최소공배수를 공통분모로 하여 통분하기",
+      "filename": "P5_1_04_42527_166021_12_X.jpeg",
+      "problem_key": "42527_166021",
+      "relative_path": "초등학교/두_분모의_최소공배수를_공통분모로_하여_통분하기/1341c6fa852c832f_P5_1_04_42527_166021_12_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "e600eaf6183cafbd",
+      "school_level": "초등학교",
+      "domain": "부분과 전체의 크기 알아보기",
+      "filename": "P3_1_06_23290_64169_14_O.jpeg",
+      "problem_key": "23290_64169",
+      "relative_path": "초등학교/부분과_전체의_크기_알아보기/e600eaf6183cafbd_P3_1_06_23290_64169_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1244c24cd3934cb7",
+      "school_level": "초등학교",
+      "domain": "덧셈, 뺄셈, 곱셈이 섞여 있는 식의 계산",
+      "filename": "P5_1_01_26771_88798_1_O.jpeg",
+      "problem_key": "26771_88798",
+      "relative_path": "초등학교/덧셈,_뺄셈,_곱셈이_섞여_있는_식의_계산/1244c24cd3934cb7_P5_1_01_26771_88798_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5c05f6c1b401e7bf",
+      "school_level": "초등학교",
+      "domain": "분모가 같은 (분수)÷(단위분수) 알아보기",
+      "filename": "P6_2_01_18094_34775_4_X.jpeg",
+      "problem_key": "18094_34775",
+      "relative_path": "초등학교/분모가_같은_(분수)÷(단위분수)_알아보기/5c05f6c1b401e7bf_P6_2_01_18094_34775_4_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "56104e75678e0e2d",
+      "school_level": "초등학교",
+      "domain": "나눗셈의 몫을 곱셈식으로 구하기",
+      "filename": "P3_1_03_23478_65250_1_O.jpeg",
+      "problem_key": "23478_65250",
+      "relative_path": "초등학교/나눗셈의_몫을_곱셈식으로_구하기/56104e75678e0e2d_P3_1_03_23478_65250_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "613c57c397ad716e",
+      "school_level": "초등학교",
+      "domain": "원그래프 해석하기",
+      "filename": "P6_1_05_28178_96452_8_X.jpeg",
+      "problem_key": "28178_96452",
+      "relative_path": "초등학교/원그래프_해석하기/613c57c397ad716e_P6_1_05_28178_96452_8_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "0296a2d91ab48d66",
+      "school_level": "초등학교",
+      "domain": "나눗셈의 몫을 곱셈식으로 구하기",
+      "filename": "P3_1_03_23479_65261_7_O.jpeg",
+      "problem_key": "23479_65261",
+      "relative_path": "초등학교/나눗셈의_몫을_곱셈식으로_구하기/0296a2d91ab48d66_P3_1_03_23479_65261_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d66c233f9d69b8c8",
+      "school_level": "초등학교",
+      "domain": "사각형의 둘레를 구해 볼까요",
+      "filename": "P5_1_06_34590_138309_1_X.jpeg",
+      "problem_key": "34590_138309",
+      "relative_path": "초등학교/사각형의_둘레를_구해_볼까요/d66c233f9d69b8c8_P5_1_06_34590_138309_1_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "25e26d16052f1081",
+      "school_level": "초등학교",
+      "domain": "(분수):(분수)의 비를 간단한 자연수 비로 나타내기",
+      "filename": "P6_2_04_30409_110200_15_O.jpeg",
+      "problem_key": "30409_110200",
+      "relative_path": "초등학교/(분수):(분수)의_비를_간단한_자연수_비로_나타내기/25e26d16052f1081_P6_2_04_30409_110200_15_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "033eea7a670fe0b5",
+      "school_level": "초등학교",
+      "domain": "모양 만들기",
+      "filename": "P4_2_06_25045_82805_15_O.jpeg",
+      "problem_key": "25045_82805",
+      "relative_path": "초등학교/모양_만들기/033eea7a670fe0b5_P4_2_06_25045_82805_15_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1c46292ff2cc7ec5",
       "school_level": "초등학교",
       "domain": "소수 두 자리 수의 뺄셈의 활용",
-      "filename": "P4_2_03_24776_75309_17_O.jpeg",
-      "relative_path": "초등학교/소수_두_자리_수의_뺄셈의_활용/28016b956c680bd0_P4_2_03_24776_75309_17_O.jpeg",
-      "is_answer": true
+      "filename": "P4_2_03_24782_75355_8_X.jpeg",
+      "problem_key": "24782_75355",
+      "relative_path": "초등학교/소수_두_자리_수의_뺄셈의_활용/1c46292ff2cc7ec5_P4_2_03_24782_75355_8_X.jpeg",
+      "is_answer": false
     },
     {
-      "sample_id": "0f9e14511b8ab069",
+      "sample_id": "d4ac60f77c9bd34c",
       "school_level": "초등학교",
-      "domain": "받아내림이 있는 분모가 다른 대분수의 뺄셈, 자연수끼리 분수끼리 덧셈, 대분수를 가분수로 계산",
-      "filename": "P5_1_05_16185_39756_8_O.jpeg",
-      "relative_path": "초등학교/받아내림이_있는_분모가_다른_대분수의_뺄셈,_자연수끼리_분수끼리_덧셈,_대분수를_가분수로_계산/0f9e14511b8ab069_P5_1_05_16185_39756_8_O.jpeg",
-      "is_answer": true
+      "domain": "곱셈과 나눗셈이 섞여 있는 식의 계산",
+      "filename": "P5_1_01_26763_89629_12_X.jpeg",
+      "problem_key": "26763_89629",
+      "relative_path": "초등학교/곱셈과_나눗셈이_섞여_있는_식의_계산/d4ac60f77c9bd34c_P5_1_01_26763_89629_12_X.jpeg",
+      "is_answer": false
     },
     {
-      "sample_id": "cae210907880f0e4",
+      "sample_id": "edae5592e6c2177e",
       "school_level": "초등학교",
-      "domain": "(자연수) ÷ (자연수)의 몫의 소수 표현과 몫의 소수점 위치를 확인하기",
-      "filename": "P6_1_03_34864_139913_16_O.jpeg",
-      "relative_path": "초등학교/(자연수)_÷_(자연수)의_몫의_소수_표현과_몫의_소수점_위치를_확인하기/cae210907880f0e4_P6_1_03_34864_139913_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7ad1312785abc81c",
-      "school_level": "중학교",
-      "domain": "삼각비와 넓이",
-      "filename": "M3_2_05_34300_135825_17_O.jpeg",
-      "relative_path": "중학교/삼각비와_넓이/7ad1312785abc81c_M3_2_05_34300_135825_17_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "9d9084ecc2da3b7c",
-      "school_level": "중학교",
-      "domain": "일차함수의 활용(4)-속력",
-      "filename": "M2_1_05_25743_83465_4_X.jpeg",
-      "relative_path": "중학교/일차함수의_활용(4)-속력/9d9084ecc2da3b7c_M2_1_05_25743_83465_4_X.jpeg",
+      "domain": "비례식 알아보기",
+      "filename": "P6_2_04_40842_159550_14_X.jpeg",
+      "problem_key": "40842_159550",
+      "relative_path": "초등학교/비례식_알아보기/edae5592e6c2177e_P6_2_04_40842_159550_14_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "4f4d27bcb8025e0c",
-      "school_level": "중학교",
-      "domain": "새로운 계산 기호",
-      "filename": "M1_1_02_5586_53658_5_X.jpeg",
-      "relative_path": "중학교/새로운_계산_기호/4f4d27bcb8025e0c_M1_1_02_5586_53658_5_X.jpeg",
+      "sample_id": "82e0cbebb9ca6ed8",
+      "school_level": "초등학교",
+      "domain": "올림, 버림, 반올림을 활용한 문제 해결",
+      "filename": "P5_2_01_33497_130802_9_O.jpeg",
+      "problem_key": "33497_130802",
+      "relative_path": "초등학교/올림,_버림,_반올림을_활용한_문제_해결/82e0cbebb9ca6ed8_P5_2_01_33497_130802_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "bcd747df65237b25",
+      "school_level": "초등학교",
+      "domain": "각뿔의 구성 요소 수 구하기",
+      "filename": "P6_1_02_17979_98357_20_O.jpeg",
+      "problem_key": "17979_98357",
+      "relative_path": "초등학교/각뿔의_구성_요소_수_구하기/bcd747df65237b25_P6_1_02_17979_98357_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ced21872418a9382",
+      "school_level": "초등학교",
+      "domain": "모양 채우기",
+      "filename": "P4_2_06_40449_158040_7_O.jpeg",
+      "problem_key": "40449_158040",
+      "relative_path": "초등학교/모양_채우기/ced21872418a9382_P4_2_06_40449_158040_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "b68d3feb0341a01e",
+      "school_level": "초등학교",
+      "domain": "간단한 자연수의 비로 나타내기 활용",
+      "filename": "P6_2_04_33938_133477_11_X.jpeg",
+      "problem_key": "33938_133477",
+      "relative_path": "초등학교/간단한_자연수의_비로_나타내기_활용/b68d3feb0341a01e_P6_2_04_33938_133477_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "d661beb17e3817da",
-      "school_level": "중학교",
-      "domain": "y=ax의 그래프의 활용",
-      "filename": "M1_1_04_34473_163470_1_X.jpeg",
-      "relative_path": "중학교/y=ax의_그래프의_활용/d661beb17e3817da_M1_1_04_34473_163470_1_X.jpeg",
+      "sample_id": "67ebb9668e2e130e",
+      "school_level": "초등학교",
+      "domain": "막대그래프 알아보기",
+      "filename": "P4_1_05_23106_63769_9_O.jpeg",
+      "problem_key": "23106_63769",
+      "relative_path": "초등학교/막대그래프_알아보기/67ebb9668e2e130e_P4_1_05_23106_63769_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "92517ebb10614caf",
+      "school_level": "초등학교",
+      "domain": "내림이 있는 (몇십)÷(몇) 알아보기",
+      "filename": "P3_2_02_23742_67903_20_O.jpeg",
+      "problem_key": "23742_67903",
+      "relative_path": "초등학교/내림이_있는_(몇십)÷(몇)_알아보기/92517ebb10614caf_P3_2_02_23742_67903_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e98dae97b513af10",
+      "school_level": "초등학교",
+      "domain": "정다각형의 둘레 구하기",
+      "filename": "P5_1_06_27771_95712_16_O.jpeg",
+      "problem_key": "27771_95712",
+      "relative_path": "초등학교/정다각형의_둘레_구하기/e98dae97b513af10_P5_1_06_27771_95712_16_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "01c9d82d5fbe1304",
+      "school_level": "초등학교",
+      "domain": "계산식의 활용",
+      "filename": "P4_1_06_42077_163725_11_O.jpeg",
+      "problem_key": "42077_163725",
+      "relative_path": "초등학교/계산식의_활용/01c9d82d5fbe1304_P4_1_06_42077_163725_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "0439facc2b61f43b",
+      "school_level": "초등학교",
+      "domain": "약분 알아보기",
+      "filename": "P5_1_04_42431_165225_9_O.jpeg",
+      "problem_key": "42431_165225",
+      "relative_path": "초등학교/약분_알아보기/0439facc2b61f43b_P5_1_04_42431_165225_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "31640ff6a4f0939c",
+      "school_level": "초등학교",
+      "domain": "무게 비교",
+      "filename": "P3_2_05_39499_154591_19_O.jpeg",
+      "problem_key": "39499_154591",
+      "relative_path": "초등학교/무게_비교/31640ff6a4f0939c_P3_2_05_39499_154591_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5529a5dcf9081cbc",
+      "school_level": "초등학교",
+      "domain": "받아올림이 있는 세 자리 수의 덧셈",
+      "filename": "P3_1_01_25803_135352_5_O.jpeg",
+      "problem_key": "25803_135352",
+      "relative_path": "초등학교/받아올림이_있는_세_자리_수의_덧셈/5529a5dcf9081cbc_P3_1_01_25803_135352_5_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "33bba204877d0612",
+      "school_level": "초등학교",
+      "domain": "덧셈, 뺄셈, 곱셈, 나눗셈이 섞여 있는 식의 계산",
+      "filename": "P5_1_01_26922_96874_13_O.jpeg",
+      "problem_key": "26922_96874",
+      "relative_path": "초등학교/덧셈,_뺄셈,_곱셈,_나눗셈이_섞여_있는_식의_계산/33bba204877d0612_P5_1_01_26922_96874_13_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "66451023a54ce538",
+      "school_level": "초등학교",
+      "domain": "덧셈과 뺄셈이 섞여 있는 식의 계산",
+      "filename": "P5_1_01_26745_96866_15_X.jpeg",
+      "problem_key": "26745_96866",
+      "relative_path": "초등학교/덧셈과_뺄셈이_섞여_있는_식의_계산/66451023a54ce538_P5_1_01_26745_96866_15_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "bac63b8ef7507277",
-      "school_level": "중학교",
-      "domain": "일차함수의 식 활용",
-      "filename": "M2_1_05_11794_87825_15_O.jpeg",
-      "relative_path": "중학교/일차함수의_식_활용/bac63b8ef7507277_M2_1_05_11794_87825_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "e8ee069fe91f3f6b",
-      "school_level": "중학교",
-      "domain": "다각형의 대각선의 총 개수(2)-대각선의 총 개수가 주어진 경우",
-      "filename": "M1_2_06_38898_153750_2_X.jpeg",
-      "relative_path": "중학교/다각형의_대각선의_총_개수(2)-대각선의_총_개수가_주어진_경우/e8ee069fe91f3f6b_M1_2_06_38898_153750_2_X.jpeg",
+      "sample_id": "0e0837dc59d174ec",
+      "school_level": "초등학교",
+      "domain": "(자연수):(자연수)의 비를 간단한 자연수 비로 나타내기",
+      "filename": "P6_2_04_20193_55499_15_X.jpeg",
+      "problem_key": "20193_55499",
+      "relative_path": "초등학교/(자연수):(자연수)의_비를_간단한_자연수_비로_나타내기/0e0837dc59d174ec_P6_2_04_20193_55499_15_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "a7bf42879b971113",
-      "school_level": "중학교",
-      "domain": "특정한 사람의 자리를 고정하여 한 줄로 세우는 경우의 수",
-      "filename": "M2_2_09_8056_7712_9_O.jpeg",
-      "relative_path": "중학교/특정한_사람의_자리를_고정하여_한_줄로_세우는_경우의_수/a7bf42879b971113_M2_2_09_8056_7712_9_O.jpeg",
+      "sample_id": "72fdd7f3c81c243e",
+      "school_level": "초등학교",
+      "domain": "그림그래프의 활용",
+      "filename": "P6_1_05_34953_140451_16_O.jpeg",
+      "problem_key": "34953_140451",
+      "relative_path": "초등학교/그림그래프의_활용/72fdd7f3c81c243e_P6_1_05_34953_140451_16_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "921b72da0801831a",
-      "school_level": "중학교",
-      "domain": "대칭의 활용",
-      "filename": "M1_1_04_7242_2634_10_O.jpeg",
-      "relative_path": "중학교/대칭의_활용/921b72da0801831a_M1_1_04_7242_2634_10_O.jpeg",
+      "sample_id": "90f3b8de3b13f185",
+      "school_level": "초등학교",
+      "domain": "평행사변형의 성질 활용",
+      "filename": "P4_2_04_33259_129079_14_O.jpeg",
+      "problem_key": "33259_129079",
+      "relative_path": "초등학교/평행사변형의_성질_활용/90f3b8de3b13f185_P4_2_04_33259_129079_14_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "7f3be81879a5a2b0",
-      "school_level": "중학교",
-      "domain": "계수가 분수와 소수인 일차부등식의 풀이",
-      "filename": "M2_1_03_10731_88198_5_O.jpeg",
-      "relative_path": "중학교/계수가_분수와_소수인_일차부등식의_풀이/7f3be81879a5a2b0_M2_1_03_10731_88198_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0e0a578efbbda9c3",
-      "school_level": "중학교",
-      "domain": "사다리꼴에서 높이가 같은 두 삼각형의 넓이",
-      "filename": "M2_2_06_19149_45132_15_O.jpeg",
-      "relative_path": "중학교/사다리꼴에서_높이가_같은_두_삼각형의_넓이/0e0a578efbbda9c3_M2_2_06_19149_45132_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0493e088bc7616e8",
-      "school_level": "중학교",
-      "domain": "과부족 문제 (2)",
-      "filename": "M1_1_03_6812_58752_11_O.jpeg",
-      "relative_path": "중학교/과부족_문제_(2)/0493e088bc7616e8_M1_1_03_6812_58752_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7536a530c4496fa1",
-      "school_level": "중학교",
-      "domain": "x축 또는 y축 위의 점의 좌표",
-      "filename": "M1_1_04_7195_58923_1_O.jpeg",
-      "relative_path": "중학교/x축_또는_y축_위의_점의_좌표/7536a530c4496fa1_M1_1_04_7195_58923_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "56a30c430f4cc2cd",
-      "school_level": "중학교",
-      "domain": "삼각형의 외심의 활용(1)-∠x+∠y+∠z=90˚",
-      "filename": "M2_2_06_18186_39975_2_O.jpeg",
-      "relative_path": "중학교/삼각형의_외심의_활용(1)-∠x+∠y+∠z=90˚/56a30c430f4cc2cd_M2_2_06_18186_39975_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fc5f697c28fb5855",
-      "school_level": "중학교",
-      "domain": "서로 다른 두 점이 주어질 때 일차함수의 식 구하기",
-      "filename": "M2_1_05_11745_84521_13_X.jpeg",
-      "relative_path": "중학교/서로_다른_두_점이_주어질_때_일차함수의_식_구하기/fc5f697c28fb5855_M2_1_05_11745_84521_13_X.jpeg",
+      "sample_id": "f5b36b3fc3b987f9",
+      "school_level": "초등학교",
+      "domain": "그림그래프로 나타내기",
+      "filename": "P3_2_06_32965_126757_17_X.jpeg",
+      "problem_key": "32965_126757",
+      "relative_path": "초등학교/그림그래프로_나타내기/f5b36b3fc3b987f9_P3_2_06_32965_126757_17_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "63915d8f0de529eb",
-      "school_level": "중학교",
-      "domain": "일차부등식의 활용",
-      "filename": "M2_1_03_34530_137732_11_O.jpeg",
-      "relative_path": "중학교/일차부등식의_활용/63915d8f0de529eb_M2_1_03_34530_137732_11_O.jpeg",
+      "sample_id": "ca56a82f2fecdcbe",
+      "school_level": "초등학교",
+      "domain": "약수와 배수",
+      "filename": "P5_1_02_34426_137238_4_O.jpeg",
+      "problem_key": "34426_137238",
+      "relative_path": "초등학교/약수와_배수/ca56a82f2fecdcbe_P5_1_02_34426_137238_4_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "c86573c2fd31a166",
-      "school_level": "중학교",
-      "domain": "대표를 뽑을 때의 확률",
-      "filename": "M2_2_09_8509_9869_18_O.jpeg",
-      "relative_path": "중학교/대표를_뽑을_때의_확률/c86573c2fd31a166_M2_2_09_8509_9869_18_O.jpeg",
+      "sample_id": "3de8c29008ab555a",
+      "school_level": "초등학교",
+      "domain": "각기둥의 구성 요소 수 구하기",
+      "filename": "P6_1_02_17945_97149_13_O.jpeg",
+      "problem_key": "17945_97149",
+      "relative_path": "초등학교/각기둥의_구성_요소_수_구하기/3de8c29008ab555a_P6_1_02_17945_97149_13_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "026301844999f550",
-      "school_level": "중학교",
-      "domain": "중심각의 크기와 호의 길이(4)-이등변삼각형의 성질 이용",
-      "filename": "M1_2_06_15148_24496_1_O.jpeg",
-      "relative_path": "중학교/중심각의_크기와_호의_길이(4)-이등변삼각형의_성질_이용/026301844999f550_M1_2_06_15148_24496_1_O.jpeg",
+      "sample_id": "1d6a92029d8d243c",
+      "school_level": "초등학교",
+      "domain": "비율의 활용",
+      "filename": "P6_1_04_34873_139960_15_O.jpeg",
+      "problem_key": "34873_139960",
+      "relative_path": "초등학교/비율의_활용/1d6a92029d8d243c_P6_1_04_34873_139960_15_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "97978f5c652dbe5e",
-      "school_level": "중학교",
-      "domain": "일차함수 y=ax+b의 그래프 위의 점(1)",
-      "filename": "M2_1_05_11266_86163_12_O.jpeg",
-      "relative_path": "중학교/일차함수_y=ax+b의_그래프_위의_점(1)/97978f5c652dbe5e_M2_1_05_11266_86163_12_O.jpeg",
+      "sample_id": "7e4f3fbf7c54ebd3",
+      "school_level": "초등학교",
+      "domain": "(자연수)×(분수)",
+      "filename": "P5_2_02_19747_40741_8_O.jpeg",
+      "problem_key": "19747_40741",
+      "relative_path": "초등학교/(자연수)×(분수)/7e4f3fbf7c54ebd3_P5_2_02_19747_40741_8_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "94920cd444b17e24",
-      "school_level": "중학교",
-      "domain": "명중률, 타율",
-      "filename": "M2_2_09_8793_102306_17_X.jpeg",
-      "relative_path": "중학교/명중률,_타율/94920cd444b17e24_M2_2_09_8793_102306_17_X.jpeg",
+      "sample_id": "01c9aea481a640d9",
+      "school_level": "초등학교",
+      "domain": "받아올림이 있는 분모가 다른 대분수의 덧셈, 자연수끼리 분수끼리 덧셈, 대분수를 가분수로 계산",
+      "filename": "P5_1_05_34578_166093_1_O.jpeg",
+      "problem_key": "34578_166093",
+      "relative_path": "초등학교/받아올림이_있는_분모가_다른_대분수의_덧셈,_자연수끼리_분수끼리_덧셈,_대분수를_가분수로_계산/01c9aea481a640d9_P5_1_05_34578_166093_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "356d53786a2eca03",
+      "school_level": "초등학교",
+      "domain": "직육면체의 겉넓이의 활용",
+      "filename": "P6_1_06_34976_140584_1_X.jpeg",
+      "problem_key": "34976_140584",
+      "relative_path": "초등학교/직육면체의_겉넓이의_활용/356d53786a2eca03_P6_1_06_34976_140584_1_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "b7e981fab3bd41b8",
-      "school_level": "중학교",
-      "domain": "단항식과 다항식의 곱셈",
-      "filename": "M2_1_02_9904_10969_9_O.jpeg",
-      "relative_path": "중학교/단항식과_다항식의_곱셈/b7e981fab3bd41b8_M2_1_02_9904_10969_9_O.jpeg",
+      "sample_id": "32085214c5038dc6",
+      "school_level": "초등학교",
+      "domain": "모양 채우기의 활용",
+      "filename": "P4_2_06_33368_129794_7_O.jpeg",
+      "problem_key": "33368_129794",
+      "relative_path": "초등학교/모양_채우기의_활용/32085214c5038dc6_P4_2_06_33368_129794_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "9e7924fdb45688f0",
+      "sample_id": "af44cc1d6cf5d145",
       "school_level": "중학교",
-      "domain": "서로 다른 두 점이 주어질 때 일차함수의 식 구하기",
-      "filename": "M2_1_05_11737_84449_19_O.jpeg",
-      "relative_path": "중학교/서로_다른_두_점이_주어질_때_일차함수의_식_구하기/9e7924fdb45688f0_M2_1_05_11737_84449_19_O.jpeg",
+      "domain": "예금액에 대한 일차부등식의 활용",
+      "filename": "M2_1_03_10874_87004_18_O.jpeg",
+      "problem_key": "10874_87004",
+      "relative_path": "중학교/예금액에_대한_일차부등식의_활용/af44cc1d6cf5d145_M2_1_03_10874_87004_18_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "e0c2357e871387bd",
+      "sample_id": "267e50075b629a02",
       "school_level": "중학교",
-      "domain": "덧셈, 뺄셈, 곱셈, 나눗셈의 혼합 계산",
-      "filename": "M1_1_02_22053_57386_13_O.jpeg",
-      "relative_path": "중학교/덧셈,_뺄셈,_곱셈,_나눗셈의_혼합_계산/e0c2357e871387bd_M1_1_02_22053_57386_13_O.jpeg",
+      "domain": "여러 가지 확률1-구슬, 달력, 사다리",
+      "filename": "M2_2_09_34915_140267_16_O.jpeg",
+      "problem_key": "34915_140267",
+      "relative_path": "중학교/여러_가지_확률1-구슬,_달력,_사다리/267e50075b629a02_M2_2_09_34915_140267_16_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "8db6f9347e7d7927",
+      "sample_id": "3f64780c57f81341",
       "school_level": "중학교",
-      "domain": "제곱근의 성질을 이용하여 제곱근 구하기",
-      "filename": "M3_1_01_11977_116171_2_O.jpeg",
-      "relative_path": "중학교/제곱근의_성질을_이용하여_제곱근_구하기/8db6f9347e7d7927_M3_1_01_11977_116171_2_O.jpeg",
+      "domain": "포물선 y=a(x-p)²+q를 평행이동한 포물선의 식 구하기",
+      "filename": "M3_1_04_12926_121826_7_O.jpeg",
+      "problem_key": "12926_121826",
+      "relative_path": "중학교/포물선_y=a(x-p)²+q를_평행이동한_포물선의_식_구하기/3f64780c57f81341_M3_1_04_12926_121826_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "37ac70f7ec5b4a44",
+      "sample_id": "845efacce0c9363d",
       "school_level": "중학교",
-      "domain": "평행사변형의 활용",
-      "filename": "M2_2_06_34798_139388_9_O.jpeg",
-      "relative_path": "중학교/평행사변형의_활용/37ac70f7ec5b4a44_M2_2_06_34798_139388_9_O.jpeg",
+      "domain": "연립방정식의 풀이-대입법",
+      "filename": "M2_1_04_25248_80035_11_O.jpeg",
+      "problem_key": "25248_80035",
+      "relative_path": "중학교/연립방정식의_풀이-대입법/845efacce0c9363d_M2_1_04_25248_80035_11_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "6f016517a1a84d78",
+      "sample_id": "636ca1f57907e08a",
       "school_level": "중학교",
-      "domain": "일렬로 세울 때의 확률",
-      "filename": "M2_2_09_8447_101023_10_O.jpeg",
-      "relative_path": "중학교/일렬로_세울_때의_확률/6f016517a1a84d78_M2_2_09_8447_101023_10_O.jpeg",
+      "domain": "색칠한 부분의 넓이 구하기(2)-도형의 넓이의 합차 이용",
+      "filename": "M1_2_06_17167_31421_6_O.jpeg",
+      "problem_key": "17167_31421",
+      "relative_path": "중학교/색칠한_부분의_넓이_구하기(2)-도형의_넓이의_합차_이용/636ca1f57907e08a_M1_2_06_17167_31421_6_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "7ded6b7bb82963b6",
+      "sample_id": "7cd610777df80e00",
       "school_level": "중학교",
-      "domain": "y=ax의 식 구하기",
-      "filename": "M1_1_04_22388_60176_6_X.jpeg",
-      "relative_path": "중학교/y=ax의_식_구하기/7ded6b7bb82963b6_M1_1_04_22388_60176_6_X.jpeg",
+      "domain": "삼각비의 값의 대소관계를 이용한 식의 계산",
+      "filename": "M3_2_05_32943_127371_11_X.jpeg",
+      "problem_key": "32943_127371",
+      "relative_path": "중학교/삼각비의_값의_대소관계를_이용한_식의_계산/7cd610777df80e00_M3_2_05_32943_127371_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "023e242ee2e5aa3a",
+      "sample_id": "fc24663a63c97465",
       "school_level": "중학교",
-      "domain": "a²－b² 꼴의 인수분해",
-      "filename": "M3_1_02_12365_117611_5_O.jpeg",
-      "relative_path": "중학교/a²－b²_꼴의_인수분해/023e242ee2e5aa3a_M3_1_02_12365_117611_5_O.jpeg",
+      "domain": "삼각비의 활용",
+      "filename": "M3_2_05_34252_135026_7_O.jpeg",
+      "problem_key": "34252_135026",
+      "relative_path": "중학교/삼각비의_활용/fc24663a63c97465_M3_2_05_34252_135026_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "e29801bca56a56b3",
+      "sample_id": "89f36a921dfc3df5",
       "school_level": "중학교",
-      "domain": "근의 공식을 이용한 이차방정식의 풀이",
-      "filename": "M3_1_03_34785_139491_13_X.jpeg",
-      "relative_path": "중학교/근의_공식을_이용한_이차방정식의_풀이/e29801bca56a56b3_M3_1_03_34785_139491_13_X.jpeg",
+      "domain": "해가 주어지고 미지수 구하기",
+      "filename": "M1_1_03_6553_1006_9_X.jpeg",
+      "problem_key": "6553_1006",
+      "relative_path": "중학교/해가_주어지고_미지수_구하기/89f36a921dfc3df5_M1_1_03_6553_1006_9_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "ceaba0b6705ad0be",
-      "school_level": "중학교",
-      "domain": "절댓값 구하기",
-      "filename": "M1_1_02_5277_1317_1_O.jpeg",
-      "relative_path": "중학교/절댓값_구하기/ceaba0b6705ad0be_M1_1_02_5277_1317_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "e816b1db53a899c1",
-      "school_level": "중학교",
-      "domain": "회전체의 겉넓이와 부피 (2) - 원뿔, 원뿔대",
-      "filename": "M1_2_07_13323_69114_9_O.jpeg",
-      "relative_path": "중학교/회전체의_겉넓이와_부피_(2)_-_원뿔,_원뿔대/e816b1db53a899c1_M1_2_07_13323_69114_9_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3a4f615d9b0fed2b",
-      "school_level": "중학교",
-      "domain": "닮음과 닮음 도형의 활용",
-      "filename": "M2_2_07_19323_45695_6_X.jpeg",
-      "relative_path": "중학교/닮음과_닮음_도형의_활용/3a4f615d9b0fed2b_M2_2_07_19323_45695_6_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "89ed4eb154ebcd4a",
-      "school_level": "중학교",
-      "domain": "근호를 포함한 식의 계산의 활용",
-      "filename": "M3_1_01_34626_138670_2_O.jpeg",
-      "relative_path": "중학교/근호를_포함한_식의_계산의_활용/89ed4eb154ebcd4a_M3_1_01_34626_138670_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "23e655a0290b1eac",
-      "school_level": "중학교",
-      "domain": "이차식의 덧셈과 뺄셈",
-      "filename": "M2_1_02_41321_160782_20_O.jpeg",
-      "relative_path": "중학교/이차식의_덧셈과_뺄셈/23e655a0290b1eac_M2_1_02_41321_160782_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "d015feeeacaab7eb",
-      "school_level": "중학교",
-      "domain": "닮은 두 입체도형의 겉넓이의 비",
-      "filename": "M2_2_07_20255_43597_4_O.jpeg",
-      "relative_path": "중학교/닮은_두_입체도형의_겉넓이의_비/d015feeeacaab7eb_M2_2_07_20255_43597_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "5680e347ed0e729d",
+      "sample_id": "3a879b4b82224842",
       "school_level": "중학교",
       "domain": "식의 값의 활용 - 식을 만들어야 하는 경우",
-      "filename": "M1_1_03_5921_54792_7_O.jpeg",
-      "relative_path": "중학교/식의_값의_활용_-_식을_만들어야_하는_경우/5680e347ed0e729d_M1_1_03_5921_54792_7_O.jpeg",
+      "filename": "M1_1_03_22838_61353_8_O.jpeg",
+      "problem_key": "22838_61353",
+      "relative_path": "중학교/식의_값의_활용_-_식을_만들어야_하는_경우/3a879b4b82224842_M1_1_03_22838_61353_8_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "3deb9142d519e774",
+      "sample_id": "dc3518b6e919a2eb",
       "school_level": "중학교",
-      "domain": "AA닮음을 이용하여 변의 길이 구하기(2)",
-      "filename": "M2_2_07_19456_45206_2_O.jpeg",
-      "relative_path": "중학교/AA닮음을_이용하여_변의_길이_구하기(2)/3deb9142d519e774_M2_2_07_19456_45206_2_O.jpeg",
+      "domain": "각기둥의 부피의 활용",
+      "filename": "M1_2_07_11611_19271_14_O.jpeg",
+      "problem_key": "11611_19271",
+      "relative_path": "중학교/각기둥의_부피의_활용/dc3518b6e919a2eb_M1_2_07_11611_19271_14_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ca2565c434798662",
+      "sample_id": "ba53a6850b46a6a7",
       "school_level": "중학교",
-      "domain": "가점, 감점에 대한 문제(계단)",
-      "filename": "M2_1_04_10571_12315_13_O.jpeg",
-      "relative_path": "중학교/가점,_감점에_대한_문제(계단)/ca2565c434798662_M2_1_04_10571_12315_13_O.jpeg",
+      "domain": "특정한 사람의 자리를 고정하여 한 줄로 세우는 경우의 수",
+      "filename": "M2_2_09_8056_9724_16_O.jpeg",
+      "problem_key": "8056_9724",
+      "relative_path": "중학교/특정한_사람의_자리를_고정하여_한_줄로_세우는_경우의_수/ba53a6850b46a6a7_M2_2_09_8056_9724_16_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "35a052d7caef30b8",
+      "sample_id": "78955e7fa9733b13",
       "school_level": "중학교",
-      "domain": "다항식과 단항식의 곱셈과 나눗셈에서 식 구하기",
-      "filename": "M2_1_02_9910_85761_16_O.jpeg",
-      "relative_path": "중학교/다항식과_단항식의_곱셈과_나눗셈에서_식_구하기/35a052d7caef30b8_M2_1_02_9910_85761_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7878cb7ecdc6aedd",
-      "school_level": "중학교",
-      "domain": "곱셈 공식4-(ax+b)(cx+d)=acx2+(ad+bc)x+bd",
-      "filename": "M3_1_02_10017_123554_12_O.jpeg",
-      "relative_path": "중학교/곱셈_공식4-(ax+b)(cx+d)=acx2+(ad+bc)x+bd/7878cb7ecdc6aedd_M3_1_02_10017_123554_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fdde30bb33c7e52a",
-      "school_level": "중학교",
-      "domain": "각기둥의 겉넓이와 부피",
-      "filename": "M1_2_07_17080_31216_9_X.jpeg",
-      "relative_path": "중학교/각기둥의_겉넓이와_부피/fdde30bb33c7e52a_M1_2_07_17080_31216_9_X.jpeg",
+      "domain": "공약수 구하기",
+      "filename": "M1_1_01_4948_51424_18_X.jpeg",
+      "problem_key": "4948_51424",
+      "relative_path": "중학교/공약수_구하기/78955e7fa9733b13_M1_1_01_4948_51424_18_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "38551e93d1869ef7",
+      "sample_id": "51dc1704d286787c",
       "school_level": "중학교",
-      "domain": "y=ax의 그래프 그리기",
-      "filename": "M1_1_04_22345_59845_7_X.jpeg",
-      "relative_path": "중학교/y=ax의_그래프_그리기/38551e93d1869ef7_M1_1_04_22345_59845_7_X.jpeg",
+      "domain": "둔각이 주어진 경우 삼각형의 넓이",
+      "filename": "M3_2_05_14853_24880_20_O.jpeg",
+      "problem_key": "14853_24880",
+      "relative_path": "중학교/둔각이_주어진_경우_삼각형의_넓이/51dc1704d286787c_M3_2_05_14853_24880_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "3ac3f6f85472c6f2",
+      "school_level": "중학교",
+      "domain": "괄호가 있는 일차부등식의 풀이",
+      "filename": "M2_1_03_10716_82902_8_O.jpeg",
+      "problem_key": "10716_82902",
+      "relative_path": "중학교/괄호가_있는_일차부등식의_풀이/3ac3f6f85472c6f2_M2_1_03_10716_82902_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ee63f86cf316fd6b",
+      "school_level": "중학교",
+      "domain": "다각형의 내각과 외각",
+      "filename": "M1_2_06_15265_66431_3_O.jpeg",
+      "problem_key": "15265_66431",
+      "relative_path": "중학교/다각형의_내각과_외각/ee63f86cf316fd6b_M1_2_06_15265_66431_3_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1037a9363183c446",
+      "school_level": "중학교",
+      "domain": "삼각비와 넓이",
+      "filename": "M3_2_05_40727_158628_12_O.jpeg",
+      "problem_key": "40727_158628",
+      "relative_path": "중학교/삼각비와_넓이/1037a9363183c446_M3_2_05_40727_158628_12_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f5965437e08b6834",
+      "school_level": "중학교",
+      "domain": "도형의 합동",
+      "filename": "M1_2_05_12474_11110_9_O.jpeg",
+      "problem_key": "12474_11110",
+      "relative_path": "중학교/도형의_합동/f5965437e08b6834_M1_2_05_12474_11110_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ba8f5e1bce47d4b7",
+      "school_level": "중학교",
+      "domain": "찢어진 히스토그램",
+      "filename": "M1_2_08_9190_70114_10_O.jpeg",
+      "problem_key": "9190_70114",
+      "relative_path": "중학교/찢어진_히스토그램/ba8f5e1bce47d4b7_M1_2_08_9190_70114_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a0d95adfdd929967",
+      "school_level": "중학교",
+      "domain": "맞꼭지각(1) -",
+      "filename": "M1_2_05_7790_11073_11_X.jpeg",
+      "problem_key": "7790_11073",
+      "relative_path": "중학교/맞꼭지각(1)_-/a0d95adfdd929967_M1_2_05_7790_11073_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "91430b517aba14b5",
+      "sample_id": "95ab2114aee993da",
       "school_level": "중학교",
-      "domain": "두 개 또는 세 개의 항을 묶어서 공통인수를 구하여 인수분해하기",
-      "filename": "M3_1_02_42390_165410_3_X.jpeg",
-      "relative_path": "중학교/두_개_또는_세_개의_항을_묶어서_공통인수를_구하여_인수분해하기/91430b517aba14b5_M3_1_02_42390_165410_3_X.jpeg",
+      "domain": "실생활에서의 덧셈과 뺄셈",
+      "filename": "M1_1_02_22019_57611_7_O.jpeg",
+      "problem_key": "22019_57611",
+      "relative_path": "중학교/실생활에서의_덧셈과_뺄셈/95ab2114aee993da_M1_1_02_22019_57611_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "66f86a56afe4c7c6",
+      "school_level": "중학교",
+      "domain": "삼각형의 내각의 이등분선",
+      "filename": "M2_2_07_40292_158333_10_O.jpeg",
+      "problem_key": "40292_158333",
+      "relative_path": "중학교/삼각형의_내각의_이등분선/66f86a56afe4c7c6_M2_2_07_40292_158333_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a3ca13c9944ef799",
+      "school_level": "중학교",
+      "domain": "평행선과 선분의 길이의 비의 응용",
+      "filename": "M2_2_07_34853_139834_18_O.jpeg",
+      "problem_key": "34853_139834",
+      "relative_path": "중학교/평행선과_선분의_길이의_비의_응용/a3ca13c9944ef799_M2_2_07_34853_139834_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "8f3a9a277bbc3726",
+      "school_level": "중학교",
+      "domain": "삼각형의 닮음 조건의 활용",
+      "filename": "M2_2_07_34839_139764_2_O.jpeg",
+      "problem_key": "34839_139764",
+      "relative_path": "중학교/삼각형의_닮음_조건의_활용/8f3a9a277bbc3726_M2_2_07_34839_139764_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "bd5b072feb749bf8",
+      "school_level": "중학교",
+      "domain": "삼각형의 닮음의 활용",
+      "filename": "M2_2_07_34846_139797_10_O.jpeg",
+      "problem_key": "34846_139797",
+      "relative_path": "중학교/삼각형의_닮음의_활용/bd5b072feb749bf8_M2_2_07_34846_139797_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "35319764eccd221d",
+      "school_level": "중학교",
+      "domain": "여러 가지 경우의 수의 합",
+      "filename": "M2_2_09_7923_98932_19_O.jpeg",
+      "problem_key": "7923_98932",
+      "relative_path": "중학교/여러_가지_경우의_수의_합/35319764eccd221d_M2_2_09_7923_98932_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "8df8f51d937355cf",
+      "school_level": "중학교",
+      "domain": "공통 부분이 2개 있는 경우",
+      "filename": "M3_1_02_42300_165079_2_X.jpeg",
+      "problem_key": "42300_165079",
+      "relative_path": "중학교/공통_부분이_2개_있는_경우/8df8f51d937355cf_M3_1_02_42300_165079_2_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "9496bc6c9fb3ea24",
+      "sample_id": "9da5ea6e732c8131",
       "school_level": "중학교",
-      "domain": "x절편, y절편이 주어질 때, 일차함수의 식 구하기",
-      "filename": "M2_1_05_11751_15334_4_O.jpeg",
-      "relative_path": "중학교/x절편,_y절편이_주어질_때,_일차함수의_식_구하기/9496bc6c9fb3ea24_M2_1_05_11751_15334_4_O.jpeg",
+      "domain": "여러 가지 사각형 사이의 관계",
+      "filename": "M2_2_06_19015_105547_12_O.jpeg",
+      "problem_key": "19015_105547",
+      "relative_path": "중학교/여러_가지_사각형_사이의_관계/9da5ea6e732c8131_M2_2_06_19015_105547_12_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "17762256c07aaf87",
+      "sample_id": "ca46ca9f623dea16",
       "school_level": "중학교",
-      "domain": "두 근에 대한 조건이 주어졌을 때 계수 구하기",
-      "filename": "M3_1_03_12641_121815_6_O.jpeg",
-      "relative_path": "중학교/두_근에_대한_조건이_주어졌을_때_계수_구하기/17762256c07aaf87_M3_1_03_12641_121815_6_O.jpeg",
+      "domain": "순서쌍",
+      "filename": "M1_1_04_7185_2346_7_O.jpeg",
+      "problem_key": "7185_2346",
+      "relative_path": "중학교/순서쌍/ca46ca9f623dea16_M1_1_04_7185_2346_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "89287b7c0d163864",
+      "sample_id": "a717abbeae72f603",
       "school_level": "중학교",
-      "domain": "비례식으로 주어진 일차방정식의 풀이",
-      "filename": "M1_1_03_6822_58790_4_O.jpeg",
-      "relative_path": "중학교/비례식으로_주어진_일차방정식의_풀이/89287b7c0d163864_M1_1_03_6822_58790_4_O.jpeg",
+      "domain": "적당한수를 곱하여 순환소수를 유한소수로 나타내기",
+      "filename": "M2_1_01_9580_7810_12_O.jpeg",
+      "problem_key": "9580_7810",
+      "relative_path": "중학교/적당한수를_곱하여_순환소수를_유한소수로_나타내기/a717abbeae72f603_M2_1_01_9580_7810_12_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "d4c466d668e4da84",
+      "sample_id": "54539799df97bffa",
       "school_level": "중학교",
-      "domain": "일차함수의 활용(2)-길이",
-      "filename": "M2_1_05_11626_83351_19_X.jpeg",
-      "relative_path": "중학교/일차함수의_활용(2)-길이/d4c466d668e4da84_M2_1_05_11626_83351_19_X.jpeg",
+      "domain": "둔각이 주어진 경우 삼각형의 넓이",
+      "filename": "M3_2_05_14851_129904_16_X.jpeg",
+      "problem_key": "14851_129904",
+      "relative_path": "중학교/둔각이_주어진_경우_삼각형의_넓이/54539799df97bffa_M3_2_05_14851_129904_16_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "aee1e2785fb185cc",
+      "sample_id": "ab19666366d7f049",
       "school_level": "중학교",
-      "domain": "닮음의 활용",
-      "filename": "M2_2_07_20281_43741_6_O.jpeg",
-      "relative_path": "중학교/닮음의_활용/aee1e2785fb185cc_M2_2_07_20281_43741_6_O.jpeg",
+      "domain": "직각삼각형의 변의 길이 구하기(1)",
+      "filename": "M2_2_08_30679_111583_10_O.jpeg",
+      "problem_key": "30679_111583",
+      "relative_path": "중학교/직각삼각형의_변의_길이_구하기(1)/ab19666366d7f049_M2_2_08_30679_111583_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "3890b3fbe1cc930e",
+      "sample_id": "1fc3c597fe51bc75",
       "school_level": "중학교",
-      "domain": "적어도 ~일 경우의 수",
-      "filename": "M2_2_09_8274_4392_15_O.jpeg",
-      "relative_path": "중학교/적어도_~일_경우의_수/3890b3fbe1cc930e_M2_2_09_8274_4392_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "00e020f88105ae2c",
-      "school_level": "중학교",
-      "domain": "이차식의 x의 계수 또는 상수항의 최댓값, 최솟값",
-      "filename": "M3_1_02_12422_117790_6_O.jpeg",
-      "relative_path": "중학교/이차식의_x의_계수_또는_상수항의_최댓값,_최솟값/00e020f88105ae2c_M3_1_02_12422_117790_6_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "e5707068226844b1",
-      "school_level": "중학교",
-      "domain": "산점도의 이해",
-      "filename": "M3_2_07_34178_134418_12_X.jpeg",
-      "relative_path": "중학교/산점도의_이해/e5707068226844b1_M3_2_07_34178_134418_12_X.jpeg",
+      "domain": "삼각비의 값의 대소관계를 이용한 식의 계산",
+      "filename": "M3_2_05_32943_127368_17_X.jpeg",
+      "problem_key": "32943_127368",
+      "relative_path": "중학교/삼각비의_값의_대소관계를_이용한_식의_계산/1fc3c597fe51bc75_M3_2_05_32943_127368_17_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "0fc4a53a63b04801",
+      "sample_id": "4b06c5d002d6cdd8",
       "school_level": "중학교",
-      "domain": "인수분해 공식을 이용한 수의 계산",
-      "filename": "M3_1_02_13248_118396_1_O.jpeg",
-      "relative_path": "중학교/인수분해_공식을_이용한_수의_계산/0fc4a53a63b04801_M3_1_02_13248_118396_1_O.jpeg",
+      "domain": "공통 부분이 2개 있는 경우",
+      "filename": "M3_1_02_42298_165068_15_O.jpeg",
+      "problem_key": "42298_165068",
+      "relative_path": "중학교/공통_부분이_2개_있는_경우/4b06c5d002d6cdd8_M3_1_02_42298_165068_15_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "a1f0bff58f926832",
+      "sample_id": "b0d4820d0af78b97",
       "school_level": "중학교",
-      "domain": "곱셈 공식 종합",
-      "filename": "M3_1_02_10026_117806_16_X.jpeg",
-      "relative_path": "중학교/곱셈_공식_종합/a1f0bff58f926832_M3_1_02_10026_117806_16_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "27a24db935e72e18",
-      "school_level": "중학교",
-      "domain": "일차부등식의 풀이",
-      "filename": "M2_1_03_34525_137706_14_X.jpeg",
-      "relative_path": "중학교/일차부등식의_풀이/27a24db935e72e18_M2_1_03_34525_137706_14_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "cb32c19428fb74b6",
-      "school_level": "중학교",
-      "domain": "y=a/x의 그래프와 도형의 넓이",
-      "filename": "M1_1_04_42013_163892_14_O.jpeg",
-      "relative_path": "중학교/y=a-x의_그래프와_도형의_넓이/cb32c19428fb74b6_M1_1_04_42013_163892_14_O.jpeg",
+      "domain": "이차함수의 그래프가 지나는 점",
+      "filename": "M3_1_04_12835_16557_13_O.jpeg",
+      "problem_key": "12835_16557",
+      "relative_path": "중학교/이차함수의_그래프가_지나는_점/b0d4820d0af78b97_M3_1_04_12835_16557_13_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "396d0346f7cc2d1a",
-      "school_level": "중학교",
-      "domain": "도형의 넓이에의 응용",
-      "filename": "M3_1_02_12404_15596_15_O.jpeg",
-      "relative_path": "중학교/도형의_넓이에의_응용/396d0346f7cc2d1a_M3_1_02_12404_15596_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7de16f5de79b8f72",
-      "school_level": "중학교",
-      "domain": "함수의 뜻",
-      "filename": "M2_1_05_34570_138098_2_O.jpeg",
-      "relative_path": "중학교/함수의_뜻/7de16f5de79b8f72_M2_1_05_34570_138098_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "2075effd9b07b210",
-      "school_level": "중학교",
-      "domain": "삼각비의 값의 활용",
-      "filename": "M3_2_05_14399_125133_20_X.jpeg",
-      "relative_path": "중학교/삼각비의_값의_활용/2075effd9b07b210_M3_2_05_14399_125133_20_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "9ab296db21f85aba",
-      "school_level": "중학교",
-      "domain": "부채꼴의 호의 길이 구하기",
-      "filename": "M1_2_06_11333_11668_3_O.jpeg",
-      "relative_path": "중학교/부채꼴의_호의_길이_구하기/9ab296db21f85aba_M1_2_06_11333_11668_3_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fde5ad49c3c4b418",
-      "school_level": "중학교",
-      "domain": "수의 연산에 대한 문제",
-      "filename": "M2_1_04_25289_86144_1_O.jpeg",
-      "relative_path": "중학교/수의_연산에_대한_문제/fde5ad49c3c4b418_M2_1_04_25289_86144_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "eea37fa4844e8f14",
-      "school_level": "중학교",
-      "domain": "평행사변형이 되는 조건의 응용(2)-각의 크기, 변의 길이",
-      "filename": "M2_2_06_39943_158132_2_X.jpeg",
-      "relative_path": "중학교/평행사변형이_되는_조건의_응용(2)-각의_크기,_변의_길이/eea37fa4844e8f14_M2_2_06_39943_158132_2_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "c1a21866cb767623",
-      "school_level": "중학교",
-      "domain": "유한소수가 되도록 하는 값을 구하고 기약분수로 나타내기",
-      "filename": "M2_1_01_9513_76930_6_X.jpeg",
-      "relative_path": "중학교/유한소수가_되도록_하는_값을_구하고_기약분수로_나타내기/c1a21866cb767623_M2_1_01_9513_76930_6_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "f14d99691311b599",
-      "school_level": "중학교",
-      "domain": "색으로 구분되는 구슬과 당첨제비 문제",
-      "filename": "M2_2_09_34917_140277_12_O.jpeg",
-      "relative_path": "중학교/색으로_구분되는_구슬과_당첨제비_문제/f14d99691311b599_M2_2_09_34917_140277_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7c49de88f1491349",
+      "sample_id": "8716857e0aeab405",
       "school_level": "중학교",
       "domain": "평행한 그래프의 식 찾기",
-      "filename": "M2_1_05_11527_12905_7_O.jpeg",
-      "relative_path": "중학교/평행한_그래프의_식_찾기/7c49de88f1491349_M2_1_05_11527_12905_7_O.jpeg",
+      "filename": "M2_1_05_11526_83615_17_O.jpeg",
+      "problem_key": "11526_83615",
+      "relative_path": "중학교/평행한_그래프의_식_찾기/8716857e0aeab405_M2_1_05_11526_83615_17_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "d1b8d72b379289dd",
+      "sample_id": "a960f7858b61eb52",
       "school_level": "중학교",
-      "domain": "두 개 또는 세 개의 항을 묶어서 공통인수를 구하여 인수분해하기",
-      "filename": "M3_1_02_13247_118352_2_O.jpeg",
-      "relative_path": "중학교/두_개_또는_세_개의_항을_묶어서_공통인수를_구하여_인수분해하기/d1b8d72b379289dd_M3_1_02_13247_118352_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "177f897c2f2d4652",
-      "school_level": "중학교",
-      "domain": "대표를 뽑을 때의 확률",
-      "filename": "M2_2_09_8509_9869_17_O.jpeg",
-      "relative_path": "중학교/대표를_뽑을_때의_확률/177f897c2f2d4652_M2_2_09_8509_9869_17_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "993dd2bc94457575",
-      "school_level": "중학교",
-      "domain": "겨냥도와 전개도",
-      "filename": "M1_2_07_23625_68554_9_X.jpeg",
-      "relative_path": "중학교/겨냥도와_전개도/993dd2bc94457575_M1_2_07_23625_68554_9_X.jpeg",
+      "domain": "소수와 합성수",
+      "filename": "M1_1_01_21709_51444_11_X.jpeg",
+      "problem_key": "21709_51444",
+      "relative_path": "중학교/소수와_합성수/a960f7858b61eb52_M1_1_01_21709_51444_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "1da810644fc6163e",
+      "sample_id": "1679503dbb1b0942",
       "school_level": "중학교",
-      "domain": "연립일차방정식의 활용",
-      "filename": "M2_1_04_34565_138074_14_O.jpeg",
-      "relative_path": "중학교/연립일차방정식의_활용/1da810644fc6163e_M2_1_04_34565_138074_14_O.jpeg",
+      "domain": "인수가 주어진 이차식의 미지수의 값 구하기",
+      "filename": "M3_1_02_12418_20403_10_O.jpeg",
+      "problem_key": "12418_20403",
+      "relative_path": "중학교/인수가_주어진_이차식의_미지수의_값_구하기/1679503dbb1b0942_M3_1_02_12418_20403_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "98c4de8d21647e17",
+      "sample_id": "01ecea27349e9724",
       "school_level": "중학교",
-      "domain": "근호를 포함한 복잡한 식의 계산",
-      "filename": "M3_1_01_12235_13975_8_O.jpeg",
-      "relative_path": "중학교/근호를_포함한_복잡한_식의_계산/98c4de8d21647e17_M3_1_01_12235_13975_8_O.jpeg",
+      "domain": "삼각형의 넓이외 내접원의 반지름의 길이",
+      "filename": "M2_2_06_18321_46507_7_O.jpeg",
+      "problem_key": "18321_46507",
+      "relative_path": "중학교/삼각형의_넓이외_내접원의_반지름의_길이/01ecea27349e9724_M2_2_06_18321_46507_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "7ca0be5f3bd3b053",
+      "sample_id": "8186f5fe5f558b95",
       "school_level": "중학교",
-      "domain": "응용",
-      "filename": "M3_2_06_33953_133202_9_X.jpeg",
-      "relative_path": "중학교/응용/7ca0be5f3bd3b053_M3_2_06_33953_133202_9_X.jpeg",
+      "domain": "AA닮음을 이용하여 변의 길이 구하기(1)-공통 각",
+      "filename": "M2_2_07_19502_48109_11_X.jpeg",
+      "problem_key": "19502_48109",
+      "relative_path": "중학교/AA닮음을_이용하여_변의_길이_구하기(1)-공통_각/8186f5fe5f558b95_M2_2_07_19502_48109_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "358585b20b466ca3",
+      "sample_id": "79a18d1c19aed2ea",
       "school_level": "중학교",
-      "domain": "금액을 지불하는 방법의 수",
-      "filename": "M2_2_09_7919_98638_12_X.jpeg",
-      "relative_path": "중학교/금액을_지불하는_방법의_수/358585b20b466ca3_M2_2_09_7919_98638_12_X.jpeg",
+      "domain": "중근을 가질 조건",
+      "filename": "M3_1_03_12633_121342_12_X.jpeg",
+      "problem_key": "12633_121342",
+      "relative_path": "중학교/중근을_가질_조건/79a18d1c19aed2ea_M3_1_03_12633_121342_12_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "94d4fd7263e16afb",
+      "sample_id": "30608cbb1e3f48ee",
       "school_level": "중학교",
-      "domain": "y=ax의 그래프의 활용",
-      "filename": "M1_1_04_34480_137515_19_O.jpeg",
-      "relative_path": "중학교/y=ax의_그래프의_활용/94d4fd7263e16afb_M1_1_04_34480_137515_19_O.jpeg",
+      "domain": "평행선에서 각의 크기 구하기(2)-보조선 1개",
+      "filename": "M1_2_05_23493_65684_16_O.jpeg",
+      "problem_key": "23493_65684",
+      "relative_path": "중학교/평행선에서_각의_크기_구하기(2)-보조선_1개/30608cbb1e3f48ee_M1_2_05_23493_65684_16_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "b8d6e99f210f617c",
+      "sample_id": "19ab7880b471395a",
       "school_level": "중학교",
-      "domain": "도형의 넓이에의 응용",
-      "filename": "M3_1_02_13386_123671_18_O.jpeg",
-      "relative_path": "중학교/도형의_넓이에의_응용/b8d6e99f210f617c_M3_1_02_13386_123671_18_O.jpeg",
+      "domain": "순환소수를 포함한 부등식",
+      "filename": "M2_1_01_25076_77235_2_O.jpeg",
+      "problem_key": "25076_77235",
+      "relative_path": "중학교/순환소수를_포함한_부등식/19ab7880b471395a_M2_1_01_25076_77235_2_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "180e2b9c943c9d45",
+      "sample_id": "c71f71dd4b1b4b2e",
       "school_level": "중학교",
-      "domain": "평행선과 넓이",
-      "filename": "M2_2_06_34804_139419_5_O.jpeg",
-      "relative_path": "중학교/평행선과_넓이/180e2b9c943c9d45_M2_2_06_34804_139419_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "85b7f062697f401d",
-      "school_level": "중학교",
-      "domain": "회전체의 겉넓이와 부피 (3) - 구",
-      "filename": "M1_2_07_15249_24723_10_O.jpeg",
-      "relative_path": "중학교/회전체의_겉넓이와_부피_(3)_-_구/85b7f062697f401d_M1_2_07_15249_24723_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "cd94942d178597a2",
-      "school_level": "중학교",
-      "domain": "인수분해 공식",
-      "filename": "M3_1_02_34699_138906_8_X.jpeg",
-      "relative_path": "중학교/인수분해_공식/cd94942d178597a2_M3_1_02_34699_138906_8_X.jpeg",
+      "domain": "이차함수의 식 구하기: 꼭짓점과 그래프 위의 다른 한 점을 알 때",
+      "filename": "M3_1_04_32502_122622_6_X.jpeg",
+      "problem_key": "32502_122622",
+      "relative_path": "중학교/이차함수의_식_구하기:_꼭짓점과_그래프_위의_다른_한_점을_알_때/c71f71dd4b1b4b2e_M3_1_04_32502_122622_6_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "ac67c3e8677efb1d",
+      "sample_id": "cd9250cb10d4b6f2",
       "school_level": "중학교",
-      "domain": "이차함수 y=a(x-p)²+q의 그래프",
-      "filename": "M3_1_04_34886_166356_11_O.jpeg",
-      "relative_path": "중학교/이차함수_y=a(x-p)²+q의_그래프/ac67c3e8677efb1d_M3_1_04_34886_166356_11_O.jpeg",
+      "domain": "0˚, 90˚의 삼각비의 값 구하기",
+      "filename": "M3_2_05_14517_23203_11_O.jpeg",
+      "problem_key": "14517_23203",
+      "relative_path": "중학교/0˚,_90˚의_삼각비의_값_구하기/cd9250cb10d4b6f2_M3_2_05_14517_23203_11_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "7f3ee26d894eb21e",
+      "sample_id": "00be48765abffb22",
       "school_level": "중학교",
-      "domain": "일차방정식의 풀이",
-      "filename": "M1_1_03_6565_57114_2_O.jpeg",
-      "relative_path": "중학교/일차방정식의_풀이/7f3ee26d894eb21e_M1_1_03_6565_57114_2_O.jpeg",
+      "domain": "함수의 식 구하기",
+      "filename": "M2_1_05_6978_1840_17_O.jpeg",
+      "problem_key": "6978_1840",
+      "relative_path": "중학교/함수의_식_구하기/00be48765abffb22_M2_1_05_6978_1840_17_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "0f68bc15ac76518d",
+      "sample_id": "bfd55048f4a8cffa",
       "school_level": "중학교",
-      "domain": "평행선과 넓이",
-      "filename": "M2_2_06_34804_139419_19_X.jpeg",
-      "relative_path": "중학교/평행선과_넓이/0f68bc15ac76518d_M2_2_06_34804_139419_19_X.jpeg",
+      "domain": "여러 가지 곱셈 공식을 이용한 수의 곱셈",
+      "filename": "M3_1_02_10131_117208_1_O.jpeg",
+      "problem_key": "10131_117208",
+      "relative_path": "중학교/여러_가지_곱셈_공식을_이용한_수의_곱셈/bfd55048f4a8cffa_M3_1_02_10131_117208_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "cb83f725cc36ed95",
+      "school_level": "중학교",
+      "domain": "SAS닮음을 이용하여 변의 길이 구하기",
+      "filename": "M2_2_07_19450_47911_1_O.jpeg",
+      "problem_key": "19450_47911",
+      "relative_path": "중학교/SAS닮음을_이용하여_변의_길이_구하기/cb83f725cc36ed95_M2_2_07_19450_47911_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d39172e11385d477",
+      "school_level": "중학교",
+      "domain": "일차함수의 그래프의 평행을 이용하여 미지수 구하기",
+      "filename": "M2_1_05_11534_12938_13_O.jpeg",
+      "problem_key": "11534_12938",
+      "relative_path": "중학교/일차함수의_그래프의_평행을_이용하여_미지수_구하기/d39172e11385d477_M2_1_05_11534_12938_13_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "bec056b5bd72c6c9",
+      "school_level": "중학교",
+      "domain": "정다면체의 꼭짓점, 모서리, 면의 개수 구하기",
+      "filename": "M1_2_07_34770_139320_1_X.jpeg",
+      "problem_key": "34770_139320",
+      "relative_path": "중학교/정다면체의_꼭짓점,_모서리,_면의_개수_구하기/bec056b5bd72c6c9_M1_2_07_34770_139320_1_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "5a723c8e6ffab3c2",
+      "sample_id": "0fd62b43847aa72a",
       "school_level": "중학교",
-      "domain": "시계에 대한 문제",
-      "filename": "M1_1_03_6894_3354_5_O.jpeg",
-      "relative_path": "중학교/시계에_대한_문제/5a723c8e6ffab3c2_M1_1_03_6894_3354_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "bff74a720d812141",
-      "school_level": "중학교",
-      "domain": "여러 가지 확률",
-      "filename": "M2_2_09_8646_4592_10_O.jpeg",
-      "relative_path": "중학교/여러_가지_확률/bff74a720d812141_M2_2_09_8646_4592_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c87400b9b9f73531",
-      "school_level": "중학교",
-      "domain": "원의 중심과 현의 수직이등분선",
-      "filename": "M3_2_06_33666_131577_16_O.jpeg",
-      "relative_path": "중학교/원의_중심과_현의_수직이등분선/c87400b9b9f73531_M3_2_06_33666_131577_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "86843157a56a2f98",
-      "school_level": "중학교",
-      "domain": "삼각형에서 평행선과 선분의 길이의 비의 활용",
-      "filename": "M2_2_07_34848_139809_16_X.jpeg",
-      "relative_path": "중학교/삼각형에서_평행선과_선분의_길이의_비의_활용/86843157a56a2f98_M2_2_07_34848_139809_16_X.jpeg",
+      "domain": "순서 관계 없이 물건 선택하기 , 방 나누기",
+      "filename": "M2_2_09_34909_140236_6_X.jpeg",
+      "problem_key": "34909_140236",
+      "relative_path": "중학교/순서_관계_없이_물건_선택하기_,_방_나누기/0fd62b43847aa72a_M2_2_09_34909_140236_6_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "a4aab3ae5b2a7aef",
+      "sample_id": "6ec686cb211dde10",
       "school_level": "중학교",
-      "domain": "원주각과 삼각비의 값",
-      "filename": "M3_2_06_40798_158966_8_O.jpeg",
-      "relative_path": "중학교/원주각과_삼각비의_값/a4aab3ae5b2a7aef_M3_2_06_40798_158966_8_O.jpeg",
+      "domain": "입체도형에서의 닮음의 성질",
+      "filename": "M2_2_07_19358_43706_10_O.jpeg",
+      "problem_key": "19358_43706",
+      "relative_path": "중학교/입체도형에서의_닮음의_성질/6ec686cb211dde10_M2_2_07_19358_43706_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "80a2a6ae84944141",
+      "sample_id": "43695c818409c8b6",
       "school_level": "중학교",
-      "domain": "연립일차방정식",
-      "filename": "M2_1_04_34550_137998_3_O.jpeg",
-      "relative_path": "중학교/연립일차방정식/80a2a6ae84944141_M2_1_04_34550_137998_3_O.jpeg",
+      "domain": "적어도 ~일 경우의 수",
+      "filename": "M2_2_09_8274_27107_10_O.jpeg",
+      "problem_key": "8274_27107",
+      "relative_path": "중학교/적어도_~일_경우의_수/43695c818409c8b6_M2_2_09_8274_27107_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "86bd08acdfdae4c7",
+      "sample_id": "3b32559b5d395b9f",
       "school_level": "중학교",
-      "domain": "삼각형의 무게중심",
-      "filename": "M2_2_07_34898_140179_18_O.jpeg",
-      "relative_path": "중학교/삼각형의_무게중심/86bd08acdfdae4c7_M2_2_07_34898_140179_18_O.jpeg",
+      "domain": "평면도형에서 닮음의 성질",
+      "filename": "M2_2_07_19305_45676_3_O.jpeg",
+      "problem_key": "19305_45676",
+      "relative_path": "중학교/평면도형에서_닮음의_성질/3b32559b5d395b9f_M2_2_07_19305_45676_3_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "737ab54eb670f9f5",
+      "sample_id": "0bdf4e74ee0e756d",
       "school_level": "중학교",
-      "domain": "그래프의 이해",
-      "filename": "M1_1_04_34471_137312_18_O.jpeg",
-      "relative_path": "중학교/그래프의_이해/737ab54eb670f9f5_M1_1_04_34471_137312_18_O.jpeg",
+      "domain": "두 유리수의 대소 관계",
+      "filename": "M1_1_02_22008_55953_7_O.jpeg",
+      "problem_key": "22008_55953",
+      "relative_path": "중학교/두_유리수의_대소_관계/0bdf4e74ee0e756d_M1_1_02_22008_55953_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "81ba4850cee22448",
+      "sample_id": "42146887bbd4dfbe",
       "school_level": "중학교",
-      "domain": "지수법칙(3)- a^m÷a^n=a^m-n",
-      "filename": "M2_1_02_25085_77825_10_X.jpeg",
-      "relative_path": "중학교/지수법칙(3)-_a^m÷a^n=a^m-n/81ba4850cee22448_M2_1_02_25085_77825_10_X.jpeg",
+      "domain": "학생 수의 증가, 감소에 대한 문제",
+      "filename": "M1_1_03_6802_58733_10_O.jpeg",
+      "problem_key": "6802_58733",
+      "relative_path": "중학교/학생_수의_증가,_감소에_대한_문제/42146887bbd4dfbe_M1_1_03_6802_58733_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a7f9262dd18eff8d",
+      "school_level": "중학교",
+      "domain": "제곱근의 계산 결과가 유리수가 될 조건",
+      "filename": "M3_1_01_12245_123397_7_X.jpeg",
+      "problem_key": "12245_123397",
+      "relative_path": "중학교/제곱근의_계산_결과가_유리수가_될_조건/a7f9262dd18eff8d_M3_1_01_12245_123397_7_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "a7284ebc57cb08bf",
+      "sample_id": "e126669aee1bbde2",
       "school_level": "중학교",
-      "domain": "수직선에 도형 굴리기",
-      "filename": "M3_1_01_31638_117013_13_X.jpeg",
-      "relative_path": "중학교/수직선에_도형_굴리기/a7284ebc57cb08bf_M3_1_01_31638_117013_13_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "7101069bc682f5b1",
-      "school_level": "중학교",
-      "domain": "과부족 문제 (2)",
-      "filename": "M1_1_03_41786_162684_7_O.jpeg",
-      "relative_path": "중학교/과부족_문제_(2)/7101069bc682f5b1_M1_1_03_41786_162684_7_O.jpeg",
+      "domain": "전체 도수가 다른 두 집단의 비교",
+      "filename": "M1_2_08_39566_156763_6_O.jpeg",
+      "problem_key": "39566_156763",
+      "relative_path": "중학교/전체_도수가_다른_두_집단의_비교/e126669aee1bbde2_M1_2_08_39566_156763_6_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "3f6b7ea49fb332e0",
+      "sample_id": "3da890bf48ef4921",
       "school_level": "중학교",
-      "domain": "삼각형의 내각의 크기의 합의 활용(2)-내심",
-      "filename": "M1_2_06_16357_29442_14_X.jpeg",
-      "relative_path": "중학교/삼각형의_내각의_크기의_합의_활용(2)-내심/3f6b7ea49fb332e0_M1_2_06_16357_29442_14_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "a7af684e7188d6ff",
-      "school_level": "중학교",
-      "domain": "이등변삼각형의 성질의 활용",
-      "filename": "M2_2_06_17867_45910_5_O.jpeg",
-      "relative_path": "중학교/이등변삼각형의_성질의_활용/a7af684e7188d6ff_M2_2_06_17867_45910_5_O.jpeg",
+      "domain": "a(x-p)²=b꼴의 이차방정식의 풀이",
+      "filename": "M3_1_03_42510_165609_14_O.jpeg",
+      "problem_key": "42510_165609",
+      "relative_path": "중학교/a(x-p)²=b꼴의_이차방정식의_풀이/3da890bf48ef4921_M3_1_03_42510_165609_14_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "532e366ebb5620b1",
+      "sample_id": "58980bac73e85d3f",
       "school_level": "중학교",
-      "domain": "닮은 두 삼각형의 넓이의 비",
-      "filename": "M2_2_07_20089_43641_2_X.jpeg",
-      "relative_path": "중학교/닮은_두_삼각형의_넓이의_비/532e366ebb5620b1_M2_2_07_20089_43641_2_X.jpeg",
+      "domain": "일차함수의 활용(4)-속력",
+      "filename": "M2_1_05_25743_83466_6_X.jpeg",
+      "problem_key": "25743_83466",
+      "relative_path": "중학교/일차함수의_활용(4)-속력/58980bac73e85d3f_M2_1_05_25743_83466_6_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "95914c0d4bc2c81e",
+      "sample_id": "7c2f1ae4b6bdfe42",
       "school_level": "중학교",
       "domain": "제곱근의 뜻과 성질",
-      "filename": "M3_1_01_34444_137498_11_O.jpeg",
-      "relative_path": "중학교/제곱근의_뜻과_성질/95914c0d4bc2c81e_M3_1_01_34444_137498_11_O.jpeg",
+      "filename": "M3_1_01_34442_164099_10_O.jpeg",
+      "problem_key": "34442_164099",
+      "relative_path": "중학교/제곱근의_뜻과_성질/7c2f1ae4b6bdfe42_M3_1_01_34442_164099_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "94375ba556cc4fa7",
+      "sample_id": "612e02a660084205",
       "school_level": "중학교",
-      "domain": "순환소수의 대소관계",
-      "filename": "M2_1_01_41179_160227_7_X.jpeg",
-      "relative_path": "중학교/순환소수의_대소관계/94375ba556cc4fa7_M2_1_01_41179_160227_7_X.jpeg",
-      "is_answer": false
+      "domain": "복잡한 이차방정식의 풀이(소수, 분수, 괄호)",
+      "filename": "M3_1_03_12617_120990_15_O.jpeg",
+      "problem_key": "12617_120990",
+      "relative_path": "중학교/복잡한_이차방정식의_풀이(소수,_분수,_괄호)/612e02a660084205_M3_1_03_12617_120990_15_O.jpeg",
+      "is_answer": true
     },
     {
-      "sample_id": "2fa731f7ec3507da",
+      "sample_id": "1557c6638b5c4440",
+      "school_level": "중학교",
+      "domain": "일차함수와 일차방정식",
+      "filename": "M2_1_05_11664_83967_16_O.jpeg",
+      "problem_key": "11664_83967",
+      "relative_path": "중학교/일차함수와_일차방정식/1557c6638b5c4440_M2_1_05_11664_83967_16_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c171181ca50799b8",
+      "school_level": "중학교",
+      "domain": "삼각형이 맞꼭지각으로 연결되어 있을 때",
+      "filename": "M2_2_07_19580_44344_13_O.jpeg",
+      "problem_key": "19580_44344",
+      "relative_path": "중학교/삼각형이_맞꼭지각으로_연결되어_있을_때/c171181ca50799b8_M2_2_07_19580_44344_13_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "104d8b1157d12b17",
       "school_level": "중학교",
       "domain": "도형에서 제곱근의 곱셈과 나눗셈",
-      "filename": "M3_1_01_31611_116910_6_X.jpeg",
-      "relative_path": "중학교/도형에서_제곱근의_곱셈과_나눗셈/2fa731f7ec3507da_M3_1_01_31611_116910_6_X.jpeg",
-      "is_answer": false
+      "filename": "M3_1_01_12190_18522_6_O.jpeg",
+      "problem_key": "12190_18522",
+      "relative_path": "중학교/도형에서_제곱근의_곱셈과_나눗셈/104d8b1157d12b17_M3_1_01_12190_18522_6_O.jpeg",
+      "is_answer": true
     },
     {
-      "sample_id": "c8088e1e4e789f0c",
+      "sample_id": "a702c32b404c15fb",
       "school_level": "중학교",
-      "domain": "완전제곱식을 이용한 이차방정식의 풀이",
-      "filename": "M3_1_03_32255_120527_14_O.jpeg",
-      "relative_path": "중학교/완전제곱식을_이용한_이차방정식의_풀이/c8088e1e4e789f0c_M3_1_03_32255_120527_14_O.jpeg",
+      "domain": "평행사변형의 성질(1)-대변",
+      "filename": "M2_2_06_18480_40480_6_O.jpeg",
+      "problem_key": "18480_40480",
+      "relative_path": "중학교/평행사변형의_성질(1)-대변/a702c32b404c15fb_M2_2_06_18480_40480_6_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "4ceabc7cf3680f5e",
+      "sample_id": "8fcbd61cb67b7606",
       "school_level": "중학교",
-      "domain": "물건 구입에 대한 문제",
-      "filename": "M2_1_04_10473_20059_14_O.jpeg",
-      "relative_path": "중학교/물건_구입에_대한_문제/4ceabc7cf3680f5e_M2_1_04_10473_20059_14_O.jpeg",
+      "domain": "내접사각형의 활용(2)-원에 내접하는 다각형",
+      "filename": "M3_2_06_34056_133783_13_O.jpeg",
+      "problem_key": "34056_133783",
+      "relative_path": "중학교/내접사각형의_활용(2)-원에_내접하는_다각형/8fcbd61cb67b7606_M3_2_06_34056_133783_13_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "964f8696430e14d6",
+      "sample_id": "466ebb4d1e45a598",
       "school_level": "중학교",
-      "domain": "확률의 곱셈",
-      "filename": "M2_2_09_8806_7731_7_X.jpeg",
-      "relative_path": "중학교/확률의_곱셈/964f8696430e14d6_M2_2_09_8806_7731_7_X.jpeg",
+      "domain": "이차방정식의 활용",
+      "filename": "M3_1_03_34790_166294_6_X.jpeg",
+      "problem_key": "34790_166294",
+      "relative_path": "중학교/이차방정식의_활용/466ebb4d1e45a598_M3_1_03_34790_166294_6_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "fc17e938313b7371",
+      "sample_id": "2f5b8bc08ff9a88a",
       "school_level": "중학교",
-      "domain": "절댓값의 성질",
-      "filename": "M1_1_02_41296_160534_4_X.jpeg",
-      "relative_path": "중학교/절댓값의_성질/fc17e938313b7371_M1_1_02_41296_160534_4_X.jpeg",
-      "is_answer": false
+      "domain": "두 원에서 내접하는 사각형의 성질의 활용",
+      "filename": "M3_2_06_34359_136866_1_O.jpeg",
+      "problem_key": "34359_136866",
+      "relative_path": "중학교/두_원에서_내접하는_사각형의_성질의_활용/2f5b8bc08ff9a88a_M3_2_06_34359_136866_1_O.jpeg",
+      "is_answer": true
     },
     {
-      "sample_id": "8b47baa55ec3c497",
+      "sample_id": "89f0cc78ae205ec8",
       "school_level": "중학교",
-      "domain": "두 점 사이의 거리",
-      "filename": "M1_2_05_15832_65504_3_O.jpeg",
-      "relative_path": "중학교/두_점_사이의_거리/8b47baa55ec3c497_M1_2_05_15832_65504_3_O.jpeg",
+      "domain": "지수법칙(2)- (am)^n =a^mn",
+      "filename": "M2_1_02_25091_77587_15_O.jpeg",
+      "problem_key": "25091_77587",
+      "relative_path": "중학교/지수법칙(2)-_(am)^n_=a^mn/89f0cc78ae205ec8_M2_1_02_25091_77587_15_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "9ef95c9a165fdbde",
-      "school_level": "고등학교",
-      "domain": "이차방정식의 켤레근",
-      "filename": "H_1_03_37936_150717_16_X.jpeg",
-      "relative_path": "고등학교/이차방정식의_켤레근/9ef95c9a165fdbde_H_1_03_37936_150717_16_X.jpeg",
+      "sample_id": "d12363ec7b17eb9a",
+      "school_level": "중학교",
+      "domain": "유리수와 소수",
+      "filename": "M2_1_01_34452_160408_2_O.jpeg",
+      "problem_key": "34452_160408",
+      "relative_path": "중학교/유리수와_소수/d12363ec7b17eb9a_M2_1_01_34452_160408_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "fcd3946daef9a32f",
+      "school_level": "중학교",
+      "domain": "전체의 양을 구하는 문제(비율)",
+      "filename": "M1_1_03_6821_2271_13_X.jpeg",
+      "problem_key": "6821_2271",
+      "relative_path": "중학교/전체의_양을_구하는_문제(비율)/fcd3946daef9a32f_M1_1_03_6821_2271_13_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "0e4c833d06bf4c7c",
-      "school_level": "고등학교",
-      "domain": "이차방정식의 켤레근",
-      "filename": "H_1_03_37936_150717_13_X.jpeg",
-      "relative_path": "고등학교/이차방정식의_켤레근/0e4c833d06bf4c7c_H_1_03_37936_150717_13_X.jpeg",
+      "sample_id": "3bc513f5ce98e6ec",
+      "school_level": "중학교",
+      "domain": "확률의 뜻",
+      "filename": "M2_2_09_8417_100756_13_O.jpeg",
+      "problem_key": "8417_100756",
+      "relative_path": "중학교/확률의_뜻/3bc513f5ce98e6ec_M2_2_09_8417_100756_13_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c9acff47aff95608",
+      "school_level": "중학교",
+      "domain": "그래프의 이해",
+      "filename": "M1_1_04_34468_163535_10_O.jpeg",
+      "problem_key": "34468_163535",
+      "relative_path": "중학교/그래프의_이해/c9acff47aff95608_M1_1_04_34468_163535_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e8fb120b6914b405",
+      "school_level": "중학교",
+      "domain": "새로운 계산 기호",
+      "filename": "M1_1_02_5561_54126_19_O.jpeg",
+      "problem_key": "5561_54126",
+      "relative_path": "중학교/새로운_계산_기호/e8fb120b6914b405_M1_1_02_5561_54126_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "8c364fc8482e251d",
+      "school_level": "중학교",
+      "domain": "원의 현",
+      "filename": "M3_2_06_34303_135883_4_O.jpeg",
+      "problem_key": "34303_135883",
+      "relative_path": "중학교/원의_현/8c364fc8482e251d_M3_2_06_34303_135883_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5a26445a7e7ac9a1",
+      "school_level": "중학교",
+      "domain": "다각형의 내각과 외각",
+      "filename": "M1_2_06_15264_24584_20_O.jpeg",
+      "problem_key": "15264_24584",
+      "relative_path": "중학교/다각형의_내각과_외각/5a26445a7e7ac9a1_M1_2_06_15264_24584_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e59aa413e14b163f",
+      "school_level": "중학교",
+      "domain": "제곱근이 자연수가 되도록 미지수의 값 구하기4-[뺄셈]",
+      "filename": "M3_1_01_12009_116311_5_X.jpeg",
+      "problem_key": "12009_116311",
+      "relative_path": "중학교/제곱근이_자연수가_되도록_미지수의_값_구하기4-[뺄셈]/e59aa413e14b163f_M3_1_01_12009_116311_5_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "b8b5778b1345086b",
-      "school_level": "고등학교",
-      "domain": "연립일차부등식의 풀이",
-      "filename": "H_1_06_26876_88869_14_X.jpeg",
-      "relative_path": "고등학교/연립일차부등식의_풀이/b8b5778b1345086b_H_1_06_26876_88869_14_X.jpeg",
+      "sample_id": "f57f6c49eed77af3",
+      "school_level": "중학교",
+      "domain": "0이 포함되는 경우",
+      "filename": "M2_2_09_8161_7714_14_O.jpeg",
+      "problem_key": "8161_7714",
+      "relative_path": "중학교/0이_포함되는_경우/f57f6c49eed77af3_M2_2_09_8161_7714_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "eca98416280673c5",
+      "school_level": "중학교",
+      "domain": "각뿔의 겉넓이와 부피",
+      "filename": "M1_2_07_17165_31703_8_X.jpeg",
+      "problem_key": "17165_31703",
+      "relative_path": "중학교/각뿔의_겉넓이와_부피/eca98416280673c5_M1_2_07_17165_31703_8_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "b44f8efd6c263bb6",
-      "school_level": "고등학교",
-      "domain": "접선의 길이",
-      "filename": "H_1_08_27872_93814_9_O.jpeg",
-      "relative_path": "고등학교/접선의_길이/b44f8efd6c263bb6_H_1_08_27872_93814_9_O.jpeg",
+      "sample_id": "37b74587ba6160d4",
+      "school_level": "중학교",
+      "domain": "회전체의 전개도",
+      "filename": "M1_2_07_15526_26225_8_O.jpeg",
+      "problem_key": "15526_26225",
+      "relative_path": "중학교/회전체의_전개도/37b74587ba6160d4_M1_2_07_15526_26225_8_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "6eb8aafbcef28cbe",
-      "school_level": "고등학교",
-      "domain": "해가 주어진 연립이차부등식",
-      "filename": "H_1_06_27356_95079_9_O.jpeg",
-      "relative_path": "고등학교/해가_주어진_연립이차부등식/6eb8aafbcef28cbe_H_1_06_27356_95079_9_O.jpeg",
+      "sample_id": "6e0dcfa6e741a277",
+      "school_level": "중학교",
+      "domain": "변화된 변량의 평균, 분산, 표준편차",
+      "filename": "M3_2_07_13621_22141_1_O.jpeg",
+      "problem_key": "13621_22141",
+      "relative_path": "중학교/변화된_변량의_평균,_분산,_표준편차/6e0dcfa6e741a277_M3_2_07_13621_22141_1_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "cace2252887e2099",
-      "school_level": "고등학교",
-      "domain": "합성함수와 역함수",
-      "filename": "H_2_04_30807_111885_14_O.jpeg",
-      "relative_path": "고등학교/합성함수와_역함수/cace2252887e2099_H_2_04_30807_111885_14_O.jpeg",
+      "sample_id": "f5ff57e096634c3f",
+      "school_level": "중학교",
+      "domain": "응용",
+      "filename": "M3_2_06_33958_133159_12_O.jpeg",
+      "problem_key": "33958_133159",
+      "relative_path": "중학교/응용/f5ff57e096634c3f_M3_2_06_33958_133159_12_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "07103f3ba3b8487f",
-      "school_level": "고등학교",
-      "domain": "복소수가 실수 또는 순허수가 되기 위한 조건",
-      "filename": "H_1_03_26314_87764_18_X.jpeg",
-      "relative_path": "고등학교/복소수가_실수_또는_순허수가_되기_위한_조건/07103f3ba3b8487f_H_1_03_26314_87764_18_X.jpeg",
+      "sample_id": "12decf44f045b99e",
+      "school_level": "중학교",
+      "domain": "꺼낸 것을 다시 넣거나 넣지 않는 경우의 확률",
+      "filename": "M2_2_09_8734_102086_7_O.jpeg",
+      "problem_key": "8734_102086",
+      "relative_path": "중학교/꺼낸_것을_다시_넣거나_넣지_않는_경우의_확률/12decf44f045b99e_M2_2_09_8734_102086_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a7e7cd01092b8490",
+      "school_level": "중학교",
+      "domain": "도수분포다각형의 이해 종합",
+      "filename": "M1_2_08_39547_156116_20_X.jpeg",
+      "problem_key": "39547_156116",
+      "relative_path": "중학교/도수분포다각형의_이해_종합/a7e7cd01092b8490_M1_2_08_39547_156116_20_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "f643b56b09a250eb",
-      "school_level": "고등학교",
-      "domain": "점의 평행이동",
-      "filename": "H_1_09_27964_94267_2_O.jpeg",
-      "relative_path": "고등학교/점의_평행이동/f643b56b09a250eb_H_1_09_27964_94267_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "41ddb87ab893cdd7",
-      "school_level": "고등학교",
-      "domain": "연립이차부등식의 풀이",
-      "filename": "H_1_06_27304_94508_11_O.jpeg",
-      "relative_path": "고등학교/연립이차부등식의_풀이/41ddb87ab893cdd7_H_1_06_27304_94508_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "5d4865b073f0af51",
-      "school_level": "고등학교",
-      "domain": "여러 가지 부분집합의 개수",
-      "filename": "H_2_01_29389_105088_10_X.jpeg",
-      "relative_path": "고등학교/여러_가지_부분집합의_개수/5d4865b073f0af51_H_2_01_29389_105088_10_X.jpeg",
+      "sample_id": "c0e23ecfd67b95e6",
+      "school_level": "중학교",
+      "domain": "도형에 대한 문제",
+      "filename": "M1_1_03_41775_162516_11_X.jpeg",
+      "problem_key": "41775_162516",
+      "relative_path": "중학교/도형에_대한_문제/c0e23ecfd67b95e6_M1_1_03_41775_162516_11_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "00e68d3f30a5ae38",
-      "school_level": "고등학교",
-      "domain": "음수의 제곱근의 계산",
-      "filename": "H_1_03_26474_87091_7_O.jpeg",
-      "relative_path": "고등학교/음수의_제곱근의_계산/00e68d3f30a5ae38_H_1_03_26474_87091_7_O.jpeg",
+      "sample_id": "0d194a63632e7803",
+      "school_level": "중학교",
+      "domain": "두 다항식의 공통인수 구하기",
+      "filename": "M3_1_02_12389_18969_7_O.jpeg",
+      "problem_key": "12389_18969",
+      "relative_path": "중학교/두_다항식의_공통인수_구하기/0d194a63632e7803_M3_1_02_12389_18969_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "c3d1402988286c2f",
-      "school_level": "고등학교",
-      "domain": "인수정리를 이용한 다항식의 인수분해",
-      "filename": "H_1_02_26368_86697_13_O.jpeg",
-      "relative_path": "고등학교/인수정리를_이용한_다항식의_인수분해/c3d1402988286c2f_H_1_02_26368_86697_13_O.jpeg",
+      "sample_id": "368fd3f3c3bc43f5",
+      "school_level": "중학교",
+      "domain": "회전체의 전개도에서 길이 구하기",
+      "filename": "M1_2_07_34773_139333_7_O.jpeg",
+      "problem_key": "34773_139333",
+      "relative_path": "중학교/회전체의_전개도에서_길이_구하기/368fd3f3c3bc43f5_M1_2_07_34773_139333_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "abd3bc748070a21e",
-      "school_level": "고등학교",
-      "domain": "연립이차방정식",
-      "filename": "H_1_05_26885_89272_14_O.jpeg",
-      "relative_path": "고등학교/연립이차방정식/abd3bc748070a21e_H_1_05_26885_89272_14_O.jpeg",
+      "sample_id": "2e88b6ca60562595",
+      "school_level": "중학교",
+      "domain": "현의 길이(1)- 두 현이 주어진 경우",
+      "filename": "M3_2_06_40769_158861_6_O.jpeg",
+      "problem_key": "40769_158861",
+      "relative_path": "중학교/현의_길이(1)-_두_현이_주어진_경우/2e88b6ca60562595_M3_2_06_40769_158861_6_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "fa2983c4a648ba27",
-      "school_level": "고등학교",
-      "domain": "집합 사이의 포함 관계가 성립하도록 하는 상수 구하기",
-      "filename": "H_2_01_29336_104621_17_X.jpeg",
-      "relative_path": "고등학교/집합_사이의_포함_관계가_성립하도록_하는_상수_구하기/fa2983c4a648ba27_H_2_01_29336_104621_17_X.jpeg",
+      "sample_id": "4ff7e2fa7c4074fe",
+      "school_level": "중학교",
+      "domain": "약수와 배수",
+      "filename": "M1_1_01_4800_19532_17_O.jpeg",
+      "problem_key": "4800_19532",
+      "relative_path": "중학교/약수와_배수/4ff7e2fa7c4074fe_M1_1_01_4800_19532_17_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d909120930c6ff5c",
+      "school_level": "중학교",
+      "domain": "사각형에서 변의 길이 구하기",
+      "filename": "M2_2_08_30866_113599_8_O.jpeg",
+      "problem_key": "30866_113599",
+      "relative_path": "중학교/사각형에서_변의_길이_구하기/d909120930c6ff5c_M2_2_08_30866_113599_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d9ce818b65588133",
+      "school_level": "중학교",
+      "domain": "색칠한 부분의 넓이 구하기(3)-도형의 일부분을 이동",
+      "filename": "M1_2_06_11380_67007_4_O.jpeg",
+      "problem_key": "11380_67007",
+      "relative_path": "중학교/색칠한_부분의_넓이_구하기(3)-도형의_일부분을_이동/d9ce818b65588133_M1_2_06_11380_67007_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1d0cd79ad24ff276",
+      "school_level": "중학교",
+      "domain": "함수의 뜻",
+      "filename": "M2_1_05_34570_138100_19_O.jpeg",
+      "problem_key": "34570_138100",
+      "relative_path": "중학교/함수의_뜻/1d0cd79ad24ff276_M2_1_05_34570_138100_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f93fd1dfceda527c",
+      "school_level": "중학교",
+      "domain": "일차함수 y=ax+b의 그래프와 a, b의 부호(1)- 부호 정하기",
+      "filename": "M2_1_05_11485_16122_18_O.jpeg",
+      "problem_key": "11485_16122",
+      "relative_path": "중학교/일차함수_y=ax+b의_그래프와_a,_b의_부호(1)-_부호_정하기/f93fd1dfceda527c_M2_1_05_11485_16122_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "6f071b870a5f460c",
+      "school_level": "중학교",
+      "domain": "인수분해 공식",
+      "filename": "M3_1_02_34702_138920_14_O.jpeg",
+      "problem_key": "34702_138920",
+      "relative_path": "중학교/인수분해_공식/6f071b870a5f460c_M3_1_02_34702_138920_14_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "b4efc673a085f2f2",
+      "school_level": "중학교",
+      "domain": "직각삼각형의 합동 조건의 활용(2)-RHS합동",
+      "filename": "M2_2_06_18044_103239_1_O.jpeg",
+      "problem_key": "18044_103239",
+      "relative_path": "중학교/직각삼각형의_합동_조건의_활용(2)-RHS합동/b4efc673a085f2f2_M2_2_06_18044_103239_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "12641cd394548eb0",
+      "school_level": "중학교",
+      "domain": "삼각형의 닮음 조건의 활용",
+      "filename": "M2_2_07_19430_45000_3_X.jpeg",
+      "problem_key": "19430_45000",
+      "relative_path": "중학교/삼각형의_닮음_조건의_활용/12641cd394548eb0_M2_2_07_19430_45000_3_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "529a58d90e403e0f",
+      "sample_id": "670a5089f92cb798",
+      "school_level": "중학교",
+      "domain": "y=a/x의 그래프의 특징",
+      "filename": "M1_1_04_42001_163778_13_X.jpeg",
+      "problem_key": "42001_163778",
+      "relative_path": "중학교/y=a-x의_그래프의_특징/670a5089f92cb798_M1_1_04_42001_163778_13_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "688ce1d4ff2fac1d",
+      "school_level": "중학교",
+      "domain": "평균에 대한 문제",
+      "filename": "M2_1_04_41650_162728_10_O.jpeg",
+      "problem_key": "41650_162728",
+      "relative_path": "중학교/평균에_대한_문제/688ce1d4ff2fac1d_M2_1_04_41650_162728_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f92261398aa81680",
+      "school_level": "중학교",
+      "domain": "일에 대한 문제",
+      "filename": "M1_1_03_6889_58849_4_O.jpeg",
+      "problem_key": "6889_58849",
+      "relative_path": "중학교/일에_대한_문제/f92261398aa81680_M1_1_03_6889_58849_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "8bfd1619885a6b4f",
+      "school_level": "중학교",
+      "domain": "반원에서의 접선",
+      "filename": "M3_2_06_40780_158897_18_O.jpeg",
+      "problem_key": "40780_158897",
+      "relative_path": "중학교/반원에서의_접선/8bfd1619885a6b4f_M3_2_06_40780_158897_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "6871d4b02ae6944d",
       "school_level": "고등학교",
       "domain": "역함수의 성질",
-      "filename": "H_2_04_30824_112043_17_X.jpeg",
-      "relative_path": "고등학교/역함수의_성질/529a58d90e403e0f_H_2_04_30824_112043_17_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "d1f12a32d117089a",
-      "school_level": "고등학교",
-      "domain": "근이 주어진 삼차방정식",
-      "filename": "H_1_05_26697_88485_4_X.jpeg",
-      "relative_path": "고등학교/근이_주어진_삼차방정식/d1f12a32d117089a_H_1_05_26697_88485_4_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "2b973fc945006bdf",
-      "school_level": "고등학교",
-      "domain": "이웃하거나 이웃하지 않는 순열의 수",
-      "filename": "H_2_07_28538_101018_13_O.jpeg",
-      "relative_path": "고등학교/이웃하거나_이웃하지_않는_순열의_수/2b973fc945006bdf_H_2_07_28538_101018_13_O.jpeg",
+      "filename": "H_2_04_30817_112007_3_O.jpeg",
+      "problem_key": "30817_112007",
+      "relative_path": "고등학교/역함수의_성질/6871d4b02ae6944d_H_2_04_30817_112007_3_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "ebffa6c13839ed4e",
+      "sample_id": "85e86dc002826b60",
       "school_level": "고등학교",
-      "domain": "적어도'의 조건이 있는 조합의 수",
-      "filename": "H_2_07_28788_101641_3_O.jpeg",
-      "relative_path": "고등학교/적어도'의_조건이_있는_조합의_수/ebffa6c13839ed4e_H_2_07_28788_101641_3_O.jpeg",
+      "domain": "유한집합의 원소의 개수",
+      "filename": "H_2_02_29806_106878_20_O.jpeg",
+      "problem_key": "29806_106878",
+      "relative_path": "고등학교/유한집합의_원소의_개수/85e86dc002826b60_H_2_02_29806_106878_20_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "363fa1d682b603f0",
+      "sample_id": "ee5d6f909b03625b",
       "school_level": "고등학교",
-      "domain": "유리식",
-      "filename": "H_2_05_38033_150663_10_O.jpeg",
-      "relative_path": "고등학교/유리식/363fa1d682b603f0_H_2_05_38033_150663_10_O.jpeg",
+      "domain": "원 밖의 점과 원 위의 점 사이의 거리",
+      "filename": "H_1_08_27839_93574_19_O.jpeg",
+      "problem_key": "27839_93574",
+      "relative_path": "고등학교/원_밖의_점과_원_위의_점_사이의_거리/ee5d6f909b03625b_H_1_08_27839_93574_19_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "0d110818a58499e8",
-      "school_level": "고등학교",
-      "domain": "이차방정식의 식 세우기",
-      "filename": "H_1_03_26648_87855_19_O.jpeg",
-      "relative_path": "고등학교/이차방정식의_식_세우기/0d110818a58499e8_H_1_03_26648_87855_19_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "6b49c0916eb638a7",
-      "school_level": "고등학교",
-      "domain": "자연수의 개수",
-      "filename": "H_2_07_28625_101398_7_X.jpeg",
-      "relative_path": "고등학교/자연수의_개수/6b49c0916eb638a7_H_2_07_28625_101398_7_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "4c7accd033f727ca",
-      "school_level": "고등학교",
-      "domain": "연립일차부등식의 풀이",
-      "filename": "H_1_06_26873_88852_5_O.jpeg",
-      "relative_path": "고등학교/연립일차부등식의_풀이/4c7accd033f727ca_H_1_06_26873_88852_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0803b41f8d3fa4cb",
-      "school_level": "고등학교",
-      "domain": "다항식의 나눗셈과 항등식",
-      "filename": "H_1_02_26119_85145_4_O.jpeg",
-      "relative_path": "고등학교/다항식의_나눗셈과_항등식/0803b41f8d3fa4cb_H_1_02_26119_85145_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "667fb05c94548010",
-      "school_level": "고등학교",
-      "domain": "수형도, 도로망, 색칠",
-      "filename": "H_2_07_28487_99880_11_O.jpeg",
-      "relative_path": "고등학교/수형도,_도로망,_색칠/667fb05c94548010_H_2_07_28487_99880_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "bbe5bc34d6bd0536",
-      "school_level": "고등학교",
-      "domain": "부분분수로의 변형",
-      "filename": "H_2_05_30966_113376_12_X.jpeg",
-      "relative_path": "고등학교/부분분수로의_변형/bbe5bc34d6bd0536_H_2_05_30966_113376_12_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "4cc028b812d1e8f5",
-      "school_level": "고등학교",
-      "domain": "집합의 표현",
-      "filename": "H_2_01_29177_103800_12_O.jpeg",
-      "relative_path": "고등학교/집합의_표현/4cc028b812d1e8f5_H_2_01_29177_103800_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "bfb87e01ede699dc",
+      "sample_id": "736b535c6a175bf4",
       "school_level": "고등학교",
       "domain": "원 위의 점과 직선 사이의 거리",
-      "filename": "H_1_08_27874_98052_12_X.jpeg",
-      "relative_path": "고등학교/원_위의_점과_직선_사이의_거리/bfb87e01ede699dc_H_1_08_27874_98052_12_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "e4f1b20baa598e7d",
-      "school_level": "고등학교",
-      "domain": "항등함수와 상수함수",
-      "filename": "H_2_04_30504_110617_5_O.jpeg",
-      "relative_path": "고등학교/항등함수와_상수함수/e4f1b20baa598e7d_H_2_04_30504_110617_5_O.jpeg",
+      "filename": "H_1_08_27874_93846_5_O.jpeg",
+      "problem_key": "27874_93846",
+      "relative_path": "고등학교/원_위의_점과_직선_사이의_거리/736b535c6a175bf4_H_1_08_27874_93846_5_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "72d3e3bc68906806",
+      "sample_id": "c4c3226c176f5767",
       "school_level": "고등학교",
-      "domain": "f○g=h를 만족시키는 함수 f 또는 g 구하기",
-      "filename": "H_2_04_38129_150962_20_O.jpeg",
-      "relative_path": "고등학교/f○g=h를_만족시키는_함수_f_또는_g_구하기/72d3e3bc68906806_H_2_04_38129_150962_20_O.jpeg",
+      "domain": "지불 방법과 지불 금액",
+      "filename": "H_2_07_28482_150861_18_O.jpeg",
+      "problem_key": "28482_150861",
+      "relative_path": "고등학교/지불_방법과_지불_금액/c4c3226c176f5767_H_2_07_28482_150861_18_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "4c18ec2280feef91",
-      "school_level": "고등학교",
-      "domain": "점과 직선 사이의 거리",
-      "filename": "H_1_07_27708_93329_6_O.jpeg",
-      "relative_path": "고등학교/점과_직선_사이의_거리/4c18ec2280feef91_H_1_07_27708_93329_6_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "9b575663b8c8f59f",
-      "school_level": "고등학교",
-      "domain": "순열의 계산",
-      "filename": "H_2_07_28518_100887_5_O.jpeg",
-      "relative_path": "고등학교/순열의_계산/9b575663b8c8f59f_H_2_07_28518_100887_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8c4273753d8296e5",
-      "school_level": "고등학교",
-      "domain": "곱셈 공식의 도형에의 활용",
-      "filename": "H_1_01_26006_85024_8_O.jpeg",
-      "relative_path": "고등학교/곱셈_공식의_도형에의_활용/8c4273753d8296e5_H_1_01_26006_85024_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "9df60e5f1c8da503",
-      "school_level": "고등학교",
-      "domain": "세 변의 길이에 따른 삼각형의 모양",
-      "filename": "H_1_07_27460_90691_1_X.jpeg",
-      "relative_path": "고등학교/세_변의_길이에_따른_삼각형의_모양/9df60e5f1c8da503_H_1_07_27460_90691_1_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "c65f48d539213b4e",
-      "school_level": "고등학교",
-      "domain": "유리함수의 그래프",
-      "filename": "H_2_05_31040_112913_11_O.jpeg",
-      "relative_path": "고등학교/유리함수의_그래프/c65f48d539213b4e_H_2_05_31040_112913_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "75c554117a297d7b",
-      "school_level": "고등학교",
-      "domain": "방정식 또는 부등식의 해의 집합의 연산",
-      "filename": "H_2_02_29781_107172_5_O.jpeg",
-      "relative_path": "고등학교/방정식_또는_부등식의_해의_집합의_연산/75c554117a297d7b_H_2_02_29781_107172_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "2bcb7aefd4c3e6f1",
-      "school_level": "고등학교",
-      "domain": "명제가 참이 되도록 하는 상수 구하기",
-      "filename": "H_2_03_29989_109888_1_X.jpeg",
-      "relative_path": "고등학교/명제가_참이_되도록_하는_상수_구하기/2bcb7aefd4c3e6f1_H_2_03_29989_109888_1_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "7078e80a5758a465",
-      "school_level": "고등학교",
-      "domain": "연립이차부등식",
-      "filename": "H_1_06_27375_94766_17_X.jpeg",
-      "relative_path": "고등학교/연립이차부등식/7078e80a5758a465_H_1_06_27375_94766_17_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "eb9de40035892276",
-      "school_level": "고등학교",
-      "domain": "명제가 참이 되도록 하는 상수 구하기",
-      "filename": "H_2_03_29989_109888_11_O.jpeg",
-      "relative_path": "고등학교/명제가_참이_되도록_하는_상수_구하기/eb9de40035892276_H_2_03_29989_109888_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0eaf4b1cc9a101b4",
-      "school_level": "고등학교",
-      "domain": "적어도'의 조건이 있는 조합의 수",
-      "filename": "H_2_07_28788_101641_14_X.jpeg",
-      "relative_path": "고등학교/적어도'의_조건이_있는_조합의_수/0eaf4b1cc9a101b4_H_2_07_28788_101641_14_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "1a1eca7a7a7d352f",
-      "school_level": "고등학교",
-      "domain": "문자가 2 개인 곱셈 공식의 변형",
-      "filename": "H_1_01_25915_84591_2_O.jpeg",
-      "relative_path": "고등학교/문자가_2_개인_곱셈_공식의_변형/1a1eca7a7a7d352f_H_1_01_25915_84591_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "ec8970d765eb46cd",
-      "school_level": "고등학교",
-      "domain": "제곱근의 성질",
-      "filename": "H_2_06_31170_113783_6_X.jpeg",
-      "relative_path": "고등학교/제곱근의_성질/ec8970d765eb46cd_H_2_06_31170_113783_6_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "b1af8b81fad14358",
-      "school_level": "고등학교",
-      "domain": "제곱근의 성질",
-      "filename": "H_2_06_31170_113783_15_X.jpeg",
-      "relative_path": "고등학교/제곱근의_성질/b1af8b81fad14358_H_2_06_31170_113783_15_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "f853fafaf4559fda",
-      "school_level": "고등학교",
-      "domain": "원 위의 점과 직선 사이의 거리",
-      "filename": "H_1_08_27874_98052_10_O.jpeg",
-      "relative_path": "고등학교/원_위의_점과_직선_사이의_거리/f853fafaf4559fda_H_1_08_27874_98052_10_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "d84e5fa0781956a1",
-      "school_level": "고등학교",
-      "domain": "복잡한 식의 인수분해",
-      "filename": "H_1_02_26342_87103_1_X.jpeg",
-      "relative_path": "고등학교/복잡한_식의_인수분해/d84e5fa0781956a1_H_1_02_26342_87103_1_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "7812a1468b481804",
-      "school_level": "고등학교",
-      "domain": "이차부등식의 풀이",
-      "filename": "H_1_06_27180_91651_18_O.jpeg",
-      "relative_path": "고등학교/이차부등식의_풀이/7812a1468b481804_H_1_06_27180_91651_18_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "318b847f9064c6d7",
-      "school_level": "고등학교",
-      "domain": "뽑아서 나열하는 경우의 수",
-      "filename": "H_2_07_28948_102826_11_O.jpeg",
-      "relative_path": "고등학교/뽑아서_나열하는_경우의_수/318b847f9064c6d7_H_2_07_28948_102826_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "a47bbd13108504a9",
-      "school_level": "고등학교",
-      "domain": "이차부등식이 항상 성립할 조건",
-      "filename": "H_1_06_27218_91704_2_O.jpeg",
-      "relative_path": "고등학교/이차부등식이_항상_성립할_조건/a47bbd13108504a9_H_1_06_27218_91704_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "1e76cc8e0ecb86d0",
-      "school_level": "고등학교",
-      "domain": "곱셈 공식을 이용한 다항식의 전개",
-      "filename": "H_1_01_25852_84096_20_O.jpeg",
-      "relative_path": "고등학교/곱셈_공식을_이용한_다항식의_전개/1e76cc8e0ecb86d0_H_1_01_25852_84096_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "8c3dcfa29ed46699",
-      "school_level": "고등학교",
-      "domain": "접선의 길이",
-      "filename": "H_1_08_27910_98068_15_O.jpeg",
-      "relative_path": "고등학교/접선의_길이/8c3dcfa29ed46699_H_1_08_27910_98068_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "7c98e4c19222e9dd",
-      "school_level": "고등학교",
-      "domain": "음수의 제곱근의 성질",
-      "filename": "H_1_03_26483_85909_17_X.jpeg",
-      "relative_path": "고등학교/음수의_제곱근의_성질/7c98e4c19222e9dd_H_1_03_26483_85909_17_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "2cf8302ea33dac1a",
-      "school_level": "고등학교",
-      "domain": "한 근이 주어진 이차방정식",
-      "filename": "H_1_03_26601_87628_15_O.jpeg",
-      "relative_path": "고등학교/한_근이_주어진_이차방정식/2cf8302ea33dac1a_H_1_03_26601_87628_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3f6d98ef549ab6ee",
-      "school_level": "고등학교",
-      "domain": "점의 대칭이동",
-      "filename": "H_1_09_28093_95841_3_X.jpeg",
-      "relative_path": "고등학교/점의_대칭이동/3f6d98ef549ab6ee_H_1_09_28093_95841_3_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "7d531414d20224c2",
-      "school_level": "고등학교",
-      "domain": "인수정리",
-      "filename": "H_1_02_26265_86579_5_O.jpeg",
-      "relative_path": "고등학교/인수정리/7d531414d20224c2_H_1_02_26265_86579_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "c435c09f040d7381",
-      "school_level": "고등학교",
-      "domain": "이웃하거나 이웃하지 않는 순열의 수",
-      "filename": "H_2_07_28538_101018_16_O.jpeg",
-      "relative_path": "고등학교/이웃하거나_이웃하지_않는_순열의_수/c435c09f040d7381_H_2_07_28538_101018_16_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3cdfb1e9603a76f5",
-      "school_level": "고등학교",
-      "domain": "점과 직선 사이의 거리",
-      "filename": "H_1_07_27711_93404_17_O.jpeg",
-      "relative_path": "고등학교/점과_직선_사이의_거리/3cdfb1e9603a76f5_H_1_07_27711_93404_17_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "e06148c29b8a4036",
-      "school_level": "고등학교",
-      "domain": "절댓값 기호가 있는 부등식의 풀이",
-      "filename": "H_1_06_26972_90273_14_O.jpeg",
-      "relative_path": "고등학교/절댓값_기호가_있는_부등식의_풀이/e06148c29b8a4036_H_1_06_26972_90273_14_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fb8d5c81dcf7fe85",
-      "school_level": "고등학교",
-      "domain": "항등함수와 상수함수",
-      "filename": "H_2_04_30504_110617_4_O.jpeg",
-      "relative_path": "고등학교/항등함수와_상수함수/fb8d5c81dcf7fe85_H_2_04_30504_110617_4_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fd4bfe4f053946d6",
-      "school_level": "고등학교",
-      "domain": "조건을 만족시키는 복소수 구하기",
-      "filename": "H_1_03_26428_88085_10_X.jpeg",
-      "relative_path": "고등학교/조건을_만족시키는_복소수_구하기/fd4bfe4f053946d6_H_1_03_26428_88085_10_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "60099d7bbdcaeec8",
-      "school_level": "고등학교",
-      "domain": "유리함수의 최대⋅최소",
-      "filename": "H_2_05_31078_113347_11_O.jpeg",
-      "relative_path": "고등학교/유리함수의_최대⋅최소/60099d7bbdcaeec8_H_2_05_31078_113347_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "d76e52721e732746",
-      "school_level": "고등학교",
-      "domain": "A < B < C 꼴의 부등식의 풀이",
-      "filename": "H_1_06_26954_90167_14_X.jpeg",
-      "relative_path": "고등학교/A_<_B_<_C_꼴의_부등식의_풀이/d76e52721e732746_H_1_06_26954_90167_14_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "de9138ab6aefe682",
-      "school_level": "고등학교",
-      "domain": "뽑아서 나열하는 경우의 수",
-      "filename": "H_2_07_28948_102824_5_X.jpeg",
-      "relative_path": "고등학교/뽑아서_나열하는_경우의_수/de9138ab6aefe682_H_2_07_28948_102824_5_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "9e7c7f4cf4e78093",
-      "school_level": "고등학교",
-      "domain": "점의 대칭이동",
-      "filename": "H_1_09_28093_95838_13_O.jpeg",
-      "relative_path": "고등학교/점의_대칭이동/9e7c7f4cf4e78093_H_1_09_28093_95838_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "4be26175f27ef7a4",
-      "school_level": "고등학교",
-      "domain": "이차방정식의 식 세우기",
-      "filename": "H_1_03_26648_87855_13_O.jpeg",
-      "relative_path": "고등학교/이차방정식의_식_세우기/4be26175f27ef7a4_H_1_03_26648_87855_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "40c1c4d6b78f0ea2",
-      "school_level": "고등학교",
-      "domain": "이차부등식이 항상 성립할 조건",
-      "filename": "H_1_06_27218_91704_11_O.jpeg",
-      "relative_path": "고등학교/이차부등식이_항상_성립할_조건/40c1c4d6b78f0ea2_H_1_06_27218_91704_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "a4e97b0ff0b386a8",
-      "school_level": "고등학교",
-      "domain": "원의 평행이동",
-      "filename": "H_1_09_28005_95263_12_O.jpeg",
-      "relative_path": "고등학교/원의_평행이동/a4e97b0ff0b386a8_H_1_09_28005_95263_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "fbb3bbec236a5cd1",
-      "school_level": "고등학교",
-      "domain": "미정계수법(수치대입법)",
-      "filename": "H_1_02_26060_84854_12_O.jpeg",
-      "relative_path": "고등학교/미정계수법(수치대입법)/fbb3bbec236a5cd1_H_1_02_26060_84854_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "0f77059a2580eb0f",
-      "school_level": "고등학교",
-      "domain": "다항식의 전개",
-      "filename": "H_1_01_25802_84336_15_X.jpeg",
-      "relative_path": "고등학교/다항식의_전개/0f77059a2580eb0f_H_1_01_25802_84336_15_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "9a6fd10f51aff83a",
-      "school_level": "고등학교",
-      "domain": "자연수의 개수",
-      "filename": "H_2_07_28625_101398_12_O.jpeg",
-      "relative_path": "고등학교/자연수의_개수/9a6fd10f51aff83a_H_2_07_28625_101398_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "44028eb5200bf6b2",
-      "school_level": "고등학교",
-      "domain": "조건을 만족시키는 부분집합의 개수",
-      "filename": "H_2_02_29671_106581_3_O.jpeg",
-      "relative_path": "고등학교/조건을_만족시키는_부분집합의_개수/44028eb5200bf6b2_H_2_02_29671_106581_3_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "3d21b605ab105c1e",
-      "school_level": "고등학교",
-      "domain": "일대일대응 찾기",
-      "filename": "H_2_04_30497_110593_11_O.jpeg",
-      "relative_path": "고등학교/일대일대응_찾기/3d21b605ab105c1e_H_2_04_30497_110593_11_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "b048808f37244a69",
-      "school_level": "고등학교",
-      "domain": "복소수의 사칙연산",
-      "filename": "H_1_03_26297_87467_20_X.jpeg",
-      "relative_path": "고등학교/복소수의_사칙연산/b048808f37244a69_H_1_03_26297_87467_20_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "8a05eb7f5ab91c2f",
-      "school_level": "고등학교",
-      "domain": "유리식의 값 구하기",
-      "filename": "H_2_05_30984_113479_12_O.jpeg",
-      "relative_path": "고등학교/유리식의_값_구하기/8a05eb7f5ab91c2f_H_2_05_30984_113479_12_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "387c3e2db84c9cdf",
-      "school_level": "고등학교",
-      "domain": "선분의 내분점과 외분점",
-      "filename": "H_1_07_27577_92024_1_O.jpeg",
-      "relative_path": "고등학교/선분의_내분점과_외분점/387c3e2db84c9cdf_H_1_07_27577_92024_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "a285bbffd0b1fd1f",
-      "school_level": "고등학교",
-      "domain": "무리식의 값 구하기",
-      "filename": "H_2_06_31198_113939_20_O.jpeg",
-      "relative_path": "고등학교/무리식의_값_구하기/a285bbffd0b1fd1f_H_2_06_31198_113939_20_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "1d913b3a7097f377",
+      "sample_id": "82068cd5aa1321eb",
       "school_level": "고등학교",
       "domain": "이차방정식의 근의 판별",
-      "filename": "H_1_06_27419_94730_6_X.jpeg",
-      "relative_path": "고등학교/이차방정식의_근의_판별/1d913b3a7097f377_H_1_06_27419_94730_6_X.jpeg",
+      "filename": "H_1_06_27393_94938_3_O.jpeg",
+      "problem_key": "27393_94938",
+      "relative_path": "고등학교/이차방정식의_근의_판별/82068cd5aa1321eb_H_1_06_27393_94938_3_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "09b165fefa360000",
+      "school_level": "고등학교",
+      "domain": "무리식의 값이 실수가 되기 위한 조건",
+      "filename": "H_2_06_31156_113704_19_O.jpeg",
+      "problem_key": "31156_113704",
+      "relative_path": "고등학교/무리식의_값이_실수가_되기_위한_조건/09b165fefa360000_H_2_06_31156_113704_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "6182a3e15c8a2dc4",
+      "school_level": "고등학교",
+      "domain": "점의 대칭이동",
+      "filename": "H_1_09_28057_95409_1_O.jpeg",
+      "problem_key": "28057_95409",
+      "relative_path": "고등학교/점의_대칭이동/6182a3e15c8a2dc4_H_1_09_28057_95409_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "8050421b73eadfd8",
+      "school_level": "고등학교",
+      "domain": "삼차방정식과 사차방정식의 풀이",
+      "filename": "H_1_05_26667_88002_7_O.jpeg",
+      "problem_key": "26667_88002",
+      "relative_path": "고등학교/삼차방정식과_사차방정식의_풀이/8050421b73eadfd8_H_1_05_26667_88002_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d75897e4be791a5d",
+      "school_level": "고등학교",
+      "domain": "유리함수의 그래프의 성질",
+      "filename": "H_2_05_31060_150771_19_O.jpeg",
+      "problem_key": "31060_150771",
+      "relative_path": "고등학교/유리함수의_그래프의_성질/d75897e4be791a5d_H_2_05_31060_150771_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "b265eb9617134597",
+      "school_level": "고등학교",
+      "domain": "조건을 만족시키는 복소수 구하기",
+      "filename": "H_1_03_26428_88084_10_X.jpeg",
+      "problem_key": "26428_88084",
+      "relative_path": "고등학교/조건을_만족시키는_복소수_구하기/b265eb9617134597_H_1_03_26428_88084_10_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "433cd41eb48dd170",
-      "school_level": "고등학교",
-      "domain": "여러 개의 문자를 포함한 다항식의 인수분해",
-      "filename": "H_1_02_26357_86444_4_X.jpeg",
-      "relative_path": "고등학교/여러_개의_문자를_포함한_다항식의_인수분해/433cd41eb48dd170_H_1_02_26357_86444_4_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "3d5a32e5dd510b57",
-      "school_level": "고등학교",
-      "domain": "조립제법을 이용하여 항등식의 미정계수 구하기",
-      "filename": "H_1_02_26134_85175_17_O.jpeg",
-      "relative_path": "고등학교/조립제법을_이용하여_항등식의_미정계수_구하기/3d5a32e5dd510b57_H_1_02_26134_85175_17_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "cd80c3e340be6bf7",
-      "school_level": "고등학교",
-      "domain": "항등식",
-      "filename": "H_1_02_26066_84885_15_O.jpeg",
-      "relative_path": "고등학교/항등식/cd80c3e340be6bf7_H_1_02_26066_84885_15_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "979052ce1e255f67",
-      "school_level": "고등학교",
-      "domain": "직선의 방정식",
-      "filename": "H_1_07_27656_92942_7_X.jpeg",
-      "relative_path": "고등학교/직선의_방정식/979052ce1e255f67_H_1_07_27656_92942_7_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "9179bbf88a81379b",
-      "school_level": "고등학교",
-      "domain": "다항식의 나눗셈",
-      "filename": "H_1_01_26026_85350_2_O.jpeg",
-      "relative_path": "고등학교/다항식의_나눗셈/9179bbf88a81379b_H_1_01_26026_85350_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "b8c449a22d87649c",
-      "school_level": "고등학교",
-      "domain": "서로 같은 집합",
-      "filename": "H_2_01_29353_104779_13_O.jpeg",
-      "relative_path": "고등학교/서로_같은_집합/b8c449a22d87649c_H_2_01_29353_104779_13_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "49b3544ee4c69ce1",
-      "school_level": "고등학교",
-      "domain": "두 수를 근으로 하는 이차방정식",
-      "filename": "H_1_03_26605_87676_6_O.jpeg",
-      "relative_path": "고등학교/두_수를_근으로_하는_이차방정식/49b3544ee4c69ce1_H_1_03_26605_87676_6_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "267ff081643845ec",
-      "school_level": "고등학교",
-      "domain": "켤레복소수의 성질",
-      "filename": "H_1_03_26402_88019_20_X.jpeg",
-      "relative_path": "고등학교/켤레복소수의_성질/267ff081643845ec_H_1_03_26402_88019_20_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "2131a05b3c3b40b9",
+      "sample_id": "309e641360ca0b45",
       "school_level": "고등학교",
       "domain": "방정식과 부등식의 해의 개수",
-      "filename": "H_2_07_28450_99655_6_O.jpeg",
-      "relative_path": "고등학교/방정식과_부등식의_해의_개수/2131a05b3c3b40b9_H_2_07_28450_99655_6_O.jpeg",
+      "filename": "H_2_07_28450_99654_8_O.jpeg",
+      "problem_key": "28450_99654",
+      "relative_path": "고등학교/방정식과_부등식의_해의_개수/309e641360ca0b45_H_2_07_28450_99654_8_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "421be0656f8ac01f",
+      "sample_id": "9f2b7955d7fee999",
       "school_level": "고등학교",
-      "domain": "인수분해 공식을 이용한 다항식의 인수분해",
-      "filename": "H_1_02_26334_86203_5_X.jpeg",
-      "relative_path": "고등학교/인수분해_공식을_이용한_다항식의_인수분해/421be0656f8ac01f_H_1_02_26334_86203_5_X.jpeg",
+      "domain": "항등식에서 계수의 합 구하기",
+      "filename": "H_1_02_26069_84895_1_X.jpeg",
+      "problem_key": "26069_84895",
+      "relative_path": "고등학교/항등식에서_계수의_합_구하기/9f2b7955d7fee999_H_1_02_26069_84895_1_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "cd5c9f80cb2a19b9",
+      "sample_id": "60b3071dccd785c2",
+      "school_level": "고등학교",
+      "domain": "진리집합",
+      "filename": "H_2_03_29955_109471_2_O.jpeg",
+      "problem_key": "29955_109471",
+      "relative_path": "고등학교/진리집합/60b3071dccd785c2_H_2_03_29955_109471_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c142e036c04ab374",
+      "school_level": "고등학교",
+      "domain": "점의 평행이동",
+      "filename": "H_1_09_27969_94326_6_X.jpeg",
+      "problem_key": "27969_94326",
+      "relative_path": "고등학교/점의_평행이동/c142e036c04ab374_H_1_09_27969_94326_6_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "ed73909a4e263e82",
+      "school_level": "고등학교",
+      "domain": "무리함수의 정의역과 치역",
+      "filename": "H_2_06_31288_114614_19_X.jpeg",
+      "problem_key": "31288_114614",
+      "relative_path": "고등학교/무리함수의_정의역과_치역/ed73909a4e263e82_H_2_06_31288_114614_19_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "3a78f6f50141f3eb",
+      "school_level": "고등학교",
+      "domain": "근이 주어진 삼차방정식",
+      "filename": "H_1_05_26697_97567_11_X.jpeg",
+      "problem_key": "26697_97567",
+      "relative_path": "고등학교/근이_주어진_삼차방정식/3a78f6f50141f3eb_H_1_05_26697_97567_11_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "de0e89d8fa7860ff",
+      "school_level": "고등학교",
+      "domain": "접선의 길이",
+      "filename": "H_1_08_27908_94144_8_O.jpeg",
+      "problem_key": "27908_94144",
+      "relative_path": "고등학교/접선의_길이/de0e89d8fa7860ff_H_1_08_27908_94144_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "cc9cf2850d3ef243",
+      "school_level": "고등학교",
+      "domain": "항등함수와 상수함수",
+      "filename": "H_2_04_30512_110648_5_O.jpeg",
+      "problem_key": "30512_110648",
+      "relative_path": "고등학교/항등함수와_상수함수/cc9cf2850d3ef243_H_2_04_30512_110648_5_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c5ce9a6b850283fe",
+      "school_level": "고등학교",
+      "domain": "x절편, y절편이 주어진 직선의 방정식",
+      "filename": "H_1_07_37948_150570_10_O.jpeg",
+      "problem_key": "37948_150570",
+      "relative_path": "고등학교/x절편,_y절편이_주어진_직선의_방정식/c5ce9a6b850283fe_H_1_07_37948_150570_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "7fa5833df32e624d",
+      "school_level": "고등학교",
+      "domain": "절댓값 기호를 포함한 식의 그래프",
+      "filename": "H_2_04_30850_114576_12_X.jpeg",
+      "problem_key": "30850_114576",
+      "relative_path": "고등학교/절댓값_기호를_포함한_식의_그래프/7fa5833df32e624d_H_2_04_30850_114576_12_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "c1ff5303ac6971db",
+      "school_level": "고등학교",
+      "domain": "조합의 수",
+      "filename": "H_2_07_28750_101561_4_X.jpeg",
+      "problem_key": "28750_101561",
+      "relative_path": "고등학교/조합의_수/c1ff5303ac6971db_H_2_07_28750_101561_4_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "5c9e9bd7b84c7eff",
+      "school_level": "고등학교",
+      "domain": "부등식 f(x) < 0 과 부등식 f(ax+b)의 관계",
+      "filename": "H_1_06_27205_90163_10_O.jpeg",
+      "problem_key": "27205_90163",
+      "relative_path": "고등학교/부등식_f(x)_<_0_과_부등식_f(ax+b)의_관계/5c9e9bd7b84c7eff_H_1_06_27205_90163_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "7d5374283b97fb69",
+      "school_level": "고등학교",
+      "domain": "조합의 수",
+      "filename": "H_2_07_28746_101809_1_O.jpeg",
+      "problem_key": "28746_101809",
+      "relative_path": "고등학교/조합의_수/7d5374283b97fb69_H_2_07_28746_101809_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5cc3fa3452e26852",
+      "school_level": "고등학교",
+      "domain": "방정식 x³=1",
+      "filename": "H_1_05_38023_150640_4_O.jpeg",
+      "problem_key": "38023_150640",
+      "relative_path": "고등학교/방정식_x³=1/5cc3fa3452e26852_H_1_05_38023_150640_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "cba97037ce211d70",
+      "school_level": "고등학교",
+      "domain": "중심에 대한 조건이 주어진 원의 방정식",
+      "filename": "H_1_08_27729_92805_16_O.jpeg",
+      "problem_key": "27729_92805",
+      "relative_path": "고등학교/중심에_대한_조건이_주어진_원의_방정식/cba97037ce211d70_H_1_08_27729_92805_16_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a3df19a986870fb0",
+      "school_level": "고등학교",
+      "domain": "유리함수의 합성함수와 역함수",
+      "filename": "H_2_05_31100_113016_2_O.jpeg",
+      "problem_key": "31100_113016",
+      "relative_path": "고등학교/유리함수의_합성함수와_역함수/a3df19a986870fb0_H_2_05_31100_113016_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "0396f768e33707fd",
+      "school_level": "고등학교",
+      "domain": "삼차방정식과 사차방정식의 활용",
+      "filename": "H_1_05_26740_90763_2_O.jpeg",
+      "problem_key": "26740_90763",
+      "relative_path": "고등학교/삼차방정식과_사차방정식의_활용/0396f768e33707fd_H_1_05_26740_90763_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "dab9042761d0af1d",
+      "school_level": "고등학교",
+      "domain": "명제의 대우를 이용하여 상수 구하기",
+      "filename": "H_2_03_30176_108726_18_O.jpeg",
+      "problem_key": "30176_108726",
+      "relative_path": "고등학교/명제의_대우를_이용하여_상수_구하기/dab9042761d0af1d_H_2_03_30176_108726_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1c5ec9dc3c3153d2",
+      "school_level": "고등학교",
+      "domain": "절댓값 기호를 포함한 방정식",
+      "filename": "H_1_03_26510_86618_11_O.jpeg",
+      "problem_key": "26510_86618",
+      "relative_path": "고등학교/절댓값_기호를_포함한_방정식/1c5ec9dc3c3153d2_H_1_03_26510_86618_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "7c9866187f1ae89e",
+      "school_level": "고등학교",
+      "domain": "자리에 대한 조건이 있는 순열의 수",
+      "filename": "H_2_07_28608_101269_17_O.jpeg",
+      "problem_key": "28608_101269",
+      "relative_path": "고등학교/자리에_대한_조건이_있는_순열의_수/7c9866187f1ae89e_H_2_07_28608_101269_17_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "9266397c0c4a20bf",
+      "school_level": "고등학교",
+      "domain": "근과 계수의 관계를 이용하여 식의 값 구하기",
+      "filename": "H_1_03_26536_87756_18_O.jpeg",
+      "problem_key": "26536_87756",
+      "relative_path": "고등학교/근과_계수의_관계를_이용하여_식의_값_구하기/9266397c0c4a20bf_H_1_03_26536_87756_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "87dd93c8529a9d1c",
       "school_level": "고등학교",
       "domain": "산술평균과 기하평균의 관계",
-      "filename": "H_2_03_30327_109182_11_O.jpeg",
-      "relative_path": "고등학교/산술평균과_기하평균의_관계/cd5c9f80cb2a19b9_H_2_03_30327_109182_11_O.jpeg",
+      "filename": "H_2_03_30325_109174_11_O.jpeg",
+      "problem_key": "30325_109174",
+      "relative_path": "고등학교/산술평균과_기하평균의_관계/87dd93c8529a9d1c_H_2_03_30325_109174_11_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "63a96b99920a1975",
+      "sample_id": "dab7bae0e3691fc3",
+      "school_level": "고등학교",
+      "domain": "문자가 3 개인 곱셈 공식의 변형",
+      "filename": "H_1_01_25997_84990_17_O.jpeg",
+      "problem_key": "25997_84990",
+      "relative_path": "고등학교/문자가_3_개인_곱셈_공식의_변형/dab7bae0e3691fc3_H_1_01_25997_84990_17_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "681401eec1129c5d",
+      "school_level": "고등학교",
+      "domain": "유리함수의 최대⋅최소",
+      "filename": "H_2_05_31085_112960_6_O.jpeg",
+      "problem_key": "31085_112960",
+      "relative_path": "고등학교/유리함수의_최대⋅최소/681401eec1129c5d_H_2_05_31085_112960_6_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "05c1acc009f70e80",
+      "school_level": "고등학교",
+      "domain": "문자가 3 개인 곱셈 공식의 변형",
+      "filename": "H_1_01_26000_84999_11_O.jpeg",
+      "problem_key": "26000_84999",
+      "relative_path": "고등학교/문자가_3_개인_곱셈_공식의_변형/05c1acc009f70e80_H_1_01_26000_84999_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "e61b2436805721f3",
+      "school_level": "고등학교",
+      "domain": "자취의 방정식",
+      "filename": "H_1_08_27842_93592_9_O.jpeg",
+      "problem_key": "27842_93592",
+      "relative_path": "고등학교/자취의_방정식/e61b2436805721f3_H_1_08_27842_93592_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c2fa3b2893240131",
+      "school_level": "고등학교",
+      "domain": "대칭이동",
+      "filename": "H_1_09_28080_95551_18_O.jpeg",
+      "problem_key": "28080_95551",
+      "relative_path": "고등학교/대칭이동/c2fa3b2893240131_H_1_09_28080_95551_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "0cac7ae6f9b089c4",
+      "school_level": "고등학교",
+      "domain": "서로소인 집합",
+      "filename": "H_2_02_29512_106666_18_O.jpeg",
+      "problem_key": "29512_106666",
+      "relative_path": "고등학교/서로소인_집합/0cac7ae6f9b089c4_H_2_02_29512_106666_18_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "92587ec2e8453e53",
+      "school_level": "고등학교",
+      "domain": "연립이차방정식의 활용",
+      "filename": "H_1_05_26864_89333_20_X.jpeg",
+      "problem_key": "26864_89333",
+      "relative_path": "고등학교/연립이차방정식의_활용/92587ec2e8453e53_H_1_05_26864_89333_20_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "4810d21b811fc5eb",
+      "school_level": "고등학교",
+      "domain": "곱셈 공식",
+      "filename": "H_1_01_25846_84042_9_O.jpeg",
+      "problem_key": "25846_84042",
+      "relative_path": "고등학교/곱셈_공식/4810d21b811fc5eb_H_1_01_25846_84042_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "68b9729a0286bf85",
+      "school_level": "고등학교",
+      "domain": "함수의 그래프와 합성함수",
+      "filename": "H_2_04_30655_112402_13_O.jpeg",
+      "problem_key": "30655_112402",
+      "relative_path": "고등학교/함수의_그래프와_합성함수/68b9729a0286bf85_H_2_04_30655_112402_13_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "6a46eb32729eb783",
+      "school_level": "고등학교",
+      "domain": "항이 네 개인 다항식의 인수분해",
+      "filename": "H_1_02_26348_86327_10_O.jpeg",
+      "problem_key": "26348_86327",
+      "relative_path": "고등학교/항이_네_개인_다항식의_인수분해/6a46eb32729eb783_H_1_02_26348_86327_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "b3ba82bcab545f77",
+      "school_level": "고등학교",
+      "domain": "x절편, y절편이 주어진 직선의 방정식",
+      "filename": "H_1_07_37948_150570_1_O.jpeg",
+      "problem_key": "37948_150570",
+      "relative_path": "고등학교/x절편,_y절편이_주어진_직선의_방정식/b3ba82bcab545f77_H_1_07_37948_150570_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "acdcf030510593e2",
+      "school_level": "고등학교",
+      "domain": "분모의 유리화",
+      "filename": "H_2_06_31193_114219_19_O.jpeg",
+      "problem_key": "31193_114219",
+      "relative_path": "고등학교/분모의_유리화/acdcf030510593e2_H_2_06_31193_114219_19_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "eba5e8cd25e931d3",
+      "school_level": "고등학교",
+      "domain": "특정한 것을 포함하거나 포함하지 않는 조합의 수",
+      "filename": "H_2_07_28771_101615_11_O.jpeg",
+      "problem_key": "28771_101615",
+      "relative_path": "고등학교/특정한_것을_포함하거나_포함하지_않는_조합의_수/eba5e8cd25e931d3_H_2_07_28771_101615_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "fdb815105d6fb260",
+      "school_level": "고등학교",
+      "domain": "두 집합의 포함 관계",
+      "filename": "H_2_02_29739_107541_15_X.jpeg",
+      "problem_key": "29739_107541",
+      "relative_path": "고등학교/두_집합의_포함_관계/fdb815105d6fb260_H_2_02_29739_107541_15_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "fd67fec5a9492702",
+      "school_level": "고등학교",
+      "domain": "적어도'의 조건이 있는 조합의 수",
+      "filename": "H_2_07_28801_101662_4_X.jpeg",
+      "problem_key": "28801_101662",
+      "relative_path": "고등학교/적어도'의_조건이_있는_조합의_수/fd67fec5a9492702_H_2_07_28801_101662_4_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "0ca590de909edd48",
+      "school_level": "고등학교",
+      "domain": "이차방정식의 풀이",
+      "filename": "H_1_03_26487_85952_5_O.jpeg",
+      "problem_key": "26487_85952",
+      "relative_path": "고등학교/이차방정식의_풀이/0ca590de909edd48_H_1_03_26487_85952_5_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "dafdf8fb932d715e",
+      "school_level": "고등학교",
+      "domain": "조합의 계산",
+      "filename": "H_2_07_28725_101529_2_O.jpeg",
+      "problem_key": "28725_101529",
+      "relative_path": "고등학교/조합의_계산/dafdf8fb932d715e_H_2_07_28725_101529_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "538306266b6346d5",
+      "school_level": "고등학교",
+      "domain": "이차함수의 그래프와 직선의 위치 관계",
+      "filename": "H_1_04_27048_89304_13_X.jpeg",
+      "problem_key": "27048_89304",
+      "relative_path": "고등학교/이차함수의_그래프와_직선의_위치_관계/538306266b6346d5_H_1_04_27048_89304_13_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "8489ef789327ad82",
+      "school_level": "고등학교",
+      "domain": "인수정리를 이용한 다항식의 인수분해",
+      "filename": "H_1_02_26367_86691_16_X.jpeg",
+      "problem_key": "26367_86691",
+      "relative_path": "고등학교/인수정리를_이용한_다항식의_인수분해/8489ef789327ad82_H_1_02_26367_86691_16_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "daf3268a5e5c3072",
+      "school_level": "고등학교",
+      "domain": "자연수의 개수",
+      "filename": "H_2_07_28622_101354_9_O.jpeg",
+      "problem_key": "28622_101354",
+      "relative_path": "고등학교/자연수의_개수/daf3268a5e5c3072_H_2_07_28622_101354_9_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "100aa459613b1beb",
+      "school_level": "고등학교",
+      "domain": "적어도'의 조건이 있는 조합의 수",
+      "filename": "H_2_07_28788_101642_18_X.jpeg",
+      "problem_key": "28788_101642",
+      "relative_path": "고등학교/적어도'의_조건이_있는_조합의_수/100aa459613b1beb_H_2_07_28788_101642_18_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "cb2c5be8570bec4c",
+      "school_level": "고등학교",
+      "domain": "대칭이동을 이용한 거리의 최솟값",
+      "filename": "H_1_09_28101_96029_11_O.jpeg",
+      "problem_key": "28101_96029",
+      "relative_path": "고등학교/대칭이동을_이용한_거리의_최솟값/cb2c5be8570bec4c_H_1_09_28101_96029_11_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "d7f80685cbd38136",
+      "school_level": "고등학교",
+      "domain": "연립이차방정식",
+      "filename": "H_1_05_26886_97620_3_X.jpeg",
+      "problem_key": "26886_97620",
+      "relative_path": "고등학교/연립이차방정식/d7f80685cbd38136_H_1_05_26886_97620_3_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "e28a8c21b61c31c5",
+      "school_level": "고등학교",
+      "domain": "두 수를 근으로 하는 이차방정식",
+      "filename": "H_1_03_26605_87673_16_X.jpeg",
+      "problem_key": "26605_87673",
+      "relative_path": "고등학교/두_수를_근으로_하는_이차방정식/e28a8c21b61c31c5_H_1_03_26605_87673_16_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "cba702834c2b10c5",
+      "school_level": "고등학교",
+      "domain": "이차함수의 그래프와 직선의 위치 관계",
+      "filename": "H_1_04_27052_89526_3_X.jpeg",
+      "problem_key": "27052_89526",
+      "relative_path": "고등학교/이차함수의_그래프와_직선의_위치_관계/cba702834c2b10c5_H_1_04_27052_89526_3_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "aef757aa6d0d6b10",
+      "school_level": "고등학교",
+      "domain": "유리함수의 합성함수와 역함수",
+      "filename": "H_2_05_31120_113057_20_O.jpeg",
+      "problem_key": "31120_113057",
+      "relative_path": "고등학교/유리함수의_합성함수와_역함수/aef757aa6d0d6b10_H_2_05_31120_113057_20_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f78227982bf8555b",
+      "school_level": "고등학교",
+      "domain": "함수의 개수",
+      "filename": "H_2_07_38173_150987_8_O.jpeg",
+      "problem_key": "38173_150987",
+      "relative_path": "고등학교/함수의_개수/f78227982bf8555b_H_2_07_38173_150987_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "1f7f970d2572102c",
+      "school_level": "고등학교",
+      "domain": "합성함수의 함숫값",
+      "filename": "H_2_04_30585_111261_20_X.jpeg",
+      "problem_key": "30585_111261",
+      "relative_path": "고등학교/합성함수의_함숫값/1f7f970d2572102c_H_2_04_30585_111261_20_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "2b59daea57ba2c44",
+      "school_level": "고등학교",
+      "domain": "유리함수의 그래프",
+      "filename": "H_2_05_31024_113100_1_X.jpeg",
+      "problem_key": "31024_113100",
+      "relative_path": "고등학교/유리함수의_그래프/2b59daea57ba2c44_H_2_05_31024_113100_1_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "08141388436affbe",
+      "school_level": "고등학교",
+      "domain": "이차함수의 그래프와 직선의 교점",
+      "filename": "H_1_04_27041_89182_2_X.jpeg",
+      "problem_key": "27041_89182",
+      "relative_path": "고등학교/이차함수의_그래프와_직선의_교점/08141388436affbe_H_1_04_27041_89182_2_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "52700213174359b4",
+      "school_level": "고등학교",
+      "domain": "서로 같은 함수",
+      "filename": "H_2_04_38121_150896_2_O.jpeg",
+      "problem_key": "38121_150896",
+      "relative_path": "고등학교/서로_같은_함수/52700213174359b4_H_2_04_38121_150896_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "633c422592349299",
+      "school_level": "고등학교",
+      "domain": "계수가 문자인 이차방정식의 근의 판별",
+      "filename": "H_1_03_26516_88246_12_X.jpeg",
+      "problem_key": "26516_88246",
+      "relative_path": "고등학교/계수가_문자인_이차방정식의_근의_판별/633c422592349299_H_1_03_26516_88246_12_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "b0456e66142794ff",
+      "school_level": "고등학교",
+      "domain": "대칭이동을 이용한 거리의 최솟값",
+      "filename": "H_1_09_28100_96021_6_X.jpeg",
+      "problem_key": "28100_96021",
+      "relative_path": "고등학교/대칭이동을_이용한_거리의_최솟값/b0456e66142794ff_H_1_09_28100_96021_6_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "11bca9b443200dfd",
       "school_level": "고등학교",
       "domain": "무리함수의 합성함수와 역함수",
-      "filename": "H_2_06_31380_115116_4_O.jpeg",
-      "relative_path": "고등학교/무리함수의_합성함수와_역함수/63a96b99920a1975_H_2_06_31380_115116_4_O.jpeg",
+      "filename": "H_2_06_31380_115118_12_O.jpeg",
+      "problem_key": "31380_115118",
+      "relative_path": "고등학교/무리함수의_합성함수와_역함수/11bca9b443200dfd_H_2_06_31380_115118_12_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "d0fdf4c5fa98dc96",
+      "sample_id": "f3d4ef9b4e9515e8",
       "school_level": "고등학교",
-      "domain": "음수의 제곱근의 성질",
-      "filename": "H_1_03_26483_85905_18_O.jpeg",
-      "relative_path": "고등학교/음수의_제곱근의_성질/d0fdf4c5fa98dc96_H_1_03_26483_85905_18_O.jpeg",
+      "domain": "문자가 3 개인 식의 값",
+      "filename": "H_1_01_26003_85016_17_O.jpeg",
+      "problem_key": "26003_85016",
+      "relative_path": "고등학교/문자가_3_개인_식의_값/f3d4ef9b4e9515e8_H_1_01_26003_85016_17_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "6f068275d755827b",
+      "sample_id": "75d267399431a459",
       "school_level": "고등학교",
-      "domain": "연립일차부등식의 활용",
-      "filename": "H_1_06_26955_90189_10_X.jpeg",
-      "relative_path": "고등학교/연립일차부등식의_활용/6f068275d755827b_H_1_06_26955_90189_10_X.jpeg",
+      "domain": "x절편, y절편이 주어진 직선의 방정식",
+      "filename": "H_1_07_27632_92380_8_O.jpeg",
+      "problem_key": "27632_92380",
+      "relative_path": "고등학교/x절편,_y절편이_주어진_직선의_방정식/75d267399431a459_H_1_07_27632_92380_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "f7c062df4ec16903",
+      "school_level": "고등학교",
+      "domain": "합성함수의 함숫값",
+      "filename": "H_2_04_30596_111340_2_O.jpeg",
+      "problem_key": "30596_111340",
+      "relative_path": "고등학교/합성함수의_함숫값/f7c062df4ec16903_H_2_04_30596_111340_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "5266d660c8a603c4",
+      "school_level": "고등학교",
+      "domain": "특수한 해를 갖는 연립일차부등식",
+      "filename": "H_1_06_26936_88951_1_O.jpeg",
+      "problem_key": "26936_88951",
+      "relative_path": "고등학교/특수한_해를_갖는_연립일차부등식/5266d660c8a603c4_H_1_06_26936_88951_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "100761805122b88d",
+      "school_level": "고등학교",
+      "domain": "번분수식",
+      "filename": "H_2_05_30977_113429_12_X.jpeg",
+      "problem_key": "30977_113429",
+      "relative_path": "고등학교/번분수식/100761805122b88d_H_2_05_30977_113429_12_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "8778b7067c15028b",
+      "sample_id": "787d4c9fe360c452",
+      "school_level": "고등학교",
+      "domain": "음수의 제곱근의 계산",
+      "filename": "H_1_03_26474_87088_3_X.jpeg",
+      "problem_key": "26474_87088",
+      "relative_path": "고등학교/음수의_제곱근의_계산/787d4c9fe360c452_H_1_03_26474_87088_3_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "de5c9711a54100b2",
+      "school_level": "고등학교",
+      "domain": "코시-슈바르츠의 부등식",
+      "filename": "H_2_03_38067_150897_13_X.jpeg",
+      "problem_key": "38067_150897",
+      "relative_path": "고등학교/코시-슈바르츠의_부등식/de5c9711a54100b2_H_2_03_38067_150897_13_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "98f7d81cb01b9e6b",
+      "school_level": "고등학교",
+      "domain": "연립이차부등식의 풀이",
+      "filename": "H_1_06_37988_150725_18_X.jpeg",
+      "problem_key": "37988_150725",
+      "relative_path": "고등학교/연립이차부등식의_풀이/98f7d81cb01b9e6b_H_1_06_37988_150725_18_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "685420eb2ab2c519",
+      "school_level": "고등학교",
+      "domain": "잘못 보고 푼 이차방정식",
+      "filename": "H_1_03_26647_87848_14_X.jpeg",
+      "problem_key": "26647_87848",
+      "relative_path": "고등학교/잘못_보고_푼_이차방정식/685420eb2ab2c519_H_1_03_26647_87848_14_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "5d638bfe57ba571d",
+      "school_level": "고등학교",
+      "domain": "유한집합과 무한집합",
+      "filename": "H_2_01_29175_107189_5_X.jpeg",
+      "problem_key": "29175_107189",
+      "relative_path": "고등학교/유한집합과_무한집합/5d638bfe57ba571d_H_2_01_29175_107189_5_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "525e2e4e253f52cb",
+      "school_level": "고등학교",
+      "domain": "무리함수의 정의역과 치역",
+      "filename": "H_2_06_31281_114599_20_X.jpeg",
+      "problem_key": "31281_114599",
+      "relative_path": "고등학교/무리함수의_정의역과_치역/525e2e4e253f52cb_H_2_06_31281_114599_20_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "56985ee89209dc95",
+      "school_level": "고등학교",
+      "domain": "무리함수의 정의역과 치역",
+      "filename": "H_2_06_31288_114614_1_O.jpeg",
+      "problem_key": "31288_114614",
+      "relative_path": "고등학교/무리함수의_정의역과_치역/56985ee89209dc95_H_2_06_31288_114614_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "118bb18d4bfc5720",
+      "school_level": "고등학교",
+      "domain": "합성함수와 역함수",
+      "filename": "H_2_04_30807_111883_15_X.jpeg",
+      "problem_key": "30807_111883",
+      "relative_path": "고등학교/합성함수와_역함수/118bb18d4bfc5720_H_2_04_30807_111883_15_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "734d7f72999132f9",
       "school_level": "고등학교",
       "domain": "부분분수로의 변형",
-      "filename": "H_2_05_30966_113376_13_O.jpeg",
-      "relative_path": "고등학교/부분분수로의_변형/8778b7067c15028b_H_2_05_30966_113376_13_O.jpeg",
+      "filename": "H_2_05_38035_150668_1_O.jpeg",
+      "problem_key": "38035_150668",
+      "relative_path": "고등학교/부분분수로의_변형/734d7f72999132f9_H_2_05_38035_150668_1_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "33fc07896a90be6d",
+      "sample_id": "cf43c1698c91d186",
       "school_level": "고등학교",
-      "domain": "여러 개의 문자를 포함한 다항식의 인수분해",
-      "filename": "H_1_02_26357_86444_13_O.jpeg",
-      "relative_path": "고등학교/여러_개의_문자를_포함한_다항식의_인수분해/33fc07896a90be6d_H_1_02_26357_86444_13_O.jpeg",
+      "domain": "인수정리",
+      "filename": "H_1_02_26268_86598_10_O.jpeg",
+      "problem_key": "26268_86598",
+      "relative_path": "고등학교/인수정리/cf43c1698c91d186_H_1_02_26268_86598_10_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "c50d0f9e0d18cc5e",
+      "sample_id": "14d9e46608b2a157",
       "school_level": "고등학교",
-      "domain": "집합 사이의 포함 관계가 성립하도록 하는 상수 구하기",
-      "filename": "H_2_01_29336_104621_7_X.jpeg",
-      "relative_path": "고등학교/집합_사이의_포함_관계가_성립하도록_하는_상수_구하기/c50d0f9e0d18cc5e_H_2_01_29336_104621_7_X.jpeg",
+      "domain": "인수분해 공식",
+      "filename": "H_1_02_26330_86173_8_O.jpeg",
+      "problem_key": "26330_86173",
+      "relative_path": "고등학교/인수분해_공식/14d9e46608b2a157_H_1_02_26330_86173_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "7ea16847870f7652",
+      "school_level": "고등학교",
+      "domain": "제곱근의 성질",
+      "filename": "H_2_06_31162_114154_1_O.jpeg",
+      "problem_key": "31162_114154",
+      "relative_path": "고등학교/제곱근의_성질/7ea16847870f7652_H_2_06_31162_114154_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "973be02b40538620",
+      "school_level": "고등학교",
+      "domain": "무리식의 값 구하기",
+      "filename": "H_2_06_31212_114023_4_O.jpeg",
+      "problem_key": "31212_114023",
+      "relative_path": "고등학교/무리식의_값_구하기/973be02b40538620_H_2_06_31212_114023_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "c482b53a701320ae",
+      "school_level": "고등학교",
+      "domain": "세 점을 지나는 원의 방정식",
+      "filename": "H_1_08_27818_93487_10_O.jpeg",
+      "problem_key": "27818_93487",
+      "relative_path": "고등학교/세_점을_지나는_원의_방정식/c482b53a701320ae_H_1_08_27818_93487_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "4d9c2eacd1e4a611",
+      "school_level": "고등학교",
+      "domain": "약수의 개수",
+      "filename": "H_2_07_28474_99811_17_O.jpeg",
+      "problem_key": "28474_99811",
+      "relative_path": "고등학교/약수의_개수/4d9c2eacd1e4a611_H_2_07_28474_99811_17_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "0775b5bbb4d0f56e",
+      "school_level": "고등학교",
+      "domain": "세 직선의 위치 관계",
+      "filename": "H_1_07_27684_93183_8_X.jpeg",
+      "problem_key": "27684_93183",
+      "relative_path": "고등학교/세_직선의_위치_관계/0775b5bbb4d0f56e_H_1_07_27684_93183_8_X.jpeg",
       "is_answer": false
     },
     {
-      "sample_id": "03389bd02e231942",
-      "school_level": "고등학교",
-      "domain": "유리식의 덧셈, 뺄셈, 곱셈, 나눗셈",
-      "filename": "H_2_05_30943_112559_8_O.jpeg",
-      "relative_path": "고등학교/유리식의_덧셈,_뺄셈,_곱셈,_나눗셈/03389bd02e231942_H_2_05_30943_112559_8_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "30e3aa81d66ca6dd",
-      "school_level": "고등학교",
-      "domain": "도형에서의 활용",
-      "filename": "H_2_03_30367_110074_5_O.jpeg",
-      "relative_path": "고등학교/도형에서의_활용/30e3aa81d66ca6dd_H_2_03_30367_110074_5_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "2c127d6a1380a168",
-      "school_level": "고등학교",
-      "domain": "다항식의 덧셈과 뺄셈",
-      "filename": "H_1_01_25775_84240_4_X.jpeg",
-      "relative_path": "고등학교/다항식의_덧셈과_뺄셈/2c127d6a1380a168_H_1_01_25775_84240_4_X.jpeg",
-      "is_answer": false
-    },
-    {
-      "sample_id": "65c1359a7d8bb379",
-      "school_level": "고등학교",
-      "domain": "삼차방정식의 켤레근",
-      "filename": "H_1_05_26713_88622_1_O.jpeg",
-      "relative_path": "고등학교/삼차방정식의_켤레근/65c1359a7d8bb379_H_1_05_26713_88622_1_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "09ba5c252ea525a4",
-      "school_level": "고등학교",
-      "domain": "해가 주어진 이차부등식",
-      "filename": "H_1_06_27196_90057_2_O.jpeg",
-      "relative_path": "고등학교/해가_주어진_이차부등식/09ba5c252ea525a4_H_1_06_27196_90057_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "dea112a38dd856dd",
-      "school_level": "고등학교",
-      "domain": "곱셈 공식을 이용한 다항식의 전개",
-      "filename": "H_1_01_25852_84096_2_O.jpeg",
-      "relative_path": "고등학교/곱셈_공식을_이용한_다항식의_전개/dea112a38dd856dd_H_1_01_25852_84096_2_O.jpeg",
-      "is_answer": true
-    },
-    {
-      "sample_id": "54c507d6782f01bc",
+      "sample_id": "3064ed0f74c5aa65",
       "school_level": "고등학교",
       "domain": "이차방정식의 식 세우기",
-      "filename": "H_1_03_26648_87855_17_O.jpeg",
-      "relative_path": "고등학교/이차방정식의_식_세우기/54c507d6782f01bc_H_1_03_26648_87855_17_O.jpeg",
+      "filename": "H_1_03_26648_87857_7_O.jpeg",
+      "problem_key": "26648_87857",
+      "relative_path": "고등학교/이차방정식의_식_세우기/3064ed0f74c5aa65_H_1_03_26648_87857_7_O.jpeg",
       "is_answer": true
     },
     {
-      "sample_id": "0c1ebdf01f603f61",
+      "sample_id": "7ea6c966b12090eb",
       "school_level": "고등학교",
-      "domain": "문자가 2 개인 곱셈 공식의 변형",
-      "filename": "H_1_01_25912_84577_14_X.jpeg",
-      "relative_path": "고등학교/문자가_2_개인_곱셈_공식의_변형/0c1ebdf01f603f61_H_1_01_25912_84577_14_X.jpeg",
+      "domain": "지불 방법과 지불 금액",
+      "filename": "H_2_07_28482_150861_10_O.jpeg",
+      "problem_key": "28482_150861",
+      "relative_path": "고등학교/지불_방법과_지불_금액/7ea6c966b12090eb_H_2_07_28482_150861_10_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "b74d169682d97621",
+      "school_level": "고등학교",
+      "domain": "연립이차방정식",
+      "filename": "H_1_05_26886_89284_1_O.jpeg",
+      "problem_key": "26886_89284",
+      "relative_path": "고등학교/연립이차방정식/b74d169682d97621_H_1_05_26886_89284_1_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "664f12ca3a20c197",
+      "school_level": "고등학교",
+      "domain": "나머지정리",
+      "filename": "H_1_02_26226_86351_7_O.jpeg",
+      "problem_key": "26226_86351",
+      "relative_path": "고등학교/나머지정리/664f12ca3a20c197_H_1_02_26226_86351_7_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "ad9a38794088d4b9",
+      "school_level": "고등학교",
+      "domain": "몫과 나머지",
+      "filename": "H_1_01_26092_85326_8_O.jpeg",
+      "problem_key": "26092_85326",
+      "relative_path": "고등학교/몫과_나머지/ad9a38794088d4b9_H_1_01_26092_85326_8_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "a402800f313f80de",
+      "school_level": "고등학교",
+      "domain": "접선의 길이",
+      "filename": "H_1_08_27908_98066_2_O.jpeg",
+      "problem_key": "27908_98066",
+      "relative_path": "고등학교/접선의_길이/a402800f313f80de_H_1_08_27908_98066_2_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "fa8eaf14e23bef61",
+      "school_level": "고등학교",
+      "domain": "적어도'의 조건이 있는 순열의 수",
+      "filename": "H_2_07_28617_101334_4_O.jpeg",
+      "problem_key": "28617_101334",
+      "relative_path": "고등학교/적어도'의_조건이_있는_순열의_수/fa8eaf14e23bef61_H_2_07_28617_101334_4_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "efeb3e0d38730dcd",
+      "school_level": "고등학교",
+      "domain": "절댓값 기호를 포함한 식의 그래프",
+      "filename": "H_2_04_30849_114556_8_X.jpeg",
+      "problem_key": "30849_114556",
+      "relative_path": "고등학교/절댓값_기호를_포함한_식의_그래프/efeb3e0d38730dcd_H_2_04_30849_114556_8_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "8698661961f2f777",
+      "school_level": "고등학교",
+      "domain": "선분의 내분점과 외분점",
+      "filename": "H_1_07_27576_92018_11_X.jpeg",
+      "problem_key": "27576_92018",
+      "relative_path": "고등학교/선분의_내분점과_외분점/8698661961f2f777_H_1_07_27576_92018_11_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "b3f63d087893a518",
+      "school_level": "고등학교",
+      "domain": "조립제법을 이용하여 항등식의 미정계수 구하기",
+      "filename": "H_1_02_26134_85177_15_O.jpeg",
+      "problem_key": "26134_85177",
+      "relative_path": "고등학교/조립제법을_이용하여_항등식의_미정계수_구하기/b3f63d087893a518_H_1_02_26134_85177_15_O.jpeg",
+      "is_answer": true
+    },
+    {
+      "sample_id": "0d240ac8ff26313a",
+      "school_level": "고등학교",
+      "domain": "켤레복소수의 성질",
+      "filename": "H_1_03_26413_88051_3_X.jpeg",
+      "problem_key": "26413_88051",
+      "relative_path": "고등학교/켤레복소수의_성질/0d240ac8ff26313a_H_1_03_26413_88051_3_X.jpeg",
+      "is_answer": false
+    },
+    {
+      "sample_id": "3a0e5721202398be",
+      "school_level": "고등학교",
+      "domain": "두 점 사이의 거리",
+      "filename": "H_1_07_27458_90676_5_X.jpeg",
+      "problem_key": "27458_90676",
+      "relative_path": "고등학교/두_점_사이의_거리/3a0e5721202398be_H_1_07_27458_90676_5_X.jpeg",
       "is_answer": false
     }
   ]

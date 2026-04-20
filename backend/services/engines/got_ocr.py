@@ -2,9 +2,9 @@
 
 import asyncio
 import base64
+import contextlib
 import json
 import logging
-import subprocess
 import uuid
 from pathlib import Path
 
@@ -37,8 +37,11 @@ class GotOcrEngine:
             )
 
         self._model_path = model_path
-        self._proc: subprocess.Popen | None = None
+        self._proc: asyncio.subprocess.Process | None = None
         self._lock: asyncio.Lock | None = None
+        self._idle_task: asyncio.Task | None = None
+        self._last_used_at: float = 0.0
+        self._idle_timeout_seconds = max(0, int(settings.got_ocr_idle_shutdown_seconds))
         self._worker_script = (
             Path(__file__).parent.parent.parent / "scripts" / "ocr_worker.py"
         )
@@ -76,11 +79,77 @@ class GotOcrEngine:
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             raise OCRError(f"GOT-OCR 워커 ready 응답 파싱 실패: {e}")
 
+        self._last_used_at = asyncio.get_running_loop().time()
+        self._ensure_idle_watchdog()
         logger.info("GOT-OCR 워커 준비 완료")
+
+    def _ensure_idle_watchdog(self) -> None:
+        if self._idle_timeout_seconds <= 0:
+            return
+        if self._idle_task and not self._idle_task.done():
+            return
+        self._idle_task = asyncio.create_task(self._idle_watchdog())
+
+    async def _idle_watchdog(self) -> None:
+        interval = min(30.0, float(self._idle_timeout_seconds))
+        try:
+            while True:
+                await asyncio.sleep(interval)
+                if self._proc is None or self._proc.returncode is not None:
+                    return
+                if self._lock is not None and self._lock.locked():
+                    continue
+                now = asyncio.get_running_loop().time()
+                if now - self._last_used_at >= self._idle_timeout_seconds:
+                    logger.info(
+                        "GOT-OCR 워커 유휴 종료: idle=%.1fs timeout=%ss",
+                        now - self._last_used_at,
+                        self._idle_timeout_seconds,
+                    )
+                    await self._stop_worker()
+                    return
+        except asyncio.CancelledError:
+            return
+
+    async def _stop_worker(self, force_kill: bool = False) -> None:
+        proc = self._proc
+        self._proc = None
+        if proc is None:
+            return
+        if proc.returncode is not None:
+            return
+        if force_kill:
+            proc.kill()
+            with contextlib.suppress(Exception):
+                await proc.wait()
+            return
+        proc.terminate()
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=5.0)
+        except asyncio.TimeoutError:
+            proc.kill()
+            with contextlib.suppress(Exception):
+                await proc.wait()
+
+    async def close(self) -> None:
+        if self._idle_task and not self._idle_task.done():
+            self._idle_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._idle_task
+        await self._stop_worker()
 
     async def recognize(self, image_bytes: bytes, content_type: str) -> str:
         self._ensure_lock()
         async with self._lock:
+            now = asyncio.get_running_loop().time()
+            if (
+                self._idle_timeout_seconds > 0
+                and self._proc is not None
+                and self._proc.returncode is None
+                and now - self._last_used_at >= self._idle_timeout_seconds
+            ):
+                await self._stop_worker()
+
             if self._proc is None or self._proc.returncode is not None:
                 await self._start_worker()
 
@@ -103,8 +172,7 @@ class GotOcrEngine:
                     self._proc.stdout.readline(), timeout=GOT_INFERENCE_TIMEOUT_SECONDS
                 )
             except asyncio.TimeoutError:
-                self._proc.kill()
-                self._proc = None
+                await self._stop_worker(force_kill=True)
                 raise OCRError(f"GOT-OCR 추론 타임아웃 ({GOT_INFERENCE_TIMEOUT_SECONDS:.0f}s)")
 
             try:
@@ -115,4 +183,6 @@ class GotOcrEngine:
             if "error" in resp:
                 raise OCRError(f"GOT-OCR 추론 실패: {resp['error']}")
 
+            self._last_used_at = asyncio.get_running_loop().time()
+            self._ensure_idle_watchdog()
             return resp.get("text", "")

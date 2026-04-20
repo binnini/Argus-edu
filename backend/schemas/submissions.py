@@ -54,6 +54,24 @@ class FeedbackStep(BaseModel):
         except (TypeError, ValueError):
             return None
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def coerce_title(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        if isinstance(v, list):
+            return " ".join(str(x) for x in v if x is not None).strip()
+        return str(v)
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def coerce_content(cls, v: Any) -> str:
+        if v is None:
+            return ""
+        if isinstance(v, list):
+            return " ".join(str(x) for x in v if x is not None).strip()
+        return str(v)
+
     model_config = {"extra": "ignore"}
 
 
